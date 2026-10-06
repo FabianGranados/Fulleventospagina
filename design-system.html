@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fulleventos - Design System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colors - Primary (Pink) */
+            --primary-50: #FFF5F9;
+            --primary-100: #FFE0ED;
+            --primary-200: #FFC2DB;
+            --primary-300: #FF9FCA;
+            --primary-400: #FF6BB4;
+            --primary-500: #FF3D81;
+            --primary-600: #E63570;
+            --primary-700: #C91C4C;
+            --primary-800: #9E1840;
+            --primary-900: #6B0E2B;
+
+            /* Colors - Accent (Orange) */
+            --accent-100: #FFF4E6;
+            --accent-400: #FFB547;
+            --accent-500: #FF9E1B;
+
+            /* Colors - Neutral */
+            --neutral-50: #F9F8FB;
+            --neutral-100: #F3F1F8;
+            --neutral-200: #E8E5F0;
+            --neutral-300: #D4CEDD;
+            --neutral-400: #A9A6B8;
+            --neutral-500: #8B8797;
+            --neutral-600: #5F5C6D;
+            --neutral-700: #423F52;
+            --neutral-800: #2A2735;
+            --neutral-900: #1A1621;
+            --neutral-1000: #0B0B12;
+
+            /* Semantic Colors */
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --info: #3B82F6;
+
+            /* Typography */
+            --font-heading: 'Sora', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+
+            /* Spacing (4px base unit) */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            --space-3xl: 64px;
+
+            /* Border radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--neutral-50);
+            color: var(--neutral-700);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-lg);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+            padding: var(--space-xl) 0;
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%);
+            color: white;
+            border-radius: var(--radius-lg);
+        }
+
+        .header h1 {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .section {
+            margin-bottom: var(--space-3xl);
+        }
+
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--neutral-900);
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--primary-200);
+        }
+
+        /* Color Palette */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-2xl);
+        }
+
+        .color-swatch {
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .color-box {
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: var(--space-sm);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .color-info {
+            padding: var(--space-md);
+            background: white;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .color-info-label {
+            color: var(--neutral-600);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .color-info-value {
+            color: var(--neutral-500);
+        }
+
+        /* Typography */
+        .typography-grid {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        .typography-sample {
+            padding: var(--space-md);
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--neutral-200);
+        }
+
+        .typography-sample h1 {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: var(--space-sm);
+            color: var(--neutral-900);
+        }
+
+        .typography-sample h2 {
+            font-family: var(--font-heading);
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: var(--space-sm);
+            color: var(--neutral-900);
+        }
+
+        .typography-sample h3 {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.15;
+            margin-bottom: var(--space-sm);
+            color: var(--neutral-900);
+        }
+
+        .typography-sample p {
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--neutral-700);
+        }
+
+        .typography-sample .small {
+            font-size: 14px;
+            color: var(--neutral-600);
+            margin-top: var(--space-sm);
+        }
+
+        .typography-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            margin-bottom: var(--space-sm);
+        }
+
+        /* Buttons */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-2xl);
+        }
+
+        .button-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--neutral-200);
+        }
+
+        .button-showcase-title {
+            font-weight: 600;
+            color: var(--neutral-700);
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        /* Button Styles */
+        button {
+            font-family: var(--font-body);
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 200ms ease-out;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 12px 24px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-500);
+            border: 2px solid var(--primary-500);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-50);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--primary-500);
+        }
+
+        .btn-ghost:hover {
+            background: var(--primary-50);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            height: 36px;
+            font-size: 14px;
+        }
+
+        .btn-large {
+            padding: 16px 32px;
+            height: 56px;
+            font-size: 18px;
+        }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--neutral-200);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 200ms ease-out;
+        }
+
+        .card:hover {
+            border-color: var(--primary-500);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-200) 0%, var(--accent-100) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-600);
+            font-size: 48px;
+        }
+
+        .card-content {
+            padding: var(--space-md);
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: var(--space-sm);
+        }
+
+        .card-text {
+            font-size: 14px;
+            color: var(--neutral-600);
+            margin-bottom: var(--space-md);
+        }
+
+        .card-badge {
+            display: inline-block;
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            height: 36px;
+            font-size: 14px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--neutral-700);
+            margin-bottom: var(--space-sm);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="search"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px var(--space-md);
+            border: 1px solid var(--neutral-300);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 16px;
+            transition: all 200ms ease-out;
+            background: white;
+            color: var(--neutral-900);
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="search"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px var(--primary-50);
+        }
+
+        input::placeholder {
+            color: var(--neutral-400);
+        }
+
+        .form-helper {
+            font-size: 12px;
+            color: var(--neutral-500);
+            margin-top: 4px;
+        }
+
+        .form-error {
+            border-color: var(--error) !important;
+        }
+
+        .form-error-text {
+            color: var(--error);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* Spacing Showcase */
+        .spacing-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .spacing-item {
+            background: white;
+            border: 1px solid var(--neutral-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+        }
+
+        .spacing-box {
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .spacing-xs { height: 4px; }
+        .spacing-sm { height: 8px; }
+        .spacing-md { height: 16px; }
+        .spacing-lg { height: 24px; }
+        .spacing-xl { height: 32px; }
+        .spacing-2xl { height: 48px; }
+        .spacing-3xl { height: 64px; }
+
+        .spacing-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--neutral-600);
+            text-transform: uppercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .buttons-grid,
+            .cards-grid,
+            .color-grid,
+            .spacing-showcase {
+                grid-template-columns: 1fr;
+            }
+
+            .typography-sample h1 {
+                font-size: 32px;
+            }
+
+            .typography-sample h2 {
+                font-size: 28px;
+            }
+
+            .typography-sample h3 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎨 Fulleventos Design System</h1>
+            <p>Especificaciones completas del sistema de diseño para el frontend</p>
+        </div>
+
+        <!-- Color Palette Section -->
+        <section class="section">
+            <h2 class="section-title">🎯 Paleta de Colores</h2>
+
+            <h3 style="margin-top: var(--space-lg); margin-bottom: var(--space-md); font-family: var(--font-heading); font-size: 20px; color: var(--neutral-800);">Primario - Rosa/Magenta</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--primary-50);">50</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FFF5F9</div>
+                        <div class="color-info-value">Muy claro</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--primary-100);">100</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FFE0ED</div>
+                        <div class="color-info-value">Claro</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--primary-300);">300</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FF9FCA</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--primary-500); color: white; text-shadow: none;">500</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FF3D81</div>
+                        <div class="color-info-value">★ MAIN</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--primary-700); color: white;">700</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#C91C4C</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--primary-900); color: white;">900</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#6B0E2B</div>
+                        <div class="color-info-value">Oscuro</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: var(--space-lg); margin-bottom: var(--space-md); font-family: var(--font-heading); font-size: 20px; color: var(--neutral-800);">Acento - Naranja</h3>
+            <div class="color-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--accent-100);">100</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FFF4E6</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--accent-400); color: white;">400</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FFB547</div>
+                        <div class="color-info-value">★ Secondary</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--accent-500); color: white;">500</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#FF9E1B</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: var(--space-lg); margin-bottom: var(--space-md); font-family: var(--font-heading); font-size: 20px; color: var(--neutral-800);">Semánticos</h3>
+            <div class="color-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--success); color: white;">Success</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#10B981</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--warning); color: white;">Warning</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#F59E0B</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--error); color: white;">Error</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#EF4444</div>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: var(--info); color: white;">Info</div>
+                    <div class="color-info">
+                        <div class="color-info-label">#3B82F6</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Section -->
+        <section class="section">
+            <h2 class="section-title">✍️ Tipografía</h2>
+
+            <div class="typography-grid">
+                <div class="typography-sample">
+                    <div class="typography-label">H1 - Sora Bold (48px desktop / 32px mobile)</div>
+                    <h1>Descubre qué hacer en Bogotá</h1>
+                    <p class="small">Line height: 1.15 | Weight: 700 | Para títulos principales</p>
+                </div>
+
+                <div class="typography-sample">
+                    <div class="typography-label">H2 - Sora Bold (36px desktop / 28px mobile)</div>
+                    <h2>Eventos de la semana</h2>
+                    <p class="small">Line height: 1.15 | Weight: 700 | Para secciones</p>
+                </div>
+
+                <div class="typography-sample">
+                    <div class="typography-label">H3 - Sora Semibold (24px / 20px mobile)</div>
+                    <h3>Morat en Vivo</h3>
+                    <p class="small">Line height: 1.15 | Weight: 600 | Para subtítulos</p>
+                </div>
+
+                <div class="typography-sample">
+                    <div class="typography-label">Body Large - Inter (18px)</div>
+                    <p>Esta es una descripción de evento de tamaño grande. Se usa para introducciones o textos destacados que necesitan más presencia visual.</p>
+                    <p class="small">Line height: 1.6 | Weight: 400</p>
+                </div>
+
+                <div class="typography-sample">
+                    <div class="typography-label">Body - Inter (16px) ★ Default</div>
+                    <p>Este es el tamaño de cuerpo de texto estándar. Se usa en descripción, detalles de eventos y contenido principal del sitio. Debe ser legible en todos los dispositivos.</p>
+                    <p class="small">Line height: 1.6 | Weight: 400</p>
+                </div>
+
+                <div class="typography-sample">
+                    <div class="typography-label">Body Small - Inter (14px)</div>
+                    <p>Texto pequeño para información secundaria, etiquetas y detalles menores. Útil para metadatos como fechas y ubicaciones.</p>
+                    <p class="small">Line height: 1.6 | Weight: 400</p>
+                </div>
+
+                <div class="typography-sample">
+                    <div class="typography-label">Caption - Inter (12px, Medium, Uppercase)</div>
+                    <p style="font-size: 12px; font-weight: 500; text-transform: uppercase; color: var(--neutral-500);">CONCIERTO • MÚSICA EN VIVO • BOGOTÁ</p>
+                    <p class="small">Para categorías, badges y etiquetas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Buttons Section -->
+        <section class="section">
+            <h2 class="section-title">🔘 Botones</h2>
+
+            <div class="buttons-grid">
+                <div class="button-showcase">
+                    <div class="button-showcase-title">Primary - Large</div>
+                    <button class="btn-primary btn-large">Ver Entrada</button>
+                    <p style="font-size: 12px; color: var(--neutral-600); margin-top: var(--space-sm);">Gradiente rosa→naranja, CTA principal</p>
+                </div>
+
+                <div class="button-showcase">
+                    <div class="button-showcase-title">Primary - Medium</div>
+                    <button class="btn-primary">Ir a Comprar</button>
+                    <p style="font-size: 12px; color: var(--neutral-600); margin-top: var(--space-sm);">Default 44px, uso general</p>
+                </div>
+
+                <div class="button-showcase">
+                    <div class="button-showcase-title">Primary - Small</div>
+                    <button class="btn-primary btn-small">Seguir</button>
+                    <p style="font-size: 12px; color: var(--neutral-600); margin-top: var(--space-sm);">Acciones secundarias</p>
+                </div>
+
+                <div class="button-showcase">
+                    <div class="button-showcase-title">Secondary</div>
+                    <button class="btn-secondary">Outline Primario</button>
+                    <p style="font-size: 12px; color: var(--neutral-600); margin-top: var(--space-sm);">Acciones alternativas</p>
+                </div>
+
+                <div class="button-showcase">
+                    <div class="button-showcase-title">Ghost</div>
+                    <button class="btn-ghost">Compartir</button>
+                    <p style="font-size: 12px; color: var(--neutral-600); margin-top: var(--space-sm);">Acciones terciarias</p>
+                </div>
+
+                <div class="button-showcase">
+                    <div class="button-showcase-title">Disabled</div>
+                    <button class="btn-primary btn-disabled" disabled>Agotado</button>
+                    <p style="font-size: 12px; color: var(--neutral-600); margin-top: var(--space-sm);">Estado deshabilitado</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards Section -->
+        <section class="section">
+            <h2 class="section-title">🎴 Tarjetas de Evento</h2>
+
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-image">🎵</div>
+                    <div class="card-content">
+                        <div class="card-badge">CONCIERTO</div>
+                        <h3 class="card-title">Morat en Vivo</h3>
+                        <p class="card-text">🕒 Sábado 22 ago • 20:00</p>
+                        <p class="card-text">📍 Teatro Metropólitano</p>
+                        <p class="card-text" style="color: var(--primary-500); font-weight: 600;">💰 $150K - $250K</p>
+                        <div class="card-actions">
+                            <button class="btn-ghost btn-small">❤️ Guardar</button>
+                            <button class="btn-primary btn-small">Ver →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image">🎉</div>
+                    <div class="card-content">
+                        <div class="card-badge" style="background: var(--accent-100); color: var(--accent-500);">FIESTA</div>
+                        <h3 class="card-title">Fiesta Bogotá Electrónica</h3>
+                        <p class="card-text">🕒 Viernes 21 ago • 22:00</p>
+                        <p class="card-text">📍 Andres Carne de Res</p>
+                        <p class="card-text" style="color: var(--primary-500); font-weight: 600;">💰 $60K - $100K</p>
+                        <div class="card-actions">
+                            <button class="btn-ghost btn-small">❤️ Guardar</button>
+                            <button class="btn-primary btn-small">Ver →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image">🎭</div>
+                    <div class="card-content">
+                        <div class="card-badge" style="background: #E0F7FF; color: var(--info);">TEATRO</div>
+                        <h3 class="card-title">La Madriguera</h3>
+                        <p class="card-text">🕒 Domingo 23 ago • 19:00</p>
+                        <p class="card-text">📍 Teatro Galerón</p>
+                        <p class="card-text" style="color: var(--primary-500); font-weight: 600;">💰 Entrada libre</p>
+                        <div class="card-actions">
+                            <button class="btn-ghost btn-small">❤️ Guardar</button>
+                            <button class="btn-primary btn-small">Ver →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Forms Section -->
+        <section class="section">
+            <h2 class="section-title">📝 Formularios</h2>
+
+            <div style="max-width: 500px; background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-md); padding: var(--space-lg);">
+                <h3 style="font-family: var(--font-heading); margin-bottom: var(--space-md);">Búsqueda de Eventos</h3>
+
+                <div class="form-group">
+                    <label for="search" class="form-label">Buscar evento o artista</label>
+                    <input type="search" id="search" placeholder="Ej: Morat, Concierto, Teatro...">
+                    <div class="form-helper">Busca por nombre de evento, artista o género</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category" class="form-label">Categoría</label>
+                    <select id="category">
+                        <option>Todas las categorías</option>
+                        <option>Conciertos</option>
+                        <option>Fiestas</option>
+                        <option>Teatro</option>
+                        <option>Deportes</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" placeholder="tu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="email-error" class="form-label">Email (con error)</label>
+                    <input type="email" id="email-error" class="form-error" placeholder="email@invalido" value="email">
+                    <div class="form-error-text">❌ Por favor ingresa un email válido</div>
+                </div>
+
+                <button class="btn-primary" style="width: 100%;">Buscar Eventos</button>
+            </div>
+        </section>
+
+        <!-- Spacing Section -->
+        <section class="section">
+            <h2 class="section-title">📏 Escala de Espaciado</h2>
+            <p style="color: var(--neutral-600); margin-bottom: var(--space-xl);">Base unit: 4px - Multiplicada según necesidad</p>
+
+            <div class="spacing-showcase">
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-xs"></div>
+                    <div class="spacing-label">XS: 4px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Separaciones mínimas</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-sm"></div>
+                    <div class="spacing-label">SM: 8px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Entre elementos cercanos</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-md"></div>
+                    <div class="spacing-label">MD: 16px ★</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Espaciado estándar</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-lg"></div>
+                    <div class="spacing-label">LG: 24px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Entre secciones</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-xl"></div>
+                    <div class="spacing-label">XL: 32px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Secciones principales</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-2xl"></div>
+                    <div class="spacing-label">2XL: 48px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Saltos grandes</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div class="spacing-box spacing-3xl"></div>
+                    <div class="spacing-label">3XL: 64px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Máximo espaciado</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Border Radius -->
+        <section class="section">
+            <h2 class="section-title">🎛️ Border Radius</h2>
+
+            <div class="spacing-showcase">
+                <div class="spacing-item">
+                    <div style="background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%); height: 80px; border-radius: 8px; margin-bottom: var(--space-md);"></div>
+                    <div class="spacing-label">SM: 8px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Inputs, badges</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div style="background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%); height: 80px; border-radius: 12px; margin-bottom: var(--space-md);"></div>
+                    <div class="spacing-label">MD: 12px ★</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Botones, cards</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div style="background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%); height: 80px; border-radius: 16px; margin-bottom: var(--space-md);"></div>
+                    <div class="spacing-label">LG: 16px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Contendores grandes</div>
+                </div>
+
+                <div class="spacing-item">
+                    <div style="background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-400) 100%); height: 80px; border-radius: 9999px; margin-bottom: var(--space-md);"></div>
+                    <div class="spacing-label">FULL: 9999px</div>
+                    <div style="font-size: 12px; color: var(--neutral-500);">Avatares, círculos</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Animations -->
+        <section class="section">
+            <h2 class="section-title">✨ Animaciones y Transiciones</h2>
+
+            <div style="background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-md); padding: var(--space-lg);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-lg);">
+                    <div>
+                        <h4 style="font-family: var(--font-heading); margin-bottom: var(--space-md); color: var(--neutral-900);">Duración Estándar</h4>
+                        <ul style="font-size: 14px; line-height: 1.8; color: var(--neutral-700);">
+                            <li>🏃 Micro-interacciones: 150-300ms</li>
+                            <li>↔️ Transiciones: 200-300ms</li>
+                            <li>🔄 Complejas: hasta 400ms</li>
+                            <li>⚠️ Evitar: >500ms</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 style="font-family: var(--font-heading); margin-bottom: var(--space-md); color: var(--neutral-900);">Easing</h4>
+                        <ul style="font-size: 14px; line-height: 1.8; color: var(--neutral-700);">
+                            <li>📈 Entrada: ease-out</li>
+                            <li>📉 Salida: ease-in</li>
+                            <li>🚫 Evitar: linear en UI</li>
+                            <li>✅ Preferir: transform/opacity</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 style="font-family: var(--font-heading); margin-bottom: var(--space-md); color: var(--neutral-900);">Transform Ejemplos</h4>
+                        <ul style="font-size: 14px; line-height: 1.8; color: var(--neutral-700);">
+                            <li>Hover: scale 1.02 + sombra</li>
+                            <li>Click: scale 0.98</li>
+                            <li>Card hover: translateY(-2px)</li>
+                            <li>Fade in: opacity 0 → 1</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Guidelines -->
+        <section class="section" style="margin-bottom: var(--space-3xl);">
+            <h2 class="section-title">📋 Pautas de Implementación</h2>
+
+            <div style="background: #FFF4E6; border-left: 4px solid var(--accent-400); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-md);">
+                <h4 style="color: var(--accent-500); font-family: var(--font-heading); margin-bottom: var(--space-sm);">Responsive Design</h4>
+                <ul style="font-size: 14px; line-height: 1.8; color: var(--neutral-700); margin-left: 20px;">
+                    <li><strong>Mobile:</strong> 1 columna, <640px</li>
+                    <li><strong>Tablet:</strong> 2 columnas, 640-1024px</li>
+                    <li><strong>Desktop:</strong> 3-4 columnas, >1024px</li>
+                </ul>
+            </div>
+
+            <div style="background: var(--primary-50); border-left: 4px solid var(--primary-500); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-md);">
+                <h4 style="color: var(--primary-700); font-family: var(--font-heading); margin-bottom: var(--space-sm);">Accesibilidad</h4>
+                <ul style="font-size: 14px; line-height: 1.8; color: var(--neutral-700); margin-left: 20px;">
+                    <li>Contraste mínimo 4.5:1 para texto</li>
+                    <li>Focus rings visibles en elementos interactivos</li>
+                    <li>Botones mínimo 44×44px (touch target)</li>
+                    <li>Alt text en imágenes significativas</li>
+                </ul>
+            </div>
+
+            <div style="background: var(--success); background-color: #D1FAE5; border-left: 4px solid var(--success); padding: var(--space-md); border-radius: var(--radius-md);">
+                <h4 style="color: #065F46; font-family: var(--font-heading); margin-bottom: var(--space-sm);">Performance</h4>
+                <ul style="font-size: 14px; line-height: 1.8; color: #065F46; margin-left: 20px;">
+                    <li>Lazy load imágenes below-the-fold</li>
+                    <li>WebP/AVIF para optimizar tamaño</li>
+                    <li>Scroll infinito para feed de eventos</li>
+                    <li>Skeleton screens mientras cargan datos</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
