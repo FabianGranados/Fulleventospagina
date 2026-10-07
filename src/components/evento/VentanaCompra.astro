@@ -7,7 +7,8 @@ import Icono from '../ui/Icono.astro';
 import Cantidad from './Cantidad.astro';
 import { mediosPago, bancosPse } from '../../data/evento';
 import { persona } from '../../data/personas';
-import { conversaciones, YO } from '../../data/mensajes';
+import { conBoletaSinMi, sinBoleta } from '../../data/asistencia';
+import { totalMiembros } from '../../data/parches';
 import { pesos } from '../../lib/formato';
 import type { ModeloEvento } from './modelo';
 
@@ -26,11 +27,15 @@ const colorDe: Record<string, string> = {
   c5: 'var(--yellow)',
   c6: 'var(--aqua)',
 };
-const amigos = (d?.amigosParche ?? []).map((id) => persona(id)!);
+// Parche de Camila para este evento (parches.ts): se le puede comprar a quien no tiene boleta (H25);
+// quienes ya la tienen se muestran aparte, sin poder elegirlos
+const parche = d ? m.parcheUsuaria : undefined;
+const amigos = (parche ? sinBoleta(parche) : []).map((id) => persona(id)!);
+const yaTienen = (parche ? conBoletaSinMi(parche) : []).map((id) => persona(id)!);
 const corto = (nombre: string) => nombre.split(' ').slice(0, -1).join(' ') || nombre;
 const pasos = ['Boletas', 'Datos', 'Pago', 'Listo'];
 // "Avisar a mi parche" abre el chat del parche de Camila para este evento (H42); sin parche, la bandeja
-const chatParche = conversaciones.find((c) => c.tipo === 'parche' && c.evento === e.id && c.miembros?.includes(YO));
+const chatParche = m.parcheUsuaria;
 const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
 ---
 
@@ -97,7 +102,7 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
         </div>
 
         {
-          d && (
+          parche && (
             <fieldset class="grupo" id="co-para-quien">
               <legend><h3>¿Para quién?</h3></legend>
               <div class="segmentado">
@@ -117,13 +122,13 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
         }
 
         {
-          d && (
+          parche && (
             <div class="parche" data-bloque-parche hidden>
               <div class="parche-cabeza">
-                <span class="av-parche" aria-hidden="true">{d.parcheCompra.iniciales}</span>
+                <span class="av-parche" aria-hidden="true">{parche.iniciales}</span>
                 <span class="parche-texto">
-                  <b>{d.parcheCompra.nombre}</b>
-                  <span>{d.parcheCompra.miembros} · elige quién va contigo</span>
+                  <b>{parche.nombre}</b>
+                  <span>{totalMiembros(parche)} miembros · elige quién va contigo</span>
                 </span>
                 <span class="van" data-van-parche>Van 2</span>
               </div>
@@ -136,9 +141,20 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
                   </button>
                 ))}
               </div>
-              <p class="cupo" data-cupo-parche>
-                Y {d.parcheCompra.miembrosMas} miembros más en el parche. Máximo 8 boletas por compra.
-              </p>
+              {yaTienen.length > 0 && (
+                <div class="ya-tienen">
+                  <b class="ya-titulo" id="co-ya-tienen">Ya tienen boleta</b>
+                  <ul class="miembros" aria-labelledby="co-ya-tienen">
+                    {yaTienen.map((a) => (
+                      <li class="miembro con-boleta">
+                        <span class="av" style={`background: ${colorDe[a.color]}`} aria-hidden="true">{a.iniciales}</span>
+                        {corto(a.nombre)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <p class="cupo" data-cupo-parche>Máximo 8 boletas por compra.</p>
               <p class="aviso-recorte" role="status" data-aviso-recorte></p>
               <button type="button" role="switch" aria-checked="false" class="interruptor" data-dividir aria-describedby="co-dividir-sub">
                 <span class="pista-switch" aria-hidden="true"><span class="perilla" /></span>
@@ -152,7 +168,7 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
                 <Icono nombre="mensajes" tamano={18} />
                 <p>
                   <b data-nota-parte>Tú pagas 1 de 2 · $48.600.</b> Cada amigo recibe una solicitud de pago dentro de la app, en el
-                  chat de {d.parcheCompra.nombre}, y paga su parte. Sus cupos quedan apartados por [PLAZO DE RESERVA].
+                  chat de {parche.nombre}, y paga su parte. Sus cupos quedan apartados por [PLAZO DE RESERVA].
                 </p>
               </div>
             </div>
@@ -953,6 +969,30 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
     background: var(--line);
     color: var(--muted);
     cursor: default;
+  }
+
+  /* Quienes ya tienen boleta: a la vista, pero no se pueden elegir (H25) */
+  .ya-tienen {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ya-titulo {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .ya-tienen ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .con-boleta {
+    background: var(--bg);
+    border-style: dashed;
+    color: var(--muted);
   }
 
   .cupo {

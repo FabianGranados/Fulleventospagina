@@ -1,6 +1,9 @@
 // Datos de ejemplo de Inicio (handoff 4.5, "Datos de ejemplo"). En producción vienen del backend (H53).
 // Las publicaciones referencian el evento por id (e1…e19 de eventos.ts) y a las personas por id (personas.ts).
 import type { ColorAvatar } from '../components/ui/Avatar.astro';
+import { eventos } from './eventos';
+import { totalMiembros } from './parches';
+import { amigosQueVan, enParche, tieneBoleta, va } from './asistencia';
 
 export type Pestana = 'amigos' | 'parches' | 'resenas' | 'cerca';
 
@@ -11,46 +14,8 @@ export const pestanas: { id: Pestana; texto: string }[] = [
   { id: 'cerca', texto: 'Cerca de ti' },
 ];
 
-// Hora de cada evento que muestra Inicio. e1: hora canónica de puertas (H37; Evento dice
-// "Puertas 8:00 p. m. · Show 9:30 p. m."). El resto, la del prototipo.
-export const horaEvento: Record<string, string> = {
-  e1: '8:00 p. m.',
-  e2: '2:00 p. m.',
-  e4: '4:00 p. m.',
-  e5: '7:00 p. m.',
-  e7: '10:00 p. m.',
-  e12: '5:00 p. m.',
-};
-
 // Contadores de la usuaria con sesión (tarjeta de perfil)
 export const contadores = { planes: 38, seguidores: 412, siguiendo: 289 };
-
-export interface Parche {
-  id: string;
-  nombre: string;
-  // Avatar cuadrado: solo los parches que se listan en "Tus parches"
-  iniciales?: string;
-  fondo?: string;
-  evento: string;
-  // Con cupo máximo se muestra "N de M cupos"; sin cupo, "N miembros" (detalle fino 48)
-  miembros: number;
-  cupoMax?: number;
-  nuevos?: number;
-  // La usuaria ya es miembro (H25): el conteo la incluye
-  soyMiembro: boolean;
-  // Solo existe el tipo "abierto" diseñado; "con aprobación" y "privado" están pendientes (H30, N70)
-  tipo: 'abierto';
-}
-
-export const parches: Parche[] = [
-  { id: 'salseros', nombre: 'Salseros de jueves', iniciales: 'SL', fondo: 'var(--yellow)', evento: 'e1', miembros: 12, nuevos: 2, soyMiembro: true, tipo: 'abierto' },
-  { id: 'rockeros', nombre: 'Rockeros del Arena', iniciales: 'RK', fondo: 'var(--lilac)', evento: 'e3', miembros: 8, soyMiembro: true, tipo: 'abierto' },
-  { id: 'clasico', nombre: 'Clásico capitalino', iniciales: 'CC', fondo: 'var(--lime)', evento: 'e4', miembros: 4, cupoMax: 6, soyMiembro: true, tipo: 'abierto' },
-  { id: 'provenza', nombre: 'Provenza de viernes', evento: 'e7', miembros: 5, cupoMax: 8, soyMiembro: false, tipo: 'abierto' },
-];
-
-// Parches que aparecen en la columna "Tus parches" (los de la usuaria)
-export const misParches = parches.filter((p) => p.soyMiembro);
 
 export interface Publicacion {
   id: string;
@@ -61,10 +26,9 @@ export interface Publicacion {
   texto: string;
   evento: string; // id de eventos.ts
   pestanas: Pestana[];
-  voy: boolean; // la usuaria ya marcó "Voy" (el conteo de eventos.ts ya la incluye)
   meGusta: number;
   comentarios: number;
-  parche?: string; // id de parches
+  parche?: string; // id de parches.ts
   estrellas?: number;
 }
 
@@ -81,7 +45,6 @@ export const publicaciones: Publicacion[] = [
     texto: '¿Quién se apunta el viernes? La orquesta en vivo es una locura.',
     evento: 'e1',
     pestanas: ['amigos', 'cerca'],
-    voy: true,
     meGusta: 24,
     comentarios: 6,
   },
@@ -94,7 +57,6 @@ export const publicaciones: Publicacion[] = [
     texto: '¿Alguien de Bogotá se viene a Medellín por el puente? Armé parche para el viernes en Provenza.',
     evento: 'e7',
     pestanas: ['amigos', 'parches'],
-    voy: false,
     meGusta: 27,
     comentarios: 9,
     parche: 'provenza',
@@ -108,7 +70,6 @@ export const publicaciones: Publicacion[] = [
     texto: 'Armé parche para el clásico. Faltan dos.',
     evento: 'e4',
     pestanas: ['amigos', 'parches', 'cerca'],
-    voy: false,
     meGusta: 18,
     comentarios: 11,
     parche: 'clasico',
@@ -123,7 +84,6 @@ export const publicaciones: Publicacion[] = [
       'Para los que vienen a la costa este puente: el sábado hay vallenato gratis en el Malecón, frente al río. Lleguen temprano que se llena.',
     evento: 'e12',
     pestanas: ['amigos'],
-    voy: false,
     meGusta: 45,
     comentarios: 12,
   },
@@ -136,7 +96,6 @@ export const publicaciones: Publicacion[] = [
     texto: 'Me dolió la barriga de reír. El cierre con improvisación del público vale cada peso. Vayan en grupo.',
     evento: 'e5',
     pestanas: ['amigos', 'resenas'],
-    voy: false,
     meGusta: 52,
     comentarios: 14,
     estrellas: 5,
@@ -162,12 +121,23 @@ export const historias: Historia[] = [
   { iniciales: 'DR', nombre: 'Dani', ciudad: 'leticia', color: 'c2', vista: true },
 ];
 
-// "Tu semana": planes con "Voy" o boleta de la usuaria (fijo en el prototipo)
-export const tuSemana: { evento: string; detalle: string }[] = [
-  { evento: 'e1', detalle: 'con 3 amigos' },
-  { evento: 'e2', detalle: 'gratis' },
-  { evento: 'e4', detalle: 'parche de 4' },
-];
+// "Tu semana": los planes con "Voy" o boleta de la usuaria (asistencia.ts), por fecha. El detalle sale
+// de los mismos datos: el parche de la usuaria ("parche de 12"), "gratis" o los amigos que van.
+export const tuSemana = eventos
+  .filter((e) => va(e.id) || tieneBoleta(e.id))
+  .sort((a, b) => a.fecha.localeCompare(b.fecha))
+  .map((e) => {
+    const parche = enParche(e.id);
+    const amigos = amigosQueVan(e.id).length;
+    const detalle = parche
+      ? `parche de ${totalMiembros(parche)}`
+      : e.precio === 0
+        ? 'gratis'
+        : amigos
+          ? `con ${amigos} ${amigos === 1 ? 'amigo' : 'amigos'}`
+          : '';
+    return { evento: e.id, detalle };
+  });
 
 export const genteGustos: { persona: string; motivo: string }[] = [
   { persona: 'mafe', motivo: 'Bogotá · Va a 4 eventos que te gustan' },

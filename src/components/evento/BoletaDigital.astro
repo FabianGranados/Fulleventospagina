@@ -11,7 +11,7 @@ interface Props {
 
 const { m } = Astro.props;
 const { evento: e, detalle: d } = m;
-const linea = `${m.fechaLarga} ${m.anio}${d ? ` · Puertas ${d.puertas}` : ''} · ${m.lugarCompleto.replace(' · ', ', ')}`;
+const linea = `${m.fechaLarga} ${m.anio}${m.horaTexto ? ` · ${m.horaTexto}` : ''} · ${m.lugarCompleto.replace(' · ', ', ')}`;
 ---
 
 <template id="plantilla-boleta">

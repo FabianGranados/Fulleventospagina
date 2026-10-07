@@ -1,6 +1,7 @@
 // Detalle de ejemplo de la página de evento (handoff 4.8, "Datos de ejemplo").
 // Solo existe para e1 ("Noche de salsa y boleros en vivo"); los otros eventos usan la plantilla
 // con los datos de src/data/eventos.ts y omiten estas secciones. En producción vienen del backend (H53).
+// La hora (eventos.ts), los parches (parches.ts) y quién va (asistencia.ts) no se copian aquí (H37).
 // Los marcadores [ASÍ] se conservan: el dato real lo entrega el negocio.
 import type { NombreIcono } from '../components/ui/Icono.astro';
 
@@ -28,18 +29,6 @@ export interface Momento {
   etiqueta?: string;
 }
 
-export interface Parche {
-  id: string;
-  iniciales: string;
-  color: string;
-  nombre: string;
-  descripcion: string;
-  usados: number;
-  maximo: number;
-  // Camila ya es miembro de "Salseros de jueves" (H25)
-  propio?: boolean;
-}
-
 export interface MensajeMuro {
   persona: string; // id de src/data/personas.ts
   hace: string;
@@ -55,10 +44,6 @@ export interface Politica {
 
 export interface DetalleEvento {
   id: string;
-  puertas: string;
-  puertasIso: string; // hora con zona -05:00 (H34, H37)
-  show: string;
-  showIso: string;
   zona: string;
   lugarNombre: string;
   edad: string;
@@ -66,19 +51,15 @@ export interface DetalleEvento {
   mayoresDe18: boolean;
   fechaRelativa: string;
   interesados: number;
-  amigos: { texto: string; avatares: { iniciales: string; color: string }[]; mas: number };
   descripcion: string[];
   etiquetas: string[];
   programacion: Momento[];
   localidades: Localidad[];
-  parches: Parche[];
   conteoMuro: number;
   muro: MensajeMuro[];
   politicas: Politica[];
   direccion: string;
   organizador: { nombre: string; iniciales: string; seguidores: string };
-  parcheCompra: { nombre: string; iniciales: string; miembros: string; miembrosMas: number };
-  amigosParche: string[]; // ids de src/data/personas.ts
   similares: string[]; // ids de src/data/eventos.ts
   ciudadesSimilares: string;
   recuerdos: string[];
@@ -88,11 +69,6 @@ export interface DetalleEvento {
 export const detalles: Record<string, DetalleEvento> = {
   e1: {
     id: 'e1',
-    // Hora canónica del evento (H37)
-    puertas: '8:00 p. m.',
-    puertasIso: '2026-10-09T20:00:00-05:00',
-    show: '9:30 p. m.',
-    showIso: '2026-10-09T21:30:00-05:00',
     zona: 'Zona T',
     lugarNombre: 'Galería Café Libro',
     edad: '+18',
@@ -101,16 +77,6 @@ export const detalles: Record<string, DetalleEvento> = {
     // Texto fijo del prototipo; en producción se calcula con la fecha del servidor (H53)
     fechaRelativa: 'este viernes',
     interesados: 340,
-    amigos: {
-      texto: 'Laura, Andrés, Sofía y 10 amigos más',
-      avatares: [
-        { iniciales: 'LM', color: '#F3B27E' },
-        { iniciales: 'AR', color: '#A3A8F0' },
-        { iniciales: 'SC', color: '#EE93BC' },
-        { iniciales: 'MG', color: '#F6DC6A' },
-      ],
-      mas: 9,
-    },
     descripcion: [
       'Una noche para bailar pegadito en Galería Café Libro. La orquesta [NOMBRE DE LA ORQUESTA] toca salsa brava, salsa romántica y boleros de siempre, en vivo y con [NÚMERO DE MÚSICOS] músicos en tarima.',
       '¿Nunca has bailado? Llega temprano: a las 8:30 p. m. hay clase de salsa gratis con [NOMBRE DEL PROFESOR O ACADEMIA]. Después, pista abierta hasta el cierre con DJ.',
@@ -126,11 +92,6 @@ export const detalles: Record<string, DetalleEvento> = {
       { id: 'general', nombre: 'General', completo: 'General', corto: 'General', precio: 45000, unidad: 'por persona', descripcion: 'De pie · acceso a pista y barra', disponibilidad: 'Disponible', caliente: false, maximo: 8, puestos: 1, color: '#B9E07A', tinte: '#E8F4D6' },
       { id: 'pref', nombre: 'Preferencial', completo: 'Preferencial (mesa compartida)', corto: 'Preferencial', precio: 70000, unidad: 'por persona', descripcion: 'Silla en mesa compartida, cerca de la pista', disponibilidad: 'Últimas 12', caliente: true, maximo: 8, puestos: 1, color: '#A3A8F0', tinte: '#E3E5FB' },
       { id: 'vip', nombre: 'Mesa VIP para 4', completo: 'Mesa VIP para 4', corto: 'Mesa VIP', precio: 320000, unidad: 'por mesa', descripcion: 'Mesa junto al escenario · [CONSUMO INCLUIDO]', disponibilidad: 'Disponible', caliente: false, maximo: 1, puestos: 4, color: '#F6DC6A', tinte: '#FBF1C6' },
-    ],
-    parches: [
-      { id: 'g1', iniciales: 'SL', color: '#F6DC6A', nombre: 'Salseros de jueves', descripcion: 'Laura M. · Pre en la casa de Laura a las 7:30, luego caminamos', usados: 6, maximo: 8, propio: true },
-      { id: 'g2', iniciales: 'PN', color: '#EE93BC', nombre: 'Primera vez bailando', descripcion: 'Mafe G. · Para los que llegan a la clase de 8:30', usados: 3, maximo: 10 },
-      { id: 'g3', iniciales: 'UB', color: '#A3A8F0', nombre: 'Uber compartido desde Suba', descripcion: 'Daniel T. · Salimos 8:15 p. m.', usados: 3, maximo: 4 },
     ],
     conteoMuro: 24,
     muro: [
@@ -149,8 +110,6 @@ export const detalles: Record<string, DetalleEvento> = {
     ],
     direccion: '[DIRECCIÓN]',
     organizador: { nombre: 'Galería Café Libro', iniciales: 'GC', seguidores: '12,4 mil seguidores' },
-    parcheCompra: { nombre: 'Salseros de jueves', iniciales: 'SL', miembros: '12 miembros', miembrosMas: 4 },
-    amigosParche: ['lauram', 'andresr', 'sofiac', 'juanpablo', 'mafe', 'danielt', 'valeq'],
     similares: ['e10', 'e7', 'e13'],
     ciudadesSimilares: 'Rumba este finde por fuera de Bogotá',
     recuerdos: [

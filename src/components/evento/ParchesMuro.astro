@@ -5,6 +5,7 @@ import Icono from '../ui/Icono.astro';
 import { persona, usuaria } from '../../data/personas';
 import type { DetalleEvento } from '../../data/evento';
 import { rutaNuevoParche } from '../../data/mensajes';
+import { parchesDelEvento, totalMiembros } from '../../data/parches';
 
 interface Props {
   d: DetalleEvento;
@@ -21,6 +22,9 @@ const colorDe: Record<string, string> = {
   c6: 'var(--aqua)',
 };
 const pct = (usados: number, maximo: number) => Math.round((usados / maximo) * 100);
+// Los mismos parches de Inicio y Mensajes (parches.ts, H25): con cupo, "N de M cupos"; sin cupo, "N miembros"
+const lista = parchesDelEvento(eventoId).map((p) => ({ ...p, usados: totalMiembros(p), propio: p.miembros.includes(usuaria.id) }));
+const fondo: Record<string, string> = colorDe;
 ---
 
 <section id="parches" class="seccion-evento" aria-labelledby="h-parches">
@@ -37,7 +41,7 @@ const pct = (usados: number, maximo: number) => Math.round((usados / maximo) * 1
 
   <div role="tablist" aria-label="Parches y muro" class="pestanas" data-pestanas>
     <button type="button" role="tab" id="pestana-parches" aria-controls="panel-parches" aria-selected="true">
-      Parches ({d.parches.length})
+      Parches ({lista.length})
     </button>
     <button type="button" role="tab" id="pestana-muro" aria-controls="panel-muro" aria-selected="false" tabindex="-1">
       Muro ({d.conteoMuro})
@@ -46,17 +50,19 @@ const pct = (usados: number, maximo: number) => Math.round((usados / maximo) * 1
 
   <div role="tabpanel" id="panel-parches" aria-labelledby="pestana-parches" class="panel-parches">
     {
-      d.parches.map((p) => {
+      lista.map((p) => {
         const usados = p.usados;
         return (
-          <article class="parche" data-parche data-usados={usados - (p.propio ? 1 : 0)} data-maximo={p.maximo}>
-            <span class="av-parche" style={`background: ${p.color}`} aria-hidden="true">{p.iniciales}</span>
+          <article class="parche" data-parche data-usados={usados - (p.propio ? 1 : 0)} data-maximo={p.cupos ?? ''}>
+            <span class="av-parche" style={`background: ${fondo[p.color]}`} aria-hidden="true">{p.iniciales}</span>
             <div class="texto">
               <h3>{p.nombre}</h3>
-              <p class="desc">{p.descripcion}</p>
+              {p.descripcion && <p class="desc">{p.descripcion}</p>}
               <div class="cupos">
-                <span class="barra" aria-hidden="true"><span style={`width: ${pct(usados, p.maximo)}%`} data-barra /></span>
-                <span data-cupos>{usados} de {p.maximo} cupos</span>
+                {p.cupos && (
+                  <span class="barra" aria-hidden="true"><span style={`width: ${pct(usados, p.cupos)}%`} data-barra /></span>
+                )}
+                <span data-cupos>{p.cupos ? `${usados} de ${p.cupos} cupos` : `${usados} miembros`}</span>
               </div>
             </div>
             <button type="button" class="unirme" aria-pressed={p.propio ? 'true' : 'false'} data-unirme>
@@ -139,8 +145,9 @@ const pct = (usados: number, maximo: number) => Math.round((usados / maximo) * 1
       boton.setAttribute('aria-pressed', String(dentro));
       boton.textContent = dentro ? 'Estás dentro' : 'Unirme';
       const usados = base + (dentro ? 1 : 0);
-      parche.querySelector('[data-cupos]')!.textContent = `${usados} de ${maximo} cupos`;
-      parche.querySelector<HTMLElement>('[data-barra]')!.style.width = `${Math.round((usados / maximo) * 100)}%`;
+      parche.querySelector('[data-cupos]')!.textContent = maximo ? `${usados} de ${maximo} cupos` : `${usados} miembros`;
+      const barra = parche.querySelector<HTMLElement>('[data-barra]');
+      if (barra && maximo) barra.style.width = `${Math.round((usados / maximo) * 100)}%`;
     });
   });
 

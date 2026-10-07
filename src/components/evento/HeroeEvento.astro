@@ -5,6 +5,7 @@ import Etiqueta from '../ui/Etiqueta.astro';
 import Titular from '../ui/Titular.astro';
 import { lineasTitulo, textoVan, type ModeloEvento } from './modelo';
 import { cifra } from '../../lib/formato';
+import { leInteresa } from '../../data/asistencia';
 
 interface Props {
   m: ModeloEvento;
@@ -27,7 +28,7 @@ const fondo = d
   <ul class="datos">
     <li>
       <Icono nombre="reloj" tamano={16} />
-      {m.fechaLarga}{d && ` · Puertas ${d.puertas}`}
+      {m.fechaLarga}{m.horaTexto && ` · ${m.horaTexto}`}
     </li>
     <li>
       <Icono nombre="pin" tamano={16} />
@@ -35,8 +36,8 @@ const fondo = d
     </li>
     <li>
       <Icono nombre="gente" tamano={16} />
-      <span><span data-conteo-van data-base={e.van}>{textoVan(e.van)}</span>{
-        d && <> · <span data-conteo-interes data-base={d.interesados}>{cifra(d.interesados)}</span> interesados</>
+      <span><span data-conteo-van data-base={e.van - (m.voy ? 1 : 0)}>{textoVan(e.van)}</span>{
+        d && <> · <span data-conteo-interes data-base={d.interesados - (leInteresa(e.id) ? 1 : 0)}>{cifra(d.interesados)}</span> interesados</>
       }</span>
     </li>
   </ul>

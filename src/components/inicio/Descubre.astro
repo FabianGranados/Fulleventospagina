@@ -4,11 +4,11 @@
 import Etiqueta from '../ui/Etiqueta.astro';
 import Avatar from '../ui/Avatar.astro';
 import MiniMapaInicio from './MiniMapaInicio.astro';
-import { tuSemana, genteGustos, tendencias, horaEvento } from '../../data/inicio';
+import { tuSemana, genteGustos, tendencias } from '../../data/inicio';
 import { eventos } from '../../data/eventos';
 import { ciudades, nombreCiudad } from '../../data/ciudades';
 import { persona } from '../../data/personas';
-import { cifra, planes, ciudadesTexto, placaFecha, rutaEvento } from '../../lib/formato';
+import { cifra, planes, ciudadesTexto, placaFecha, rutaEvento, horaSinCorte } from '../../lib/formato';
 import { conteoCiudad } from '../../data/eventos';
 
 const semana = tuSemana.map((s) => {
@@ -21,7 +21,8 @@ const semana = tuSemana.map((s) => {
     href: rutaEvento(e.ciudad, e.titulo),
     numero: placaFecha(e.fecha).dia,
     dia,
-    detalle: `${horaEvento[e.id].replace(/ /g, ' ')} · ${s.detalle}`,
+    // La hora sale del evento (H37); sin hora, solo el detalle
+    detalle: [e.hora && horaSinCorte(e.hora), s.detalle].filter(Boolean).join(' · '),
   };
 });
 const confirmados = semana.length === 1 ? '1 plan confirmado' : `${semana.length} planes confirmados`;

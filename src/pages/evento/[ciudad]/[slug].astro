@@ -25,6 +25,7 @@ import { modeloEvento } from '../../../components/evento/modelo';
 import { eventos, type Evento } from '../../../data/eventos';
 import { persona } from '../../../data/personas';
 import { CARGO_DEMO } from '../../../data/evento';
+import { sinBoleta } from '../../../data/asistencia';
 import { slug, pesos } from '../../../lib/formato';
 
 export function getStaticPaths() {
@@ -44,7 +45,7 @@ const vende = !m.gratis;
 
 const titulo = `${e.titulo} · ${m.ciudad} · Fulleventos`;
 const descripcion =
-  `${m.fechaLarga} de ${m.anio}${d ? `, puertas ${d.puertas}` : ''} en ${m.lugarCompleto}. ` +
+  `${m.fechaLarga} de ${m.anio}${m.horaTexto ? `, ${m.horaTexto.charAt(0).toLowerCase()}${m.horaTexto.slice(1)}` : ''} en ${m.lugarCompleto}. ` +
   `${m.gratis ? 'Gratis' : `${m.precioDesde} + cargo por servicio`}. Mira quién va y arma parche en Fulleventos.`;
 
 const atajos = [
@@ -61,8 +62,8 @@ const esquema = {
   '@context': 'https://schema.org',
   '@type': 'Event',
   name: e.titulo,
-  startDate: d ? d.showIso : e.fecha,
-  ...(d && { doorTime: d.puertasIso }),
+  startDate: m.inicioIso ?? e.fecha,
+  ...(m.puertasIso && { doorTime: m.puertasIso }),
   eventStatus: 'https://schema.org/EventScheduled',
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   location: {
@@ -109,7 +110,8 @@ const datosCompra = {
     maximo,
     puestos,
   })),
-  amigos: (d?.amigosParche ?? []).map((id) => {
+  // "Para mi parche" ofrece la boleta solo a quienes todavía no la tienen (H25)
+  amigos: (d && m.parcheUsuaria ? sinBoleta(m.parcheUsuaria) : []).map((id) => {
     const p = persona(id)!;
     return {
       id,
@@ -119,11 +121,11 @@ const datosCompra = {
       color: colorDe[p.color],
     };
   }),
-  parche: d?.parcheCompra.nombre ?? null,
+  parche: d && m.parcheUsuaria ? m.parcheUsuaria.nombre : null,
   mayores18: Boolean(d?.mayoresDe18),
   cargo: CARGO_DEMO,
   saludoPista: e.id === 'e1',
-  inicioIso: d?.puertasIso ?? null,
+  inicioIso: m.puertasIso ?? m.inicioIso ?? null,
   fecha: e.fecha,
   lugar: m.lugarCompleto,
   url: m.url,

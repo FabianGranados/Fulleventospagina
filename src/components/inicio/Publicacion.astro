@@ -4,11 +4,12 @@
 import Icono from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import type { Publicacion } from '../../data/inicio';
-import { horaEvento, parches } from '../../data/inicio';
 import { eventos } from '../../data/eventos';
-import { persona } from '../../data/personas';
+import { persona, usuaria } from '../../data/personas';
+import { parchePorId, totalMiembros } from '../../data/parches';
+import { amigosQueVan, va } from '../../data/asistencia';
 import { nombreCiudad } from '../../data/ciudades';
-import { cifra, placaFecha, rutaEvento } from '../../lib/formato';
+import { cifra, placaFecha, rutaEvento, horaSinCorte } from '../../lib/formato';
 
 interface Props {
   publicacion: Publicacion;
@@ -17,22 +18,28 @@ interface Props {
 const { publicacion: p } = Astro.props;
 const e = eventos.find((ev) => ev.id === p.evento)!;
 const autor = persona(p.autor)!;
-const parche = p.parche ? parches.find((pa) => pa.id === p.parche) : undefined;
+const parche = p.parche ? parchePorId(p.parche) : undefined;
 const { dia, mes } = placaFecha(e.fecha);
 const semana = new Date(`${e.fecha}T12:00:00-05:00`)
   .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'America/Bogota' })
   .replace('.', '');
 const diaSemana = semana.charAt(0).toUpperCase() + semana.slice(1);
-// Espacios de no separación para que la hora no se parta entre "p." y "m." (detalle fino 33)
-const hora = horaEvento[e.id].replace(/ /g, ' ');
+// La hora sale del evento (H37), sin partirse entre "p." y "m." (detalle fino 33); sin hora no se muestra
+const hora = e.hora ? horaSinCorte(e.hora) : '';
 const lugar = e.lugar.split(' · ').join(', ');
 const categoria = e.categoria + (e.precio ? '' : ' · Gratis');
 const href = rutaEvento(e.ciudad, e.titulo);
-// El conteo de eventos.ts ya incluye a la usuaria si marcó "Voy" (detalle fino 13)
-const vanBase = e.van - (p.voy ? 1 : 0);
-const usados = parche ? parche.miembros : 0;
-const usadosBase = parche ? usados - (parche.soyMiembro ? 1 : 0) : 0;
-const pct = parche?.cupoMax ? Math.round((usados / parche.cupoMax) * 100) : 0;
+// "Voy" sale del estado de la usuaria (asistencia.ts), el mismo de Evento y Perfil (H37).
+// El conteo de eventos.ts ya la incluye si va (detalle fino 13)
+const voy = va(e.id);
+const vanBase = e.van - (voy ? 1 : 0);
+// Amigos que van: calculados de los parches del evento, con sus avatares reales (H37, detalle fino 14)
+const amigos = amigosQueVan(e.id).map((id) => persona(id)!);
+const textoAmigos = amigos.length ? ` · ${amigos.length} ${amigos.length === 1 ? 'amigo' : 'amigos'}` : '';
+const soyMiembro = !!parche?.miembros.includes(usuaria.id);
+const usados = parche ? totalMiembros(parche) : 0;
+const usadosBase = parche ? usados - (soyMiembro ? 1 : 0) : 0;
+const pct = parche?.cupos ? Math.round((usados / parche.cupos) * 100) : 0;
 const idTitulo = `publicacion-${p.id}`;
 ---
 
@@ -78,34 +85,40 @@ const idTitulo = `publicacion-${p.id}`;
       <span class="categoria">{categoria}</span>
       <a href={href} class="titulo">{e.titulo}</a>
       <span class="donde">
-        <time datetime={e.fecha}>{diaSemana} {dia} {mes}</time> · {hora} · {lugar} · <b>{nombreCiudad(e.ciudad)}</b>
+        <time datetime={e.fecha}>{diaSemana} {dia} {mes}</time> ·{hora && ` ${hora} ·`} {lugar} · <b>{nombreCiudad(e.ciudad)}</b>
       </span>
       <div class="social">
         <span class="van">
-          <span class="pila" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span>
-          <span><span data-conteo-van={p.id}>{cifra(e.van)}</span> van · 3 amigos</span>
+          {
+            amigos.length > 0 && (
+              <span class="pila" aria-hidden="true">
+                {amigos.slice(0, 3).map((a) => <i class={a.color}>{a.iniciales}</i>)}
+              </span>
+            )
+          }
+          <span><span data-conteo-van={p.id}>{cifra(e.van)}</span> van{textoAmigos}</span>
         </span>
         <button
           type="button"
           class="voy"
-          aria-pressed={p.voy ? 'true' : 'false'}
+          aria-pressed={voy ? 'true' : 'false'}
           data-alternar="voy"
           data-id={p.id}
           data-base={vanBase}
         >
-          <span data-texto>{p.voy ? 'Vas' : 'Voy'}</span><span class="solo-lectores"> a {e.titulo}</span>
+          <span data-texto>{voy ? 'Vas' : 'Voy'}</span><span class="solo-lectores"> a {e.titulo}</span>
         </button>
       </div>
     </div>
   </div>
 
   {
-    parche && parche.cupoMax && (
+    parche && parche.cupos && (
       <div class="parche">
         <div class="parche-texto">
           <p class="parche-fila">
             <b>Parche: {parche.nombre}</b>
-            <span data-cupos={parche.id}>{usados} de {parche.cupoMax} cupos</span>
+            <span data-cupos={parche.id}>{usados} de {parche.cupos} cupos</span>
           </p>
           <span class="riel" aria-hidden="true">
             <span class="lleno" style={`width: ${pct}%`} data-barra={parche.id} />
@@ -114,13 +127,13 @@ const idTitulo = `publicacion-${p.id}`;
         <button
           type="button"
           class="unirme"
-          aria-pressed={parche.soyMiembro ? 'true' : 'false'}
+          aria-pressed={soyMiembro ? 'true' : 'false'}
           data-alternar="unirme"
           data-parche={parche.id}
           data-base={usadosBase}
-          data-max={parche.cupoMax}
+          data-max={parche.cupos}
         >
-          <span data-texto>{parche.soyMiembro ? 'Estás en el parche' : 'Unirme al parche'}</span>
+          <span data-texto>{soyMiembro ? 'Estás en el parche' : 'Unirme al parche'}</span>
           <span class="solo-lectores"> {parche.nombre}</span>
         </button>
       </div>
@@ -349,6 +362,12 @@ const idTitulo = `publicacion-${p.id}`;
     height: 28px;
     border-radius: 50%;
     border: 2px solid var(--surface);
+    display: grid;
+    place-items: center;
+    font-style: normal;
+    font-size: .56rem;
+    font-weight: 700;
+    color: var(--ink);
   }
 
   .pila i + i {
@@ -358,6 +377,9 @@ const idTitulo = `publicacion-${p.id}`;
   .c1 { background: var(--peach); }
   .c2 { background: var(--lilac); }
   .c3 { background: var(--pink); }
+  .c4 { background: var(--lime); }
+  .c5 { background: var(--yellow); }
+  .c6 { background: var(--aqua); }
 
   .voy {
     height: 38px;

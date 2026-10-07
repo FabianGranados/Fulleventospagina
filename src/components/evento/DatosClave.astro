@@ -22,7 +22,10 @@ interface Dato {
 
 const datos: Dato[] = [
   { rotulo: 'Fecha', valor: m.fechaLarga, detalle: d ? `${m.anio} · ${d.fechaRelativa}` : m.anio },
-  ...(d ? [{ rotulo: 'Hora', valor: `Puertas ${d.puertas}`, detalle: `Show ${d.show}`, icono: 'reloj' as const, color: 'var(--peach)' }] : []),
+  // La hora sale de eventos.ts (H37): con puertas y show, los dos; si no, la hora si existe
+  ...(e.hora
+    ? [{ rotulo: 'Hora', valor: m.horaTexto!, detalle: e.show ? `Show ${e.show}` : undefined, icono: 'reloj' as const, color: 'var(--peach)' }]
+    : []),
   { rotulo: 'Lugar', valor: m.lugarNombre, detalle: m.lugarDetalle, icono: 'pin', color: 'var(--pink)' },
   ...(d ? [{ rotulo: 'Edad', valor: d.edad, detalle: d.edadDetalle, icono: 'documento' as const, color: 'var(--lilac)' }] : []),
   {
@@ -62,7 +65,7 @@ const datos: Dato[] = [
 </section>
 
 <style>
-  /* Columnas (H61): sin fila suelta ni "Show 9:30 p. m." partido. 5 datos: 1 / 2 / 3 + 2 / 5; 3 datos: 1 / 3 */
+  /* Columnas (H61): sin fila suelta ni "Show 9:30 p. m." partido. 5 datos: 1 / 2 / 3 + 2 / 5; 4 datos: 1 / 2 + 2 / 4; 3 datos: 1 / 3 */
   .datos-clave {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -87,6 +90,19 @@ const datos: Dato[] = [
   @media (min-width: 560px) {
     .datos-clave[data-n='3'] {
       grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* 4 datos (evento sin detalle con hora): 1 / 2 + 2 / 4 */
+  @media (min-width: 440px) {
+    .datos-clave[data-n='4'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 900px) {
+    .datos-clave[data-n='4'] {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 

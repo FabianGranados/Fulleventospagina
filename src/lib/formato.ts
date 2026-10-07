@@ -25,3 +25,14 @@ export const slug = (texto: string) =>
     .replace(/^-|-$/g, '');
 
 export const rutaEvento = (ciudad: string, titulo: string) => `/evento/${ciudad}/${slug(titulo)}`;
+
+// "2026-10-09" + "8:00 p. m." → "2026-10-09T20:00:00-05:00" (zona America/Bogota, sin horario de verano; H34)
+export const isoConHora = (fecha: string, hora: string) => {
+  const m = hora.match(/^(\d{1,2}):(\d{2})\s*([ap])\.\s*m\.$/);
+  if (!m) return fecha;
+  const h = (Number(m[1]) % 12) + (m[3] === 'p' ? 12 : 0);
+  return `${fecha}T${String(h).padStart(2, '0')}:${m[2]}:00-05:00`;
+};
+
+// Hora con espacios de no separación, para que no se parta entre "p." y "m." (detalle fino 33 de Inicio)
+export const horaSinCorte = (hora: string) => hora.replace(/ /g, '\u00A0');

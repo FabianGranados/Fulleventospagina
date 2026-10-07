@@ -3,7 +3,10 @@
 import { eventos, type Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
 import { detalles, type DetalleEvento, type Localidad } from '../../data/evento';
-import { cifra, pesos, rutaEvento } from '../../lib/formato';
+import { cifra, isoConHora, pesos, rutaEvento } from '../../lib/formato';
+import { parchesDelEvento, type Parche } from '../../data/parches';
+import { amigosQueVan, enParche, va } from '../../data/asistencia';
+import { persona, type Persona } from '../../data/personas';
 
 const fechaDe = (iso: string) => new Date(`${iso}T12:00:00-05:00`);
 const parte = (iso: string, opciones: Intl.DateTimeFormatOptions) =>
@@ -49,6 +52,15 @@ export interface ModeloEvento {
   organizador: string;
   similares: Evento[];
   textoSimilares: string;
+  // Hora del evento (eventos.ts, H37): "Puertas 8:00 p. m." si distingue puertas y show; si no, la hora
+  horaTexto?: string;
+  inicioIso?: string; // inicio del evento (show, o la hora) con zona -05:00 (H34)
+  puertasIso?: string;
+  // Estado de la usuaria y de su gente (asistencia.ts y parches.ts): el mismo de Inicio, Perfil y Mensajes
+  voy: boolean;
+  parches: Parche[];
+  parcheUsuaria?: Parche;
+  amigosVan: Persona[];
 }
 
 export const modeloEvento = (evento: Evento): ModeloEvento => {
@@ -105,6 +117,13 @@ export const modeloEvento = (evento: Evento): ModeloEvento => {
     organizador: detalle?.organizador.nombre ?? '[ORGANIZADOR]',
     similares,
     textoSimilares: detalle?.ciudadesSimilares ?? `${evento.categoria} este finde por fuera de ${ciudad}`,
+    horaTexto: evento.puertas ? `Puertas ${evento.puertas}` : evento.hora,
+    inicioIso: evento.show ? isoConHora(evento.fecha, evento.show) : evento.hora ? isoConHora(evento.fecha, evento.hora) : undefined,
+    puertasIso: evento.puertas ? isoConHora(evento.fecha, evento.puertas) : undefined,
+    voy: va(evento.id),
+    parches: parchesDelEvento(evento.id),
+    parcheUsuaria: enParche(evento.id),
+    amigosVan: amigosQueVan(evento.id).map((id) => persona(id)!),
   };
 };
 

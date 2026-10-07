@@ -1,4 +1,5 @@
 import { HOY_DEMO } from './demo';
+import { parchePorId, totalMiembros } from './parches';
 // Datos de ejemplo de la Agenda (handoff 4.6, "Datos de ejemplo"). En producción vienen del backend (H53).
 // Línea social de cada evento: quién aparece, reposts totales (incluye a "quien"), colores de los
 // 2 avatares y si lo repostearon tus amigos cercanos (filtro "Lo que repostea tu gente").
@@ -60,9 +61,11 @@ export const fechasAgenda = [
 ];
 
 // Destinos del repost (N16)
+const salseros = parchePorId('salseros')!;
 export const destinosRepost = [
   { id: 'feed', titulo: 'En mi feed', detalle: 'Lo ven todos tus seguidores', aviso: 'tu feed' },
-  { id: 'parche', titulo: 'En un parche', detalle: 'Salseros de jueves · 12 miembros', aviso: 'el parche Salseros de jueves' },
+  // El parche y su número de miembros salen de parches.ts, como en Inicio y Mensajes (H37)
+  { id: 'parche', titulo: 'En un parche', detalle: `${salseros.nombre} · ${totalMiembros(salseros)} miembros`, aviso: `el parche ${salseros.nombre}` },
   { id: 'amigos', titulo: 'Solo a amigos cercanos', detalle: 'Una lista que tú eliges', aviso: 'tus amigos cercanos' },
 ];
 

@@ -166,9 +166,10 @@ export const iniciarCompra = (datos: DatosCompra, marcarVoy: (va: boolean) => vo
         b.setAttribute('aria-pressed', String(elegido));
         b.setAttribute('aria-disabled', String(!elegido && estado.elegidos.length >= cupo));
       });
+      // Solo se elige entre quienes no tienen boleta; los demás se listan aparte (H25)
       $('[data-cupo-parche]').textContent = c.vip
-        ? `Una mesa VIP es para 4: elige hasta 3 amigos. Y 4 miembros más en el parche.`
-        : `Y 4 miembros más en el parche. Máximo ${c.l.maximo} boletas por compra.`;
+        ? `Una mesa VIP es para 4: elige hasta 3 amigos.`
+        : `Máximo ${c.l.maximo} boletas por compra.`;
       $('[data-aviso-recorte]').textContent = mensajeRecorte;
       const sw = $('[data-dividir]');
       const activo = estado.dividir && c.k > 0;
@@ -641,7 +642,11 @@ export const iniciarCompra = (datos: DatosCompra, marcarVoy: (va: boolean) => vo
 export const iniciarAsistencia = () => {
   const $ = (sel: string) => document.querySelector<HTMLElement>(sel);
   const $$ = (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)];
-  const estado = { va: false, interes: false };
+  // Arrancan como los dejó la usuaria (asistencia.ts): el servidor pinta aria-pressed (H37)
+  const estado = {
+    va: $('[data-voy]')?.getAttribute('aria-pressed') === 'true',
+    interes: $('[data-interes]')?.getAttribute('aria-pressed') === 'true',
+  };
   const conteos = () => {
     $$('[data-conteo-van]').forEach((s) => {
       const n = (Number(s.dataset.base) + (estado.va ? 1 : 0)).toLocaleString('es-CO');

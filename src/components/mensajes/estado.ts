@@ -118,7 +118,8 @@ export const eventoDe = (id: string): EventoChat => {
     categoria: e.categoria,
     etiqueta: eventoChat[id]?.etiqueta ?? e.categoria,
     corto: eventoChat[id]?.corto ?? e.titulo,
-    hora: eventoChat[id]?.hora ?? '',
+    // Una sola hora por evento (eventos.ts, H37)
+    hora: e.hora ?? '',
     dia: semana.charAt(0).toUpperCase() + semana.slice(1),
     d,
     mes,

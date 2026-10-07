@@ -4,6 +4,7 @@
 import Icono from '../ui/Icono.astro';
 import { ciudades } from '../../data/ciudades';
 import { usuaria } from '../../data/personas';
+import { chatsSinLeer } from '../../data/mensajes';
 
 type Pagina = 'inicio' | 'agenda' | 'mapa' | 'mensajes';
 
@@ -13,7 +14,8 @@ interface Props {
   noLeidos?: number;
 }
 
-const { variante = 'completo', activa, noLeidos = 3 } = Astro.props;
+// Sin cifra propia de la página, la de los datos del chat (una sola fuente, H13)
+const { variante = 'completo', activa, noLeidos = chatsSinLeer } = Astro.props;
 
 const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 'mensajes'; nombre: string }[] = [
   { id: 'inicio', href: '/inicio', icono: 'inicio', nombre: 'Inicio' },

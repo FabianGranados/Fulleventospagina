@@ -11,8 +11,9 @@ import Publicacion from '../components/inicio/Publicacion.astro';
 import Descubre from '../components/inicio/Descubre.astro';
 import { pestanas, publicaciones } from '../data/inicio';
 import { ciudades } from '../data/ciudades';
+import { chatsSinLeer } from '../data/mensajes';
 
-const noLeidos = 3;
+const noLeidos = chatsSinLeer;
 const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
 ---
 

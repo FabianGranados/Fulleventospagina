@@ -11,7 +11,8 @@ import MosaicoRecuerdo from './MosaicoRecuerdo.astro';
 import TarjetaResena from './TarjetaResena.astro';
 import { usuaria, type Persona } from '../../data/personas';
 import { eventos } from '../../data/eventos';
-import { perfil as buscarPerfil, type EstadoPlan } from '../../data/perfil';
+import { perfil as buscarPerfil } from '../../data/perfil';
+import { planesDeUsuaria, type EstadoPlan } from '../../data/asistencia';
 
 interface Props {
   persona: Persona;
@@ -29,7 +30,9 @@ const textoEstado: Record<EstadoPlan, [string, string]> = {
   parche: ['En parche', 'En parche'],
 };
 
-const planes = (perfil?.planes ?? []).flatMap((p) => {
+// Próximos planes: solo hay estado de asistencia de la usuaria del demo (asistencia.ts), con la regla
+// "En parche" > "Va" > "Le interesa" (8.2.8)
+const planes = (perfil && persona.id === usuaria.id ? planesDeUsuaria() : []).flatMap((p) => {
   const evento = eventos.find((e) => e.id === p.evento);
   return evento ? [{ evento, estado: textoEstado[p.estado][propio ? 0 : 1] }] : [];
 });

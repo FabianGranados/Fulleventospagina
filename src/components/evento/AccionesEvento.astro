@@ -3,6 +3,7 @@
 import Icono from '../ui/Icono.astro';
 import { cifra } from '../../lib/formato';
 import type { ModeloEvento } from './modelo';
+import { leInteresa } from '../../data/asistencia';
 
 interface Props {
   m: ModeloEvento;
@@ -10,15 +11,38 @@ interface Props {
 
 const { m } = Astro.props;
 const { evento: e, detalle: d } = m;
+// "Voy" y "Me interesa" arrancan como los dejó la usuaria (asistencia.ts, H37); los conteos ya la incluyen
+const interesa = leInteresa(e.id);
+const vanBase = e.van - (m.voy ? 1 : 0);
+// Quién va: amigos calculados de los parches del evento, no un texto fijo (H37)
+const colorDe: Record<string, string> = {
+  c1: '#F3B27E',
+  c2: '#A3A8F0',
+  c3: '#EE93BC',
+  c4: '#B9E07A',
+  c5: '#F6DC6A',
+  c6: '#8FD3D0',
+};
+const amigos = m.amigosVan;
+const corto = (nombre: string) => nombre.split(' ')[0];
+const nombrados = amigos.slice(0, 3).map((a) => corto(a.nombre));
+const resto = amigos.length - nombrados.length;
+const textoAmigos = resto
+  ? `${nombrados.join(', ')} y ${resto} ${resto === 1 ? 'amigo más' : 'amigos más'}`
+  : nombrados.length > 1
+    ? `${nombrados.slice(0, -1).join(', ')} y ${nombrados[nombrados.length - 1]}`
+    : nombrados.join('');
+const avatares = amigos.slice(0, 4);
+const mas = amigos.length - avatares.length;
 ---
 
 <div class="acciones-evento">
   <div class="fila">
-    <button type="button" class="boton voy" aria-pressed="false" data-voy>
+    <button type="button" class="boton voy" aria-pressed={m.voy ? 'true' : 'false'} data-voy>
       <Icono nombre="visto" tamano={18} grosor={2.4} />
-      <span data-texto-voy>Voy</span>
+      <span data-texto-voy>{m.voy ? 'Vas a ir' : 'Voy'}</span>
     </button>
-    <button type="button" class="boton claro interes" aria-pressed="false" data-interes>
+    <button type="button" class="boton claro interes" aria-pressed={interesa ? 'true' : 'false'} data-interes>
       <Icono nombre="estrella" tamano={18} />
       Me interesa
     </button>
@@ -35,17 +59,19 @@ const { evento: e, detalle: d } = m;
   {
     d && (
       <div class="quien-va">
-        <span class="pila" aria-hidden="true">
-          {d.amigos.avatares.map((a) => (
-            <span class="av" style={`background: ${a.color}`}>{a.iniciales}</span>
-          ))}
-          <span class="av mas">+{d.amigos.mas}</span>
-        </span>
+        {avatares.length > 0 && (
+          <span class="pila" aria-hidden="true">
+            {avatares.map((a) => (
+              <span class="av" style={`background: ${colorDe[a.color]}`}>{a.iniciales}</span>
+            ))}
+            {mas > 0 && <span class="av mas">+{mas}</span>}
+          </span>
+        )}
         <p>
-          <b>{d.amigos.texto}</b> van.{' '}
+          {amigos.length > 0 && <><b>{textoAmigos}</b> {amigos.length === 1 ? 'va' : 'van'}.{' '}</>}
           <span class="gris">
-            <span data-conteo-van data-base={e.van} data-solo-numero>{cifra(e.van)}</span> personas confirmadas ·{' '}
-            <span data-conteo-interes data-base={d.interesados}>{cifra(d.interesados)}</span> interesadas
+            <span data-conteo-van data-base={vanBase} data-solo-numero>{cifra(e.van)}</span> personas confirmadas ·{' '}
+            <span data-conteo-interes data-base={d.interesados - (interesa ? 1 : 0)}>{cifra(d.interesados)}</span> interesadas
           </span>
         </p>
         <a href="#parches" class="enlace">Ver parches</a>

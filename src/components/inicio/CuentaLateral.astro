@@ -4,15 +4,17 @@
 import Icono, { type NombreIcono } from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
-import { contadores, misParches } from '../../data/inicio';
-import { conversaciones } from '../../data/mensajes';
+import { contadores } from '../../data/inicio';
+import { misParches } from '../../data/asistencia';
+import { totalMiembros, type Parche } from '../../data/parches';
+import { conversaciones, chatsSinLeer } from '../../data/mensajes';
 import { cifra } from '../../lib/formato';
 
 interface Props {
   noLeidos?: number;
 }
 
-const { noLeidos = 3 } = Astro.props;
+const { noLeidos = chatsSinLeer } = Astro.props;
 
 const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean; conteo?: number }[] = [
   { texto: 'Inicio', href: '/inicio', icono: 'inicio', actual: true },
@@ -31,10 +33,23 @@ const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean;
   { texto: 'Recuerdos', href: '/yo?pestana=recuerdos', icono: 'recuerdos' },
 ];
 
-const estadoParche = (p: (typeof misParches)[number]) =>
-  p.cupoMax
-    ? `${p.miembros} de ${p.cupoMax} cupos`
-    : `${p.miembros} miembros${p.nuevos ? ` · ${p.nuevos} nuevos` : ''}`;
+// Una regla para todos (detalle fino 48): con cupo máximo, "N de M cupos"; sin cupo, "N miembros" y los
+// mensajes nuevos de su chat, el mismo dato que el separador "N mensajes nuevos" de Mensajes (H37)
+const nuevosDe = (p: Parche) => conversaciones.find((c) => c.id === p.id)?.nuevos ?? 0;
+const estadoParche = (p: Parche) => {
+  const n = totalMiembros(p);
+  if (p.cupos) return `${n} de ${p.cupos} cupos`;
+  const nuevos = nuevosDe(p);
+  return `${n} miembros${nuevos ? ` · ${nuevos} ${nuevos === 1 ? 'nuevo' : 'nuevos'}` : ''}`;
+};
+const fondo: Record<string, string> = {
+  c1: 'var(--peach)',
+  c2: 'var(--lilac)',
+  c3: 'var(--pink)',
+  c4: 'var(--lime)',
+  c5: 'var(--yellow)',
+  c6: 'var(--aqua)',
+};
 ---
 
 <aside class="cuenta" aria-label="Tu cuenta">
@@ -79,8 +94,8 @@ const estadoParche = (p: (typeof misParches)[number]) =>
     <h2 id="parches-titulo">Tus parches</h2>
     {
       misParches.map((p) => (
-        <a href={`/mensajes/${conversaciones.find((c) => c.id === p.id)!.slug}`} class="parche">
-          <span class="cuadro" style={`background: ${p.fondo}`} aria-hidden="true">{p.iniciales}</span>
+        <a href={`/mensajes/${p.slug}`} class="parche">
+          <span class="cuadro" style={`background: ${fondo[p.color]}`} aria-hidden="true">{p.iniciales}</span>
           <span class="texto">
             <b>{p.nombre}</b>
             <span data-estado-parche={p.id}>{estadoParche(p)}</span>

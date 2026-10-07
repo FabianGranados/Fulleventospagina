@@ -1,9 +1,8 @@
 // Datos de ejemplo del Perfil (handoff 4.10, "Datos de ejemplo"). En producción vienen del backend (H53).
 // Solo Camila Vargas tiene perfil en el prototipo; las demás personas muestran lo que hay en personas.ts.
 
-// Estado de la persona frente a un plan. Se escribe en segunda persona en Mi perfil y en tercera en
-// el perfil ajeno (H37 y la tabla "Estado de asistencia" de la sección 7).
-export type EstadoPlan = 'va' | 'interesa' | 'parche';
+// El estado de la persona frente a cada plan ("Va", "Le interesa", "En parche") sale de asistencia.ts,
+// el mismo dato de Inicio y Evento (H37).
 
 export interface Estadistica {
   etiqueta: string;
@@ -32,7 +31,6 @@ export interface Perfil {
   biografia: string;
   estadisticas: Estadistica[];
   gustos: string[];
-  planes: { evento: string; estado: EstadoPlan }[]; // ids de eventos.ts, por fecha ascendente
   recuerdos: Recuerdo[]; // del más reciente al más antiguo
   resenas: Resena[]; // de la más reciente a la más antigua
 }
@@ -52,13 +50,6 @@ export const perfiles: Record<string, Perfil> = {
       { etiqueta: 'Parches', valor: 7 },
     ],
     gustos: ['Salsa', 'Rock', 'Planes gratis', 'Stand-up', 'Fútbol'],
-    planes: [
-      { evento: 'e1', estado: 'va' },
-      { evento: 'e2', estado: 'va' },
-      { evento: 'e3', estado: 'interesa' },
-      { evento: 'e4', estado: 'parche' },
-      { evento: 'e8', estado: 'interesa' },
-    ],
     recuerdos: [
       { titulo: 'Techno hasta el amanecer', ciudad: 'bogota', mes: 'Sep 2026', bg1: '#6B3FA0', bg2: '#0E0A1A' },
       { titulo: 'Feria de las Flores', ciudad: 'medellin', mes: 'Ago 2026', bg1: '#F6DC6A', bg2: '#3E9B63' },

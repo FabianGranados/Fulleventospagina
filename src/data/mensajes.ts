@@ -4,6 +4,8 @@
 // "Hoy" ficticio del ejemplo: martes 6 de octubre de 2026 (4.9, ficha técnica). Las horas y las fechas
 // relativas de los mensajes ("Ayer", "Dom 4 oct") son texto fijo; en producción las calcula el servidor (H53).
 export { HOY_DEMO as HOY } from './demo';
+import { parchePorId } from './parches';
+import { conBoletaDe } from './asistencia';
 
 // La usuaria del demo (Camila Vargas) en personas.ts
 export const YO = 'camivargas';
@@ -24,8 +26,8 @@ export const ciudadDe: Record<string, string> = {
   majop: 'Bogotá',
 };
 
-// Amigos que se pueden elegir en "Nuevo parche" / "Nuevo chat", en este orden
-export const AMIGOS = ['lauram', 'andresr', 'sofiac', 'juanpablo', 'mafe', 'danielt', 'valeq'];
+// Amigos que se pueden elegir en "Nuevo parche" / "Nuevo chat", en este orden (estado de la usuaria)
+export { AMIGOS } from './asistencia';
 
 // Cuenta de organizador. Qué se verifica está pendiente (P9, H48); "Responde en ~1 h" es texto fijo (H14).
 export const organizador = {
@@ -36,13 +38,13 @@ export const organizador = {
   eventos: ['e1'],
 };
 
-// Datos del evento que solo usa el chat: etiqueta de la píldora, nombre corto de la bandeja y hora.
-// La hora de la salsa son las puertas (8:00 p. m.), la hora canónica que fija 8.1 #9 (H37). El rock no tiene hora.
-export const eventoChat: Record<string, { etiqueta: string; corto: string; hora: string }> = {
-  e1: { etiqueta: 'Salsa', corto: 'Noche de salsa y boleros', hora: '8:00 p. m.' },
-  e4: { etiqueta: 'Fútbol', corto: 'Santa Fe vs. Millonarios', hora: '4:00 p. m.' },
-  e3: { etiqueta: 'Rock', corto: 'Rock en el Movistar Arena', hora: '' },
-  e7: { etiqueta: 'Reguetón', corto: 'Reguetón en Provenza', hora: '10:00 p. m.' },
+// Datos del evento que solo usa el chat: etiqueta de la píldora y nombre corto de la bandeja.
+// La hora sale de eventos.ts, igual que en Inicio y Evento (H37). El rock no tiene hora.
+export const eventoChat: Record<string, { etiqueta: string; corto: string }> = {
+  e1: { etiqueta: 'Salsa', corto: 'Noche de salsa y boleros' },
+  e4: { etiqueta: 'Fútbol', corto: 'Santa Fe vs. Millonarios' },
+  e3: { etiqueta: 'Rock', corto: 'Rock en el Movistar Arena' },
+  e7: { etiqueta: 'Reguetón', corto: 'Reguetón en Provenza' },
 };
 
 // Orden de los eventos en la bandeja "Compartir" y en la ventana "Nuevo parche"
@@ -98,20 +100,30 @@ export interface Conversacion {
   mensajes: Mensaje[];
 }
 
+// Datos de un parche para su conversación: salen de parches.ts (H25, H37), con la boleta de la usuaria
+// de asistencia.ts. Así el chat, Inicio y Evento cuentan los mismos miembros y boletas.
+const deParche = (id: string) => {
+  const p = parchePorId(id)!;
+  return {
+    id: p.id,
+    slug: p.slug,
+    tipo: 'parche' as const,
+    nombre: p.nombre,
+    iniciales: p.iniciales,
+    color: p.color,
+    evento: p.evento,
+    admin: p.admin,
+    miembros: p.miembros,
+    conBoleta: conBoletaDe(p),
+    cupos: p.cupos,
+  };
+};
+
 // Avisos de compra sin cantidad ni localidad (H30): "Andrés ya tiene su boleta".
 // Los textos que escribe la gente se conservan tal cual del prototipo, sin emoji.
 export const conversaciones: Conversacion[] = [
   {
-    id: 'salseros',
-    slug: 'salseros-de-jueves',
-    tipo: 'parche',
-    nombre: 'Salseros de jueves',
-    iniciales: 'SL',
-    color: 'c5',
-    evento: 'e1',
-    admin: 'lauram',
-    miembros: ['camivargas', 'lauram', 'andresr', 'valeq', 'juanpablo', 'sofiac', 'mafe', 'danielt', 'natah', 'caror', 'sebasb', 'majop'],
-    conBoleta: ['lauram', 'andresr', 'valeq', 'juanpablo', 'sofiac', 'mafe', 'danielt'],
+    ...deParche('salseros'),
     noLeidos: 3,
     nuevos: 3,
     hora: '9:41 a. m.',
@@ -171,17 +183,7 @@ export const conversaciones: Conversacion[] = [
     ],
   },
   {
-    id: 'clasico',
-    slug: 'clasico-capitalino',
-    tipo: 'parche',
-    nombre: 'Clásico capitalino',
-    iniciales: 'CC',
-    color: 'c4',
-    evento: 'e4',
-    admin: 'sofiac',
-    cupos: 6,
-    miembros: ['camivargas', 'sofiac', 'juanpablo', 'danielt'],
-    conBoleta: ['sofiac', 'camivargas'],
+    ...deParche('clasico'),
     noLeidos: 0,
     nuevos: 0,
     hora: 'Ayer',
@@ -215,16 +217,7 @@ export const conversaciones: Conversacion[] = [
     ],
   },
   {
-    id: 'rockeros',
-    slug: 'rockeros-del-arena',
-    tipo: 'parche',
-    nombre: 'Rockeros del Arena',
-    iniciales: 'RK',
-    color: 'c2',
-    evento: 'e3',
-    admin: 'juanpablo',
-    miembros: ['camivargas', 'juanpablo', 'valeq', 'danielt', 'lauram', 'mafe', 'sebasb', 'majop'],
-    conBoleta: ['juanpablo', 'valeq', 'danielt', 'lauram', 'mafe'],
+    ...deParche('rockeros'),
     noLeidos: 0,
     nuevos: 0,
     hora: 'Dom',
@@ -267,6 +260,10 @@ export const conversaciones: Conversacion[] = [
 export const CONVERSACION_INICIAL = 'salseros';
 
 export const conversacionPorSlug = (s: string) => conversaciones.find((c) => c.slug === s);
+
+// Chats sin leer al cargar (conversaciones, no mensajes: detalle fino 1). La misma cifra en el encabezado,
+// en el menú de Inicio y en Mensajes (H13, detalle fino 23 de Inicio)
+export const chatsSinLeer = conversaciones.filter((c) => c.noLeidos > 0).length;
 
 // Enlaces de otras pantallas al chat (H42): la conversación va en la dirección (/mensajes/:slug).
 // Sin conversación, "Mensaje" abre la ventana "Nuevo chat" con la persona elegida.
