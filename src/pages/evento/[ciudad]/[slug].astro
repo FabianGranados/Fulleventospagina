@@ -57,7 +57,9 @@ const atajos = [
   { href: '#ubicacion', texto: 'Ubicación' },
 ].filter(Boolean) as { href: string; texto: string }[];
 
-// schema.org/Event (H34): fecha con zona -05:00 cuando hay hora; precio en COP
+// schema.org/Event (H34): fecha con zona -05:00 cuando hay hora; precio en COP.
+// La url de la oferta debe ser absoluta: solo se incluye si hay dominio configurado (site en astro.config)
+const urlOferta = Astro.site ? new URL(m.url, Astro.site).href : undefined;
 const esquema = {
   '@context': 'https://schema.org',
   '@type': 'Event',
@@ -79,14 +81,14 @@ const esquema = {
   ...(d && { organizer: { '@type': 'Organization', name: d.organizador.nombre } }),
   ...(d && { description: d.descripcion[0] }),
   offers: m.gratis
-    ? { '@type': 'Offer', price: 0, priceCurrency: 'COP', availability: 'https://schema.org/InStock', url: m.url }
+    ? { '@type': 'Offer', price: 0, priceCurrency: 'COP', availability: 'https://schema.org/InStock', ...(urlOferta && { url: urlOferta }) }
     : m.localidades.map((l) => ({
         '@type': 'Offer',
         name: l.completo,
         price: l.precio,
         priceCurrency: 'COP',
         availability: 'https://schema.org/InStock',
-        url: m.url,
+        ...(urlOferta && { url: urlOferta }),
       })),
 };
 

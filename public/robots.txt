@@ -1,0 +1,4 @@
+# Sitio de demostración con datos de ejemplo: no se indexa (M7, H34).
+# Al publicar con datos reales, quitar este bloqueo y la etiqueta robots de src/layouts/Base.astro.
+User-agent: *
+Disallow: /

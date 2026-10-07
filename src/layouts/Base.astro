@@ -21,6 +21,9 @@ const { titulo, descripcion = DESCRIPCION, tamanoBase = 16 } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Sitio de demostración con datos de ejemplo: que los buscadores no lo indexen (M7, H34).
+         Quitar esta etiqueta y public/robots.txt al publicar con datos reales. -->
+    <meta name="robots" content="noindex, nofollow" />
     <title>{titulo}</title>
     <meta name="description" content={descripcion} />
     <meta property="og:type" content="website" />
