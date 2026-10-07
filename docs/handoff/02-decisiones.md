@@ -203,3 +203,31 @@ Aplican a toda la implementación.
 | P7 | **Política de edad** | Fecha de nacimiento en el registro + confirmación +18 en la compra | Requerida (auditoría H10). | Fundador + abogado |
 | P8 | **Datos legales reales** | Razón social, NIT, dirección, PQR, políticas de retracto y devolución, política de datos | Requeridos antes de vender (auditoría H5, H27, H28). | Fundador + abogado |
 | P9 | **Insignia de organizador verificado** | Qué se verifica y cómo | Definir el criterio (auditoría H48). | Fundador |
+| P10 | **Foto real del héroe de Bienvenida** | Foto propia con derechos de uso / foto de banco con licencia | Elegir una foto de un evento en Colombia con derechos de uso y definir la capa oscura que garantice el contraste del texto blanco (detalle fino 18 de Bienvenida). Mientras tanto se usa el fondo degradado (decisión 2.13). | Fundador + diseño |
+| P11 | **Datos de la prueba social del héroe** | Qué cuenta como "tener plan" (marcar "Voy", comprar boleta, estar en un parche) y de dónde salen las cifras | Definir la fuente real de "[N] personas" y "[N] ciudades" este finde. El componente ya está listo y se muestra en cuanto reciba datos (decisión 2.13). | Fundador + tecnología |
+
+### 2.13 Decisiones tomadas al implementar la Bienvenida (7 de octubre de 2026)
+
+Las tomó el cliente al revisar el plan de implementación del héroe.
+
+- **Prueba social oculta hasta tener datos reales.**
+  - **Qué:** la línea "[N] personas en [N] ciudades ya tienen plan este finde", con sus 4 avatares, no se muestra. El componente queda listo y aparece solo cuando reciba cifras reales.
+  - **Por qué:** los marcadores con corchetes no se publican y no hay que inventar cifras. Todavía no existe la fuente de los datos (pendiente P11).
+  - **Descartado:** mostrar el marcador "[N]" o una cifra de ejemplo.
+- **Fondo degradado sin la nota de foto.**
+  - **Qué:** el héroe usa el fondo con manchas de luz del prototipo, sin la nota "[Foto real de un evento en Colombia]".
+  - **Por qué:** la nota es un marcador de diseño y no hay foto real todavía (pendiente P10).
+  - **Descartado:** conservar la nota visible.
+- **Ajuste del héroe en celular del código base.**
+  - **Qué:** por debajo de 820 px el héroe no tiene alto mínimo y su radio baja a 22 px.
+  - **Por qué:** con el alto mínimo de 520 px y el radio de 28 px del prototipo, el bloque ocupa más pantalla de la necesaria en celular.
+  - **Descartado:** mantener en celular el `min-height: 520px` y el radio de 28 px del prototipo.
+- **Hover del botón claro.**
+  - **Qué:** "Crear mi cuenta gratis" pasa a fondo `#F3ECE6` al pasar el mouse (hover del `.btn-light` del código base). Resuelve la decisión abierta R1 solo para este botón.
+  - **Descartado:** dejarlo sin efecto, como en el prototipo.
+- **Destinos de los enlaces del héroe.**
+  - **Qué:** "Crear mi cuenta gratis" apunta a `/registro` y "Ver la agenda sin registrarme" a `#agenda`, aunque esas partes todavía no estén construidas.
+- **Orden de la página (auditoría H44).**
+  - **Qué:** héroe → "Este finde en Colombia" → "Cómo funciona" → Mapa → Únete → Noticias.
+  - **Por qué:** en el prototipo el primer "Comprar" aparecía después de 5,5 pantallas en celular. Así los planes a la venta quedan justo después del héroe.
+  - **Descartado:** el orden del prototipo (héroe → Cómo funciona → Mapa → Noticias → Agenda → Únete).

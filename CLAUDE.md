@@ -4,10 +4,11 @@ Red social de eventos para toda Colombia: descubrir planes (agenda y mapa), ver 
 
 ## Estado del repositorio
 
-Todavía **no hay código de producción**. Lo que existe es diseño y documentación:
+La implementación está en marcha en `src/` (ver "Stack"). La Bienvenida se construye por secciones; la primera es el héroe. El diseño y la documentación de referencia son:
 
 | Ruta | Qué es |
 |---|---|
+| `src/` | Código de producción (Astro). `styles/tokens.css` tiene los tokens de la sección 3 del handoff; `styles/base.css`, el reseteo, el foco global y el contenedor; `components/ui/` las piezas compartidas; `components/<pantalla>/` las de cada pantalla. |
 | `docs/handoff/README.md` | **Fuente de verdad para implementar.** Índice del handoff: objetivo, decisiones, sistema visual, estructura de las 8 pantallas, responsive, estados, componentes y detalles finos. |
 | `docs/auditoria-2026-10-07.md` | Auditoría del prototipo (hallazgos H1–H62) con plan de acción. |
 | `docs/handoff-inventario-estilos.md` | Inventario automático de colores, tamaños, radios, sombras y breakpoints. |
@@ -21,7 +22,19 @@ Todavía **no hay código de producción**. Lo que existe es diseño y documenta
 1. Lee `docs/handoff/README.md` y luego las secciones 1, 2 y 3.
 2. Para cada pantalla, lee su sección 4 (estructura y textos), 5 (responsive), 6 (estados) y 8 (detalles finos y **correcciones obligatorias de la auditoría**). La sección 7 indica qué componentes reutilizar y cuáles crear.
 3. **Orden de autoridad** si algo no coincide: handoff > correcciones obligatorias de la auditoría > prototipo y capturas. Cuando el prototipo y la auditoría se contradicen, se implementa lo que pide la auditoría.
-4. **No hay stack definido.** Antes de crear la estructura del proyecto, propón el stack al usuario y confírmalo. Toma como base los requisitos de plataforma de la auditoría (H53 y "Requisitos para producción"), y ten en cuenta que las páginas de evento deben ser indexables y compartibles (render en servidor, Open Graph, schema.org/Event; H34).
+4. **El stack ya está definido** (ver "Stack"). No instales dependencias nuevas sin preguntar.
+
+## Stack
+
+Decidido por el cliente el 7 de octubre de 2026.
+
+- **Astro** (`astro`) con páginas generadas en el servidor o prerenderizadas. Así las páginas de evento son indexables y compartibles (H34) y se envía muy poco JavaScript (H57). La interactividad va en scripts pequeños o islas, solo donde haga falta (filtros, búsqueda).
+- **Hosting en Cloudflare** con `@astrojs/cloudflare`. El adaptador compila para Cloudflare Workers con archivos estáticos y trae `wrangler` como dependencia par.
+- **Estilos:** CSS con variables, como el código base (`diseno/referencia/preview-demo.html`). Nada de Tailwind ni CSS-in-JS. Los tokens globales van en `src/styles/tokens.css` y los estilos de cada componente, con alcance, dentro del `.astro`.
+  - Para estilizar un componente hijo desde el padre, usa `.padre :global(.clase)`: en Astro 7 el alcance no pasa por la prop `class`.
+- **Nombres de tokens:** los de la sección 3 del handoff. `--brand` = `#C23A24` (acción) y `--brand-logo` = `#D9452F` (solo el logo). La sección 7 usa otros nombres (`--brand` para el logo y `--action`); manda la sección 3.
+- **Pruebas:** `axe-core` (dependencia de desarrollo) con Playwright, que ya está en el entorno. Hay que medir a 390, 768 y 1280 px y comprobar que no hay scroll horizontal a 320 px.
+- **Comandos:** `npm run dev`, `npm run build` (sale en `dist/`) y `npm run preview`.
 
 ## Reglas que no se negocian
 
@@ -81,6 +94,6 @@ Es la especificación visual y de comportamiento, no una base de código:
 
 ## Convenciones del repositorio
 
-- Rama de trabajo: `main`.
+- Rama de trabajo: `rediseno-pagina` (no trabajar directo en `main`). El código React anterior quedó guardado en la rama `respaldo-react-viejo`.
 - Mensajes de commit en español, describiendo el porqué del cambio.
 - Comunícate con el usuario en español.
