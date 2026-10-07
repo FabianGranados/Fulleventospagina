@@ -1,15 +1,12 @@
 ---
+import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
 import { destacada, lista } from '../../data/noticias';
 ---
 
 <section id="noticias" class="noticias" aria-labelledby="noticias-titulo">
-  <div class="cabecera">
-    <div>
-      <p class="antetitulo">Lo que se mueve</p>
-      <h2 id="noticias-titulo">Noticias de la escena</h2>
-    </div>
-    <span class="ejemplo">Contenido de ejemplo</span>
-  </div>
+  <EncabezadoSeccion antetitulo="Lo que se mueve" titulo="Noticias de la escena" id="noticias-titulo">
+    <span class="ejemplo" slot="aside">Contenido de ejemplo</span>
+  </EncabezadoSeccion>
 
   <!-- Sin enlaces hasta que exista la página de noticia (H36, decisión 2.14) -->
   <div class="cuerpo">
@@ -39,32 +36,6 @@ import { destacada, lista } from '../../data/noticias';
 <style>
   .noticias {
     padding-top: 72px;
-  }
-
-  .cabecera {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .antetitulo {
-    margin: 0 0 6px;
-    font-size: .74rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-
-  h2 {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
   }
 
   .ejemplo {

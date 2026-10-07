@@ -1,0 +1,52 @@
+---
+// Antetítulo + h2 de sección en fondo claro (.sec-head, .eyebrow y h2 del código base).
+// El slot "aside" va a la derecha y baja debajo del título cuando no cabe.
+interface Props {
+  antetitulo: string;
+  titulo: string;
+  id: string;
+  enfocable?: boolean;
+  margenInferior?: number;
+}
+
+const { antetitulo, titulo, id, enfocable = false, margenInferior = 24 } = Astro.props;
+---
+
+<div class="cabecera" style={`margin-bottom: ${margenInferior}px`}>
+  <div>
+    <p class="antetitulo">{antetitulo}</p>
+    <h2 id={id} tabindex={enfocable ? '-1' : undefined}>{titulo}</h2>
+  </div>
+  <slot name="aside" />
+</div>
+
+<style>
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .antetitulo {
+    margin: 0 0 6px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  h2[tabindex]:focus {
+    outline: none;
+  }
+</style>

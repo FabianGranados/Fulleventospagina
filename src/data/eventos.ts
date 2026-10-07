@@ -39,3 +39,5 @@ export const eventos: Evento[] = [
   { id: 'e18', titulo: 'Concierto andino en la plaza', categoria: 'Conciertos', etiquetas: ['conciertos', 'gratis'], ciudad: 'pasto', fecha: '2026-10-10', lugar: 'Plaza de Nariño', precio: 0, vende: 'Entrada libre', bg1: '#8FD3D0', bg2: '#2A1F3A', van: 160, parches: 0 },
   { id: 'e19', titulo: 'Música y comida en el malecón del Amazonas', categoria: 'Comida', etiquetas: ['comida', 'gratis'], ciudad: 'leticia', fecha: '2026-10-11', lugar: 'Malecón de Leticia', precio: 0, vende: 'Entrada libre', bg1: '#B9E07A', bg2: '#12343A', van: 70, parches: 0 },
 ];
+
+export const conteoCiudad = (ciudad: string) => eventos.filter((e) => e.ciudad === ciudad).length;

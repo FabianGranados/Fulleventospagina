@@ -1,4 +1,6 @@
 ---
+import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
+
 const pasos = [
   {
     n: '1',
@@ -24,8 +26,7 @@ const pasos = [
 ---
 
 <section id="como-funciona" class="como" aria-labelledby="como-titulo">
-  <p class="antetitulo">Cómo funciona</p>
-  <h2 id="como-titulo">Planes mejores, con tu gente</h2>
+  <EncabezadoSeccion antetitulo="Cómo funciona" titulo="Planes mejores, con tu gente" id="como-titulo" margenInferior={28} />
   <div class="pasos">
     {
       pasos.map((p) => (
@@ -42,24 +43,6 @@ const pasos = [
 <style>
   .como {
     padding-top: 72px;
-  }
-
-  .antetitulo {
-    margin: 0 0 6px;
-    font-size: .74rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-
-  h2 {
-    margin: 0 0 28px;
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
   }
 
   /* Pasa directo de 1 a 3 columnas, sin la fila suelta de 2 + 1 (H61) */

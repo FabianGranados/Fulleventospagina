@@ -1,5 +1,6 @@
 ---
 import PilaAvatares from '../ui/PilaAvatares.astro';
+import { cifra } from '../../lib/formato';
 
 interface Props {
   personas: number;
@@ -7,7 +8,6 @@ interface Props {
 }
 
 const { personas, ciudades } = Astro.props;
-const cifra = (n: number) => n.toLocaleString('es-CO');
 ---
 
 <p class="prueba">

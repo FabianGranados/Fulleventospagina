@@ -3,10 +3,10 @@ import Etiqueta from '../ui/Etiqueta.astro';
 import Icono from '../ui/Icono.astro';
 import MiniMapaColombia from './MiniMapaColombia.astro';
 import { ciudades } from '../../data/ciudades';
-import { eventos } from '../../data/eventos';
+import { eventos, conteoCiudad } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
 
-const activas = ciudades.filter((c) => eventos.some((e) => e.ciudad === c.id)).length;
+const activas = ciudades.filter((c) => conteoCiudad(c.id) > 0).length;
 ---
 
 <section id="mapa" class="seccion" aria-labelledby="mapa-titulo">

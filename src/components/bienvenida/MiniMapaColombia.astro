@@ -1,9 +1,8 @@
 ---
 import { ciudades } from '../../data/ciudades';
-import { eventos } from '../../data/eventos';
+import { eventos, conteoCiudad as conteo } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
 
-const conteo = (id: string) => eventos.filter((e) => e.ciudad === id).length;
 const activas = ciudades.filter((c) => conteo(c.id) > 0).length;
 // Orden de norte a sur (top ascendente), como en el prototipo
 const pines = [...ciudades].sort((a, b) => a.top - b.top);

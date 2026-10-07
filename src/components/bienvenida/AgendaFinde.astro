@@ -1,9 +1,10 @@
 ---
 import Icono from '../ui/Icono.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
 import TarjetaEvento from '../eventos/TarjetaEvento.astro';
 import { ciudades } from '../../data/ciudades';
-import { eventos } from '../../data/eventos';
+import { eventos, conteoCiudad } from '../../data/eventos';
 
 const LIMITE = 8;
 
@@ -18,8 +19,6 @@ const categorias = [
   { id: 'teatro', texto: 'Arte y teatro' },
 ];
 
-const conteo = (id: string) => eventos.filter((e) => e.ciudad === id).length;
-
 // Orden intercalado por ciudad: el 1.º de cada ciudad, luego el 2.º… (4.3, 6.5)
 const porCiudad = ciudades.map((c) => eventos.filter((e) => e.ciudad === c.id));
 const intercalados = [];
@@ -29,18 +28,14 @@ for (let i = 0; porCiudad.some((g) => g[i]); i++) {
 const ocultos = eventos.length - LIMITE;
 ---
 
-<section id="agenda" class="agenda" aria-labelledby="agenda-titulo" data-agenda>
-  <div class="cabecera">
-    <div>
-      <p class="antetitulo">Agenda</p>
-      <h2 id="agenda-titulo" tabindex="-1">Este finde en Colombia</h2>
-    </div>
-    <div class="enlaces">
+<section id="agenda" class="agenda" aria-labelledby="agenda-titulo" data-agenda data-limite={LIMITE}>
+  <EncabezadoSeccion antetitulo="Agenda" titulo="Este finde en Colombia" id="agenda-titulo" enfocable margenInferior={20}>
+    <div class="enlaces" slot="aside">
       <span class="ejemplo">Contenido de ejemplo</span>
       <a href="/mapa" class="ver-mapa" data-ver-mapa><Icono nombre="mapa" tamano={16} />Ver en el mapa</a>
       <EnlaceSubrayado href="/agenda" class="ver-todo">Ver toda la agenda</EnlaceSubrayado>
     </div>
-  </div>
+  </EncabezadoSeccion>
 
   <div class="chips" role="group" aria-label="Filtrar por ciudad">
     <button type="button" class="chip" data-ciudad="all" aria-pressed="true">
@@ -49,7 +44,7 @@ const ocultos = eventos.length - LIMITE;
     {
       ciudades.map((c) => (
         <button type="button" class="chip" data-ciudad={c.id} aria-pressed="false">
-          {c.nombre}{' '}<span class="conteo">{conteo(c.id)}<span class="solo-lectores">{conteo(c.id) === 1 ? ' plan' : ' planes'}</span></span>
+          {c.nombre}{' '}<span class="conteo">{conteoCiudad(c.id)}<span class="solo-lectores">{conteoCiudad(c.id) === 1 ? ' plan' : ' planes'}</span></span>
         </button>
       ))
     }
@@ -91,12 +86,13 @@ const ocultos = eventos.length - LIMITE;
 
 <script>
   import { ciudades } from '../../data/ciudades';
+  import { planes } from '../../lib/formato';
 
-  const LIMITE = 8;
   const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
   const raiz = document.querySelector<HTMLElement>('[data-agenda]');
 
   if (raiz) {
+    const LIMITE = Number(raiz.dataset.limite);
     const rejilla = raiz.querySelector<HTMLElement>('[data-rejilla]')!;
     const celdas = [...rejilla.querySelectorAll<HTMLElement>('[data-celda]')].sort(
       (a, b) => Number(a.dataset.orden) - Number(b.dataset.orden),
@@ -113,7 +109,6 @@ const ocultos = eventos.length - LIMITE;
     const titulo = raiz.querySelector<HTMLElement>('#agenda-titulo')!;
 
     const estado = { ciudad: 'all', categoria: 'all', todo: false };
-    const planes = (n: number) => `${n} ${n === 1 ? 'plan' : 'planes'}`;
 
     const coincide = (c: HTMLElement) => {
       const tarjeta = c.querySelector<HTMLElement>('[data-tarjeta]')!;
@@ -152,8 +147,10 @@ const ocultos = eventos.length - LIMITE;
       vacio.hidden = visibles.length > 0;
       mensajeVacio.textContent = mensajeVacioTexto();
       contenedorMas.hidden = ocultos <= 0;
-      botonMas.setAttribute('aria-expanded', String(estado.todo));
-      botonMas.textContent = estado.todo ? 'Ver menos planes' : ocultos === 1 ? 'Ver 1 plan más' : `Ver ${ocultos} planes más`;
+      if (ocultos > 0) {
+        botonMas.setAttribute('aria-expanded', String(estado.todo));
+        botonMas.textContent = estado.todo ? 'Ver menos planes' : ocultos === 1 ? 'Ver 1 plan más' : `Ver ${ocultos} planes más`;
+      }
 
       chipsCiudad.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ciudad === estado.ciudad)));
       chipsCategoria.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
@@ -212,36 +209,6 @@ const ocultos = eventos.length - LIMITE;
     padding-top: 72px;
   }
 
-  .cabecera {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .antetitulo {
-    margin: 0 0 6px;
-    font-size: .74rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-
-  h2 {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-  }
-
-  h2:focus {
-    outline: none;
-  }
-
   .enlaces {
     display: flex;
     flex-wrap: wrap;
@@ -271,13 +238,17 @@ const ocultos = eventos.length - LIMITE;
   }
 
   /* position: relative contiene el texto oculto de los contadores (8.1 #4) */
+  /* El relleno superior deja ver completo el anillo de foco dentro de la fila con scroll;
+     el margen negativo lo compensa para conservar el espaciado del prototipo */
   .chips {
     position: relative;
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding-block: 6px;
+    margin-top: -6px;
     margin-bottom: 8px;
+    scroll-padding-inline: 8px 40px;
   }
 
   .categorias {
@@ -387,17 +358,10 @@ const ocultos = eventos.length - LIMITE;
     flex: 1;
   }
 
-  .celda[hidden] {
-    display: none;
-  }
-
   .mas {
     display: flex;
     justify-content: center;
     margin-top: 28px;
   }
 
-  .mas[hidden] {
-    display: none;
-  }
 </style>
