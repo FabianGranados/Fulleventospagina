@@ -203,7 +203,7 @@ Aplican a toda la implementación.
 | P7 | **Política de edad** | Fecha de nacimiento en el registro + confirmación +18 en la compra | Requerida (auditoría H10). | Fundador + abogado |
 | P8 | **Datos legales reales** | Razón social, NIT, dirección, PQR, políticas de retracto y devolución, política de datos | Requeridos antes de vender (auditoría H5, H27, H28). | Fundador + abogado |
 | P9 | **Insignia de organizador verificado** | Qué se verifica y cómo | Definir el criterio (auditoría H48). | Fundador |
-| P10 | **Foto real del héroe de Bienvenida** | Foto propia con derechos de uso / foto de banco con licencia | Elegir una foto de un evento en Colombia con derechos de uso y definir la capa oscura que garantice el contraste del texto blanco (detalle fino 18 de Bienvenida). Mientras tanto se usa el fondo degradado (decisión 2.13). | Fundador + diseño |
+| P10 | **Foto real del héroe de Bienvenida** (en curso, decisión 2.18) | Foto propia con derechos de uso / foto de banco con licencia | Elegir una foto de un evento en Colombia con derechos de uso y definir la capa oscura que garantice el contraste del texto blanco (detalle fino 18 de Bienvenida). Mientras tanto se usa el fondo degradado (decisión 2.13). | Fundador + diseño |
 | P11 | **Datos de la prueba social del héroe** | Qué cuenta como "tener plan" (marcar "Voy", comprar boleta, estar en un parche) y de dónde salen las cifras | Definir la fuente real de "[N] personas" y "[N] ciudades" este finde. El componente ya está listo y se muestra en cuanto reciba datos (decisión 2.13). | Fundador + tecnología |
 | P12 | **Descripción para buscadores y vista previa al compartir** | Texto propuesto en `src/layouts/Base.astro` / otro | Aprobar o cambiar la descripción propuesta (decisión 2.15). | Fundador |
 
@@ -341,3 +341,17 @@ El agente auditor revisó el sitio completo y no encontró hallazgos críticos: 
   - Los marcadores `[ASÍ]` de Evento: hacen falta los datos reales (P8). Son un bloqueo de publicación.
   - El perfil del organizador (`/perfil/galeria-cafe-libro`): no está diseñado.
   - La unificación de las 7 tarjetas de evento y de los formatos repetidos: es un refactor aparte.
+
+### 2.18 Hero de la Bienvenida al 100 % (7 de octubre de 2026)
+
+El cliente pidió terminar el frontend antes del backend, empezando por el héroe. Decisiones:
+
+- **Foto del héroe (P10).**
+  - **Qué:** foto de banco gratuita (Unsplash o Pexels, licencia libre) de un concierto o rumba en Colombia. Se escoge y descarga a mano, porque el entorno de desarrollo no tiene acceso a esos sitios.
+  - **Cómo se pone:** se deja el archivo en `src/assets/hero/foto.jpg` (también sirve `.jpeg`, `.png` o `.webp`). El héroe la detecta solo, la convierte a AVIF y WebP en 4 tamaños y la carga con prioridad alta (H57). Sin archivo se sigue viendo el fondo con manchas de luz (decisión 2.13).
+  - **Capa oscura (detalle fino 18):** degradado horizontal de `#140E10` al 94 % a la izquierda (donde va el texto) al 25 % a la derecha (donde se luce la foto). En celular, el texto ocupa todo el ancho y la capa queda pareja (78 % → 90 %). La foto es decorativa (`alt=""`): el texto del héroe ya cuenta todo.
+- **Encabezado de visitante compacto en celular.**
+  - **Qué:** por debajo de 768 px, la primera fila muestra el logo, "Entrar" y un botón de menú. El buscador queda debajo, a todo el ancho. "Cómo funciona", "Mapa", "Agenda", "Entrar" y "Crear cuenta" quedan dentro del menú desplegable.
+  - **Por qué:** antes el encabezado ocupaba 264 px y el titular del héroe empezaba a media pantalla. Ahora ocupa unos 165 px. "Crear cuenta" sale de la primera fila porque no cabe a 320 px, y el héroe ya la repite como botón principal ("Crear mi cuenta gratis").
+  - **Accesibilidad:** el botón usa `aria-expanded` y `aria-controls`. Escape cierra el menú y devuelve el foco al botón, y al tocar un enlace el menú se cierra. Sin JavaScript, el menú se ve abierto y el botón no aparece.
+- **Prueba social:** sigue oculta hasta que el backend entregue cifras reales (P11). No se inventan números.

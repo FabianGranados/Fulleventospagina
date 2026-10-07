@@ -23,11 +23,18 @@ import { ciudades } from '../../data/ciudades';
       </button>
     </form>
 
-    <nav aria-label="Principal" class="nav">
+    <!-- En celular el menú se pliega detrás de un botón; sin JavaScript queda abierto -->
+    <button type="button" class="abrir-menu" aria-expanded="false" aria-controls="menu-principal" hidden data-abrir-menu>
+      <Icono nombre="menu" tamano={22} class="icono-abrir" />
+      <Icono nombre="cerrar" tamano={22} class="icono-cerrar" />
+      <span class="solo-lectores">Menú</span>
+    </button>
+
+    <nav aria-label="Principal" class="nav" id="menu-principal">
       <a href="#como-funciona">Cómo funciona</a>
       <a href="/mapa" class="con-insignia">Mapa <span class="insignia">Nuevo</span></a>
       <a href="#agenda">Agenda</a>
-      <a href="/entrar" class="fuerte">Entrar</a>
+      <a href="/entrar" class="fuerte entrar">Entrar</a>
       <a href="/registro" class="crear">Crear cuenta</a>
     </nav>
   </div>
@@ -44,6 +51,28 @@ import { ciudades } from '../../data/ciudades';
     agenda.scrollIntoView();
     document.querySelector<HTMLElement>('#agenda-titulo')?.focus();
   });
+
+  // Menú plegable de celular (decisión 2.18): Escape lo cierra y devuelve el foco al botón
+  const botonMenu = document.querySelector<HTMLButtonElement>('[data-abrir-menu]');
+  const menu = document.querySelector<HTMLElement>('#menu-principal');
+  if (botonMenu && menu) {
+    botonMenu.hidden = false;
+    menu.classList.add('plegable');
+    const alternar = (abrir: boolean) => {
+      botonMenu.setAttribute('aria-expanded', String(abrir));
+      menu.classList.toggle('abierto', abrir);
+    };
+    botonMenu.addEventListener('click', () => alternar(botonMenu.getAttribute('aria-expanded') !== 'true'));
+    menu.addEventListener('click', (ev) => {
+      if ((ev.target as HTMLElement).closest('a')) alternar(false);
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && botonMenu.getAttribute('aria-expanded') === 'true') {
+        alternar(false);
+        botonMenu.focus();
+      }
+    });
+  }
 
   // El foco y los saltos de ancla no deben quedar debajo del encabezado fijo (H16).
   const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
@@ -199,12 +228,102 @@ import { ciudades } from '../../data/ciudades';
     font-weight: 700;
   }
 
-  /* En celular el encabezado deja de ser fijo (H40, decisión 2.14) */
+  .abrir-menu {
+    display: none;
+  }
+
+  /* En celular el encabezado deja de ser fijo (H40, decisión 2.14) y se compacta (decisión 2.18):
+     logo, "Entrar" y el botón de menú en una fila; el buscador debajo; el resto del menú plegado */
   @media (max-width: 767px) {
     .encabezado {
       position: static;
     }
+
+    .fila {
+      padding-block: 10px 12px;
+      gap: 10px 12px;
+    }
+
+    .logo {
+      margin-right: auto;
+    }
+
+    .buscador {
+      order: 5;
+      flex-basis: 100%;
+      max-width: none;
+    }
+
+    .abrir-menu:not([hidden]) {
+      order: 2;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      margin-right: -8px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .abrir-menu :global(.icono-cerrar),
+    .abrir-menu[aria-expanded='true'] :global(.icono-abrir) {
+      display: none;
+    }
+
+    .abrir-menu[aria-expanded='true'] :global(.icono-cerrar) {
+      display: block;
+    }
+
+    .nav.plegable {
+      display: contents;
+    }
+
+    .nav.plegable > a:not(.entrar) {
+      display: none;
+    }
+
+    .nav.plegable > .entrar {
+      order: 1;
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding-inline: 4px;
+    }
+
+    /* Menú abierto: panel a todo el ancho entre la primera fila y el buscador */
+    .nav.plegable.abierto {
+      order: 3;
+      flex-basis: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      margin: 0;
+      padding: 4px 0 6px;
+      border-top: 1px solid var(--line);
+      font-size: 1rem;
+    }
+
+    /* Abierto, "Entrar" pasa de la primera fila a la lista del panel */
+    .nav.plegable.abierto > a {
+      order: 0;
+      display: flex;
+      padding-inline: 0;
+      align-items: center;
+      min-height: 48px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .nav.plegable.abierto > .crear {
+      justify-content: center;
+      padding-inline: 18px;
+      margin-top: 10px;
+      border-bottom: 0;
+    }
   }
+
 
   /* Por debajo de 480 px la ciudad baja a su propia línea dentro del buscador (H8) */
   @media (max-width: 479px) {

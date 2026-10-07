@@ -4,6 +4,15 @@ import Titular from '../ui/Titular.astro';
 import Boton from '../ui/Boton.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import PruebaSocial from './PruebaSocial.astro';
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+// Foto del héroe (P10, decisión 2.18): basta con dejar el archivo en src/assets/hero/ con el nombre
+// "foto" (.jpg, .jpeg, .png o .webp). Sin archivo se usa el fondo con manchas de luz (decisión 2.13).
+const archivos = import.meta.glob<{ default: ImageMetadata }>('../../assets/hero/foto.{jpg,jpeg,png,webp}', {
+  eager: true,
+});
+const foto = Object.values(archivos)[0]?.default;
 
 interface Props {
   // Se muestra solo con datos reales (decisión 2.13); sin datos no se pinta.
@@ -13,7 +22,22 @@ interface Props {
 const { pruebaSocial } = Astro.props;
 ---
 
-<section aria-label="Bienvenida" class="hero superficie-oscura">
+<section aria-label="Bienvenida" class:list={['hero', 'superficie-oscura', { 'con-foto': foto }]}>
+  {
+    foto && (
+      <Picture
+        src={foto}
+        alt=""
+        formats={['avif', 'webp']}
+        widths={[480, 800, 1280, 1920]}
+        sizes="(max-width: 1288px) 100vw, 1240px"
+        loading="eager"
+        fetchpriority="high"
+        class="foto"
+        pictureAttributes={{ class: 'marco-foto' }}
+      />
+    )
+  }
   <Etiqueta tamano="lg" class="etiqueta-hero">Arma tu parche</Etiqueta>
   <Titular
     lineas={[
@@ -47,6 +71,41 @@ const { pruebaSocial } = Astro.props;
     color: var(--on-dark);
   }
 
+  /* La foto va de fondo y la capa oscura asegura el contraste del texto blanco (detalle fino 18):
+     casi opaca a la izquierda, donde va el texto, y más clara a la derecha, donde se ve la foto */
+  .hero :global(.marco-foto) {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .hero :global(.foto) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% 40%;
+  }
+
+  .con-foto::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      90deg,
+      rgba(20, 14, 16, .94) 0%,
+      rgba(20, 14, 16, .86) 38%,
+      rgba(20, 14, 16, .45) 72%,
+      rgba(20, 14, 16, .25) 100%
+    );
+  }
+
+  /* El texto (incluidos los componentes hijos) va por encima de la capa */
+  .con-foto > :global(:not(.marco-foto)) {
+    position: relative;
+    z-index: 2;
+  }
+
   .hero :global(.etiqueta-hero) {
     align-self: flex-start;
     margin-left: clamp(0px, 3vw, 44px);
@@ -72,6 +131,11 @@ const { pruebaSocial } = Astro.props;
     .hero {
       min-height: 0;
       border-radius: 22px;
+    }
+
+    /* En celular el texto ocupa todo el ancho: la capa se oscurece parejo */
+    .con-foto::before {
+      background: linear-gradient(180deg, rgba(20, 14, 16, .78) 0%, rgba(20, 14, 16, .9) 100%);
     }
   }
 </style>
