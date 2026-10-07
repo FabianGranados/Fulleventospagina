@@ -585,6 +585,9 @@ export const iniciar = () => {
       if (persona && asegurarPersona(persona)) campos.persona.value = persona;
     }
     actualizarVentana();
+    // El foco entra a la ventana en "Cerrar" en todos los anchos (H7, M5). Sin fijarlo, a 390 px el foco que
+    // pone showModal() terminaba en el body al abrir "Nuevo chat" con el teclado.
+    dialogo.querySelector<HTMLElement>('.cerrar')?.focus();
   });
 
   form.addEventListener('input', actualizarVentana);
