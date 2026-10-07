@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fulleventos · Crear cuenta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F3}
+a{color:#17120F;text-decoration:none}a:hover{color:#C23A24}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FBF7F3; color: #17120F; font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.5">
+
+  <header style="max-width: 1240px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+    <a href="Bienvenida.dc.html" style="font-weight: 700; font-size: 1.6rem; letter-spacing: -0.03em; color: #D9452F">fulleventos</a>
+    <span style="font-size: .9rem; color: #6E6259">¿Ya tienes cuenta? <a href="Main.dc.html" style="font-weight: 700; color: #17120F; border-bottom: 2px solid #17120F">Entrar</a></span>
+  </header>
+
+  <main style="max-width: 1240px; margin: 0 auto; padding: 8px 24px 64px; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch">
+
+    <aside style="flex: 1 1 340px; border-radius: 28px; color: #FFFFFF; padding: clamp(28px, 4vw, 48px); box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 28px; min-height: 420px; background: radial-gradient(circle at 74% 30%, rgba(214,140,70,.55) 0, transparent 26%), radial-gradient(circle at 80% 85%, rgba(190,70,80,.45) 0, transparent 30%), radial-gradient(ellipse at 8% 40%, rgba(70,30,80,.55) 0, transparent 45%), #140E10">
+      <span style="align-self: flex-start; background: #F6DC6A; color: #17120F; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: .9rem; text-transform: uppercase; padding: 4px 10px">Paso {{stepNum}} de 3</span>
+      <h1 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.035em; line-height: .98; font-size: clamp(2rem, 4vw, 3.2rem); color: #17120F; display: flex; flex-direction: column; align-items: flex-start">
+        <span style="background: linear-gradient(90deg, #F3B27E, #EE93BC); padding: .1em .22em .06em">Tu próximo</span>
+        <span style="background: linear-gradient(90deg, #EE93BC, #F3B27E); padding: .1em .22em .06em; margin-left: .8em">plan empieza</span>
+        <span style="background: linear-gradient(90deg, #F3B27E, #EE93BC); padding: .1em .22em .06em">aquí</span>
+      </h1>
+      <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{steps}}" as="st" hint-placeholder-count="3">
+          <li style="display: flex; align-items: center; gap: 12px; color: {{st.fg}}">
+            <span style="width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85rem; background: {{st.dotBg}}; color: {{st.dotFg}}">{{st.n}}</span>{{st.label}}</li>
+        </sc-for>
+      </ol>
+    </aside>
+
+    <section aria-label="Formulario de registro" style="flex: 1.3 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 28px; padding: clamp(24px, 4vw, 48px); box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+
+      <div style="height: 6px; border-radius: 3px; background: #EAE1D8; overflow: hidden"><div style="height: 100%; width: {{progress}}%; background: #C23A24; border-radius: 3px"></div></div>
+
+      <sc-if value="{{isStep1}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-direction: column; gap: 18px">
+          <div>
+            <h2 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.9rem; letter-spacing: -0.03em; line-height: 1.05">Crea tu cuenta</h2>
+            <p style="margin: 6px 0 0; color: #6E6259">Gratis. Solo tarda un minuto.</p>
+          </div>
+          <button onClick="{{next}}" style="height: 52px; border-radius: 999px; border: 1px solid #17120F; background: #FFFFFF; color: #17120F; font-weight: 700; font-size: .95rem; display: flex; align-items: center; justify-content: center; gap: 10px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M20.5 12.2c0-.6-.1-1.2-.2-1.7H12v3.3h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.6-3.9 2.6-6.5z"></path><path d="M12 21c2.4 0 4.5-.8 5.9-2.2L15 16.5c-.8.5-1.8.9-3 .9-2.3 0-4.3-1.6-5-3.7H4v2.3A9 9 0 0 0 12 21z"></path><path d="M7 13.7a5.4 5.4 0 0 1 0-3.4V8H4a9 9 0 0 0 0 8z"></path><path d="M12 6.6c1.3 0 2.5.5 3.4 1.3L18 5.4A9 9 0 0 0 4 8l3 2.3c.7-2.1 2.7-3.7 5-3.7z"></path></svg>Continuar con Google</button>
+          <div style="display: flex; align-items: center; gap: 12px; color: #6E6259; font-size: .85rem"><span style="flex: 1; height: 1px; background: #EAE1D8"></span>o con tus datos<span style="flex: 1; height: 1px; background: #EAE1D8"></span></div>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: .9rem">Nombre
+            <input type="text" autocomplete="name" placeholder="Cómo te llamas" style="height: 48px; border: 1px solid #D9CEC3; border-radius: 12px; padding: 0 14px; font-size: 1rem; font-weight: 400; background: #FBF7F3; outline: 0"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: .9rem">Celular o correo
+            <input type="text" autocomplete="email" placeholder="300 123 4567 o tu@correo.com" style="height: 48px; border: 1px solid #D9CEC3; border-radius: 12px; padding: 0 14px; font-size: 1rem; font-weight: 400; background: #FBF7F3; outline: 0"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: .9rem">Barrio o localidad
+            <input type="text" placeholder="Ej. Chapinero" style="height: 48px; border: 1px solid #D9CEC3; border-radius: 12px; padding: 0 14px; font-size: 1rem; font-weight: 400; background: #FBF7F3; outline: 0"></label>
+          <button onClick="{{next}}" style="height: 52px; border-radius: 999px; border: 0; background: #C23A24; color: #FFFFFF; font-weight: 700; font-size: 1rem">Continuar</button>
+          <p style="margin: 0; font-size: .78rem; color: #6E6259">Al continuar aceptas los [Términos] y la [Política de privacidad].</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isStep2}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column; gap: 18px">
+          <div>
+            <h2 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.9rem; letter-spacing: -0.03em; line-height: 1.05">¿Qué planes te gustan?</h2>
+            <p style="margin: 6px 0 0; color: #6E6259">Elige al menos 3. Así armamos tu agenda.</p>
+          </div>
+          <div role="group" aria-label="Gustos" style="display: flex; flex-wrap: wrap; gap: 10px">
+            <sc-for list="{{likes}}" as="l" hint-placeholder-count="12">
+              <button aria-pressed="{{l.pressed}}" onClick="{{l.toggle}}" style="height: 46px; border-radius: 999px; padding: 0 18px; font-size: .95rem; font-weight: 500; border: 1px solid {{l.border}}; background: {{l.bg}}; color: {{l.fg}}; display: flex; align-items: center; gap: 8px">{{l.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px">
+            <button onClick="{{back}}" style="height: 48px; border: 0; background: transparent; font-weight: 700; color: #17120F; padding: 0 8px">Atrás</button>
+            <span style="font-size: .88rem; color: #6E6259">{{likesCount}} elegidos</span>
+            <button onClick="{{next}}" disabled="{{cantContinue}}" style="height: 52px; border-radius: 999px; border: 0; padding: 0 28px; background: {{continueBg}}; color: #FFFFFF; font-weight: 700; font-size: 1rem">Continuar</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isStep3}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div>
+            <h2 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.9rem; letter-spacing: -0.03em; line-height: 1.05">Encuentra a tu gente</h2>
+            <p style="margin: 6px 0 0; color: #6E6259">Sigue a amigos y a personas con tus gustos para ver a qué van.</p>
+          </div>
+          <button style="height: 48px; border-radius: 14px; border: 1px dashed #B9AEA4; background: #FBF7F3; color: #17120F; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>Buscar amigos en mis contactos</button>
+          <sc-for list="{{people}}" as="u" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid #F1EAE3">
+              <span style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: {{u.c}}; display: grid; place-items: center; font-weight: 700; font-size: .8rem">{{u.ini}}</span>
+              <div style="flex: 1; min-width: 0; line-height: 1.3"><b style="font-size: .95rem">{{u.name}}</b><span style="display: block; font-size: .8rem; color: #6E6259">{{u.why}}</span></div>
+              <button aria-pressed="{{u.pressed}}" onClick="{{u.toggle}}" style="height: 40px; border-radius: 999px; padding: 0 16px; font-size: .84rem; font-weight: 700; border: 1px solid #17120F; background: {{u.bg}}; color: {{u.fg}}">{{u.label}}</button>
+            </div>
+          </sc-for>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px">
+            <button onClick="{{back}}" style="height: 48px; border: 0; background: transparent; font-weight: 700; color: #17120F; padding: 0 8px">Atrás</button>
+            <a href="Main.dc.html" style="height: 52px; border-radius: 999px; padding: 0 28px; background: #C23A24; color: #FFFFFF; font-weight: 700; display: flex; align-items: center; gap: 8px">Ir a mi feed
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 1, likes: {}, follow: {} };
+  }
+  flip(key, id) {
+    const n = Object.assign({}, this.state[key]);
+    n[id] = !n[id];
+    const patch = {};
+    patch[key] = n;
+    this.setState(patch);
+  }
+  renderVals() {
+    const s = this.state;
+    const stepLabels = ['Tu cuenta', 'Tus gustos', 'Tu gente'];
+    const steps = stepLabels.map((label, i) => {
+      const n = i + 1;
+      const done = n < s.step;
+      const cur = n === s.step;
+      return {
+        n: done ? '✓' : String(n),
+        label,
+        fg: cur || done ? '#FFFFFF' : 'rgba(255,255,255,.65)',
+        dotBg: cur ? '#F6DC6A' : (done ? '#FFFFFF' : 'transparent'),
+        dotFg: '#17120F'
+      };
+    });
+    const likeDefs = ['Salsa', 'Rock', 'Electrónica', 'Reguetón', 'Jazz', 'Conciertos', 'Fútbol', 'Stand-up', 'Teatro', 'Comida', 'Planes gratis', 'Festivales'];
+    const likes = likeDefs.map((label) => {
+      const on = !!s.likes[label];
+      return {
+        label,
+        pressed: on ? 'true' : 'false',
+        bg: on ? '#17120F' : '#FFFFFF',
+        fg: on ? '#FFFFFF' : '#17120F',
+        border: on ? '#17120F' : '#D9CEC3',
+        toggle: () => this.flip('likes', label)
+      };
+    });
+    const likesCount = likeDefs.filter((l) => s.likes[l]).length;
+    const people = [
+      { id: 'u1', ini: 'LM', c: '#F3B27E', name: 'Laura Martínez', why: 'Está en tus contactos' },
+      { id: 'u2', ini: 'AR', c: '#A3A8F0', name: 'Andrés Ramírez', why: 'Está en tus contactos' },
+      { id: 'u3', ini: 'SC', c: '#EE93BC', name: 'Sofía Cárdenas', why: 'Le gusta la salsa y el fútbol' },
+      { id: 'u4', ini: 'MG', c: '#F6DC6A', name: 'María F. Gómez', why: 'Va a 4 eventos que te gustan' },
+      { id: 'u5', ini: 'GC', c: '#17120F', name: 'Galería Café Libro', why: 'Lugar · organiza eventos de salsa' }
+    ].map((u) => {
+      const on = !!s.follow[u.id];
+      return Object.assign({}, u, {
+        pressed: on ? 'true' : 'false',
+        label: on ? 'Siguiendo' : 'Seguir',
+        bg: on ? '#FFFFFF' : '#17120F',
+        fg: on ? '#17120F' : '#FFFFFF',
+        toggle: () => this.flip('follow', u.id)
+      });
+    });
+    const can = s.step !== 2 || likesCount >= 3;
+    return {
+      steps, likes, people, likesCount,
+      stepNum: s.step,
+      progress: Math.round(s.step / 3 * 100),
+      isStep1: s.step === 1,
+      isStep2: s.step === 2,
+      isStep3: s.step === 3,
+      cantContinue: !can,
+      continueBg: can ? '#C23A24' : '#B9AEA4',
+      next: () => { if (can) this.setState({ step: Math.min(3, s.step + 1) }); },
+      back: () => this.setState({ step: Math.max(1, s.step - 1) })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Bienvenida.dc.html": {
+      "expand": "fill",
+      "h": 4440,
+      "is_interactive": true,
+      "title": "1 · Bienvenida · Marketplace nacional",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Registro.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "title": "2 · Registro · Gustos y gente",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 2520,
+      "is_interactive": true,
+      "title": "3 · Inicio · Feed social",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "Agenda.dc.html": {
+      "expand": "fill",
+      "h": 3140,
+      "is_interactive": true,
+      "title": "4 · Agenda · Marketplace con reposts",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "Mapa.dc.html": {
+      "expand": "fill",
+      "h": 1560,
+      "is_interactive": true,
+      "title": "5 · Mapa de eventos · Colombia",
+      "w": 1280,
+      "x": 5440,
+      "y": 0
+    },
+    "Evento.dc.html": {
+      "expand": "fill",
+      "h": 3900,
+      "is_interactive": true,
+      "title": "6 · Evento · Compra dentro de la página",
+      "w": 1280,
+      "x": 6800,
+      "y": 0
+    },
+    "Perfil.dc.html": {
+      "expand": "fill",
+      "h": 1040,
+      "is_interactive": true,
+      "title": "8 · Perfil de usuario",
+      "w": 1280,
+      "x": 9520,
+      "y": 0
+    },
+    "Chat.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "7 · Mensajes · Chats y parches",
+      "w": 1280,
+      "x": 8160,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-06T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "focused",
+    "file": "Bienvenida.dc.html"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 8000,
+      "text": "Fulleventos — red social de eventos en Colombia",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Bienvenida.dc.html",
+    "Registro.dc.html",
+    "Main.dc.html",
+    "Agenda.dc.html",
+    "Mapa.dc.html",
+    "Evento.dc.html",
+    "Chat.dc.html",
+    "Perfil.dc.html"
+  ],
+  "pages": [],
+  "title": "Fulleventos red social"
+}

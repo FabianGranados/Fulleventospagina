@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fulleventos · Mensajes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F3}
+a{color:#17120F;text-decoration:none}a:hover{color:#C23A24}
+button{font-family:inherit;cursor:pointer}
+button:disabled{cursor:default}
+input,textarea,select{font-family:inherit}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #C23A24;outline-offset:2px}
+@media (min-width: 900px){[data-ch~="root"]{height:100vh}[data-ch~="shell"]{min-height:520px}[data-ch~="back"]{display:none !important}}
+@media (min-width: 1180px){[data-info-wide="off"]{display:none !important}[data-ch~="tg-narrow"]{display:none !important}}
+@media (max-width: 1179px){[data-ch~="tg-wide"]{display:none !important}[data-info-narrow="off"]{display:none !important}[data-ch~="list"]{width:300px !important}[data-ch~="info"]{position:absolute !important;top:0;right:0;bottom:0;z-index:6;width:min(320px, 100%) !important;box-shadow:-16px 0 40px rgba(23,18,15,.16)}}
+@media (max-width: 899px){[data-ch~="hdr"]{position:static !important}[data-ch~="main"]{padding:12px 16px 16px !important}[data-ch~="shell"]{overflow:visible !important;border-radius:20px !important}[data-ch~="list"]{width:auto !important;flex:1 1 auto !important;border-right:0 !important;border-radius:20px}[data-pane="list"] [data-ch~="conv"]{display:none !important}[data-pane="chat"] [data-ch~="list"]{display:none !important}[data-ch~="conv"]{border-radius:20px}[data-ch~="stream"]{overflow:visible !important;padding:8px 12px 16px !important}[data-ch~="topbar"]{position:sticky;top:0;z-index:4;border-radius:20px 20px 0 0}[data-ch~="composer"]{position:sticky;bottom:0;z-index:4;border-radius:0 0 20px 20px}[data-ch~="info"]{position:fixed !important;inset:0;z-index:30;width:auto !important;box-shadow:none}[data-ch~="send"]{padding:0 !important;width:44px}[data-ch~="sendtxt"]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+@media (prefers-reduced-motion: reduce){[data-fx]{transition:none !important}}
+</style>
+</helmet>
+<div data-ch="root" style="position: relative; min-height: 100vh; display: flex; flex-direction: column; background: #FBF7F3; color: #17120F; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+  <header data-ch="hdr" style="position: sticky; top: 0; z-index: 5; flex-shrink: 0; background: #FBF7F3; border-bottom: 1px solid #EAE1D8">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+      <a href="Main.dc.html" style="font-weight: 700; font-size: 1.55rem; letter-spacing: -0.03em; color: #D9452F">fulleventos</a>
+      <div role="search" style="flex: 1 1 260px; max-width: 500px; min-width: 0; display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 999px; padding: 0 6px 0 16px; height: 44px; box-sizing: border-box">
+        <label style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6259" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input type="search" placeholder="Busca planes, gente o lugares" aria-label="Buscar" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: .95rem; color: #17120F">
+        </label>
+        <label style="position: relative; display: flex; align-items: center; gap: 4px; padding-left: 10px; border-left: 1px solid #EAE1D8; font-size: .9rem; white-space: nowrap; flex-shrink: 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Ciudad</span>
+          <select name="ciudad" value="{{city}}" onChange="{{onCity}}" style="height: 36px; max-width: 8.6em; border: 0; background: transparent; font-size: .9rem; font-weight: 500; color: #17120F; cursor: pointer">
+            <option value="all">Toda Colombia</option>
+            <option value="bogota">Bogotá</option>
+            <option value="medellin">Medellín</option>
+            <option value="cali">Cali</option>
+            <option value="barranquilla">Barranquilla</option>
+            <option value="cartagena">Cartagena</option>
+            <option value="santamarta">Santa Marta</option>
+            <option value="bucaramanga">Bucaramanga</option>
+            <option value="pereira">Pereira</option>
+            <option value="villavicencio">Villavicencio</option>
+            <option value="pasto">Pasto</option>
+            <option value="leticia">Leticia</option>
+          </select>
+        </label>
+      </div>
+      <nav aria-label="Principal" style="margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px">
+        <a href="Main.dc.html" aria-label="Inicio" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+        <a href="Agenda.dc.html" aria-label="Agenda de eventos" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></a>
+        <a href="Mapa.dc.html" aria-label="Mapa de eventos" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"></path><path d="M9 4v13.5M15 6.5V20"></path></svg></a>
+        <a href="Chat.dc.html" aria-label="{{msgNavAria}}" aria-current="page" style="position: relative; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #17120F; color: #FFFFFF">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path></svg>
+          <sc-if value="{{hasNavUnread}}" hint-placeholder-val="{{true}}">
+            <span aria-hidden="true" style="position: absolute; top: 4px; right: 4px; min-width: 18px; height: 18px; box-sizing: border-box; border-radius: 9px; background: #C23A24; color: #FFFFFF; box-shadow: 0 0 0 2px #17120F; font-size: .66rem; font-weight: 700; display: grid; place-items: center; padding: 0 4px">{{navUnread}}</span>
+          </sc-if>
+        </a>
+        <button type="button" aria-label="Notificaciones" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; color: #17120F; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg></button>
+        <button type="button" style="height: 44px; border: 0; border-radius: 999px; padding: 0 18px; background: #17120F; color: #FFFFFF; font-weight: 700; font-size: .9rem; margin-left: 6px">Crear evento</button>
+        <a href="Perfil.dc.html" aria-label="Tu perfil" style="width: 40px; height: 40px; border-radius: 50%; background: #8FD3D0; display: grid; place-items: center; font-weight: 700; font-size: .78rem; margin-left: 4px">CV</a>
+      </nav>
+    </div>
+  </header>
+
+  <main data-ch="main" style="flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1240px; margin: 0 auto; padding: 16px 24px; box-sizing: border-box; display: flex; flex-direction: column">
+    <div data-ch="shell" data-pane="{{pane}}" style="position: relative; flex: 1 1 auto; display: flex; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 24px; overflow: hidden">
+
+      <section data-ch="list" aria-label="Tus conversaciones" style="width: 330px; flex-shrink: 0; min-height: 0; display: flex; flex-direction: column; background: #FFFFFF; border-right: 1px solid #EAE1D8">
+        <div style="padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #EAE1D8">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+            <h1 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.75rem; letter-spacing: -0.03em; line-height: 1">Mensajes</h1>
+            <span style="font-size: .8rem; color: #6E6259">{{unreadSummary}}</span>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button type="button" onClick="{{openNewChat}}" style="flex: 1 1 0; min-width: 0; height: 40px; border-radius: 999px; border: 1px solid #17120F; background: #FFFFFF; color: #17120F; font-weight: 700; font-size: .84rem; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 0 10px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path><path d="M12 8.5v7M8.5 12h7"></path></svg>Nuevo chat</button>
+            <button type="button" onClick="{{openNewGroup}}" style="flex: 1 1 0; min-width: 0; height: 40px; border-radius: 999px; border: 1px solid #17120F; background: #17120F; color: #FFFFFF; font-weight: 700; font-size: .84rem; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 0 10px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"></path></svg>Nuevo parche</button>
+          </div>
+          <label style="position: relative; display: flex; align-items: center; gap: 8px; height: 42px; box-sizing: border-box; border: 1px solid #EAE1D8; border-radius: 999px; padding: 0 14px; background: #FBF7F3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6E6259" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Buscar en tus chats</span>
+            <input type="search" value="{{q}}" onChange="{{onSearch}}" placeholder="Busca chats, parches o eventos" autocomplete="off" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: .9rem; color: #17120F">
+          </label>
+          <div role="group" aria-label="Filtrar chats" style="display: flex; gap: 2px; overflow-x: auto; background: #FBF7F3; border: 1px solid #EAE1D8; border-radius: 999px; padding: 3px">
+            <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+              <button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="flex: 1 0 auto; height: 36px; border: 0; border-radius: 999px; padding: 0 6px; font-size: .8rem; font-weight: 700; white-space: nowrap; background: {{t.bg}}; color: {{t.fg}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div data-ch="scroll" style="position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px">
+          <sc-for list="{{items}}" as="c" hint-placeholder-count="7">
+            <button type="button" onClick="{{c.open}}" aria-current="{{c.current}}" style="position: relative; width: 100%; flex-shrink: 0; display: flex; align-items: flex-start; gap: 12px; padding: 10px; border-radius: 16px; border: 1px solid {{c.border}}; background: {{c.bg}}; text-align: left; color: #17120F; font-size: .9rem">
+              <span aria-hidden="true" style="width: 48px; height: 48px; flex-shrink: 0; border-radius: {{c.avRadius}}; background: {{c.avBg}}; color: {{c.avFg}}; display: grid; place-items: center; font-family: {{c.avFont}}; font-weight: {{c.avWeight}}; font-size: .86rem">{{c.ini}}</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; line-height: 1.3">
+                <span style="display: flex; align-items: center; gap: 5px">
+                  <b style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .92rem">{{c.name}}</b>
+                  <sc-if value="{{c.isOrg}}" hint-placeholder-val="{{false}}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" role="img" aria-label="Cuenta verificada" style="flex-shrink: 0"><path d="M12 2.5l2.4 1.8 3-.1.9 2.8 2.4 1.8-.9 2.9.9 2.9-2.4 1.8-.9 2.8-3-.1L12 21.5l-2.4-1.8-3 .1-.9-2.8-2.4-1.8.9-2.9-.9-2.9 2.4-1.8.9-2.8 3 .1z" fill="#C23A24"></path><path d="m8.5 12.2 2.3 2.3 4.7-4.9" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </sc-if>
+                  <sc-if value="{{c.isMuted}}" hint-placeholder-val="{{false}}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6E6259" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Silenciado" style="flex-shrink: 0"><path d="M8.7 3.6A6 6 0 0 1 18 8c0 3.2.6 5.4 1.3 6.8M17 17H3s3-2 3-9c0-.5 0-1 .1-1.4"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path><path d="m3 3 18 18"></path></svg>
+                  </sc-if>
+                  <span style="margin-left: auto; padding-left: 6px; flex-shrink: 0; font-size: .72rem; color: {{c.timeColor}}; font-weight: {{c.timeWeight}}">{{c.time}}</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 8px">
+                  <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .84rem; color: {{c.pvColor}}; font-weight: {{c.pvWeight}}">{{c.preview}}</span>
+                  <sc-if value="{{c.showBadge}}" hint-placeholder-val="{{false}}">
+                    <span aria-hidden="true" style="min-width: 20px; height: 20px; box-sizing: border-box; border-radius: 10px; background: #C23A24; color: #FFFFFF; font-size: .7rem; font-weight: 700; display: grid; place-items: center; padding: 0 6px; flex-shrink: 0">{{c.unread}}</span>
+                    <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">{{c.unreadText}}</span>
+                  </sc-if>
+                </span>
+                <sc-if value="{{c.hasEvent}}" hint-placeholder-val="{{false}}">
+                  <span style="align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 999px; padding: 2px 9px 2px 7px; font-size: .72rem; font-weight: 700">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C23A24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>{{c.evPill}}</span>
+                </sc-if>
+                <sc-if value="{{c.isOrg}}" hint-placeholder-val="{{false}}">
+                  <span style="align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; background: #F6DC6A; border-radius: 999px; padding: 2px 9px; font-size: .72rem; font-weight: 700">Organizador · Responde en ~1 h</span>
+                </sc-if>
+              </span>
+            </button>
+          </sc-for>
+          <sc-if value="{{listEmpty}}" hint-placeholder-val="{{false}}">
+            <div style="padding: 32px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px">
+              <p style="margin: 0; color: #6E6259; font-size: .9rem">{{listEmptyMsg}}</p>
+              <button type="button" onClick="{{clearListFilters}}" style="height: 40px; border-radius: 999px; border: 1px solid #17120F; background: #FFFFFF; color: #17120F; padding: 0 16px; font-size: .84rem; font-weight: 700">Ver todos los chats</button>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section data-ch="conv" aria-label="{{cv.convAria}}" style="flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: #FBF7F3">
+        <div data-ch="topbar" style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; min-height: 66px; box-sizing: border-box; padding: 10px 12px 10px 16px; background: #FFFFFF; border-bottom: 1px solid #EAE1D8">
+          <button type="button" data-ch="back" onClick="{{backToList}}" aria-label="Volver a tus chats" style="width: 40px; height: 40px; flex-shrink: 0; margin-left: -6px; border: 0; border-radius: 50%; background: transparent; color: #17120F; display: grid; place-items: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <span aria-hidden="true" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: {{cv.avRadius}}; background: {{cv.avBg}}; color: {{cv.avFg}}; display: grid; place-items: center; font-family: {{cv.avFont}}; font-weight: {{cv.avWeight}}; font-size: .82rem">{{cv.ini}}</span>
+          <div style="flex: 1; min-width: 0; line-height: 1.25">
+            <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+              <h2 style="margin: 0; min-width: 0; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cv.name}}</h2>
+              <sc-if value="{{cv.isOrg}}" hint-placeholder-val="{{false}}">
+                <svg width="17" height="17" viewBox="0 0 24 24" role="img" aria-label="Cuenta verificada" style="flex-shrink: 0"><path d="M12 2.5l2.4 1.8 3-.1.9 2.8 2.4 1.8-.9 2.9.9 2.9-2.4 1.8-.9 2.8-3-.1L12 21.5l-2.4-1.8-3 .1-.9-2.8-2.4-1.8.9-2.9-.9-2.9 2.4-1.8.9-2.8 3 .1z" fill="#C23A24"></path><path d="m8.5 12.2 2.3 2.3 4.7-4.9" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </sc-if>
+            </div>
+            <span style="display: flex; align-items: center; gap: 6px; font-size: .8rem; color: #6E6259; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+              <sc-if value="{{cv.online}}" hint-placeholder-val="{{false}}">
+                <span aria-hidden="true" style="width: 9px; height: 9px; flex-shrink: 0; border-radius: 50%; background: #B9E07A; box-shadow: 0 0 0 1.5px #17120F"></span>
+              </sc-if>{{cv.sub}}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0">
+            <sc-if value="{{hasPlan}}" hint-placeholder-val="{{true}}">
+              <a href="Evento.dc.html" aria-label="Ver evento" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"></path><path d="M14 7v2M14 11v2M14 15v2"></path></svg></a>
+            </sc-if>
+            <button type="button" data-ch="tg-wide" aria-label="{{infoLabel}}" aria-pressed="{{infoWidePressed}}" onClick="{{toggleInfoWide}}" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: {{infoWideBg}}; color: {{infoWideFg}}; display: grid; place-items: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></button>
+            <button type="button" data-ch="tg-narrow" aria-label="{{infoLabel}}" aria-pressed="{{infoNarrowPressed}}" onClick="{{toggleInfoNarrow}}" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: {{infoNarrowBg}}; color: {{infoNarrowFg}}; display: grid; place-items: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></button>
+            <button type="button" aria-label="Silenciar chat" aria-pressed="{{mutePressed}}" onClick="{{toggleMute}}" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: {{muteBg}}; color: {{muteFg}}; display: grid; place-items: center">
+              <sc-if value="{{isMuted}}" hint-placeholder-val="{{false}}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.7 3.6A6 6 0 0 1 18 8c0 3.2.6 5.4 1.3 6.8M17 17H3s3-2 3-9c0-.5 0-1 .1-1.4"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path><path d="m3 3 18 18"></path></svg>
+              </sc-if>
+              <sc-if value="{{notMuted}}" hint-placeholder-val="{{true}}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
+              </sc-if>
+            </button>
+          </div>
+        </div>
+
+        <sc-if value="{{hasPlan}}" hint-placeholder-val="{{true}}">
+          <div style="flex-shrink: 0; padding: 12px 14px 0">
+            <section aria-label="Plan fijado del parche" style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 18px; padding: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px">
+              <span role="img" aria-label="[Foto del evento]" style="width: 64px; height: 64px; flex-shrink: 0; border-radius: 14px; background: radial-gradient(circle at 70% 30%, {{plan.bg1}} 0, transparent 58%), {{plan.bg2}}; display: grid; place-items: center">
+                <span style="background: #FFFFFF; border-radius: 9px; padding: 4px 7px 3px; text-align: center; line-height: 1; min-width: 34px; box-sizing: border-box"><b style="display: block; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.05rem">{{plan.d}}</b><span style="font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6E6259">oct</span></span>
+              </span>
+              <div style="flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.3">
+                <span style="display: flex; align-items: center; gap: 6px; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #C23A24">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3z"></path><path d="M12 14v6"></path></svg>Plan fijado · {{plan.countdown}}</span>
+                <a href="Evento.dc.html" style="font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; line-height: 1.2">{{plan.title}}</a>
+                <span style="font-size: .8rem; color: #6E6259">{{plan.meta}}</span>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px">
+                  <div role="img" aria-label="{{plan.barAria}}" style="flex: 0 1 120px; height: 6px; border-radius: 3px; background: #EAE1D8; overflow: hidden"><div data-fx="1" style="height: 100%; width: {{plan.pct}}%; background: #C23A24; border-radius: 3px; transition: width 300ms ease"></div></div>
+                  <span style="font-size: .78rem"><b>{{plan.ticketsLine}}</b> ya tienen boleta</span>
+                </div>
+              </div>
+              <sc-if value="{{plan.needsTicket}}" hint-placeholder-val="{{true}}">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0">
+                  <a href="Evento.dc.html" style="height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; padding: 0 18px; border-radius: 999px; background: #C23A24; color: #FFFFFF; font-weight: 700; font-size: .88rem; white-space: nowrap">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"></path><path d="M14 7v2M14 11v2M14 15v2"></path></svg>Comprar mi boleta</a>
+                  <span style="font-size: .72rem; color: #6E6259">{{plan.price}}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{plan.hasTicket}}" hint-placeholder-val="{{false}}">
+                <a href="Evento.dc.html" style="flex-shrink: 0; height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px 0 6px; border-radius: 999px; background: #B9E07A; font-weight: 700; font-size: .84rem; white-space: nowrap">
+                  <span style="width: 28px; height: 28px; border-radius: 50%; background: #17120F; color: #FFFFFF; display: grid; place-items: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"></path></svg></span>Ya tienes boleta</a>
+              </sc-if>
+            </section>
+          </div>
+        </sc-if>
+
+        <div data-ch="stream" role="log" aria-label="Mensajes de {{cv.name}}" style="position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column-reverse; padding: 6px 18px 16px">
+          <div style="display: flex; flex-direction: column">
+            <sc-for list="{{msgs}}" as="m" hint-placeholder-count="10">
+              <sc-if value="{{m.isDate}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; align-items: center; gap: 12px; margin: 16px 0 4px; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6E6259"><span style="flex: 1; height: 1px; background: #EAE1D8"></span>{{m.text}}<span style="flex: 1; height: 1px; background: #EAE1D8"></span></div>
+              </sc-if>
+              <sc-if value="{{m.isNew}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; align-items: center; gap: 12px; margin: 14px 0 0; font-size: .72rem; font-weight: 700; color: #C23A24"><span style="flex: 1; height: 1.5px; background: #C23A24; opacity: .5"></span>{{m.text}}<span style="flex: 1; height: 1.5px; background: #C23A24; opacity: .5"></span></div>
+              </sc-if>
+              <sc-if value="{{m.isSystem}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; justify-content: center; margin: 12px 0 2px">
+                  <span style="display: inline-flex; align-items: center; gap: 8px; max-width: 100%; box-sizing: border-box; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 999px; padding: 5px 14px 5px 5px; font-size: .8rem; line-height: 1.3">
+                    <sc-if value="{{m.sysTicket}}" hint-placeholder-val="{{false}}">
+                      <span aria-hidden="true" style="width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: #B9E07A; display: grid; place-items: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"></path></svg></span>
+                    </sc-if>
+                    <sc-if value="{{m.sysPay}}" hint-placeholder-val="{{false}}">
+                      <span aria-hidden="true" style="width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: #8FD3D0; display: grid; place-items: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"></path><path d="M16.5 7.5c-.8-1.2-2.4-2-4.5-2-2.5 0-4 1.2-4 3s1.6 2.4 4 3 4 1.4 4 3.2-1.7 3-4.2 3c-2.1 0-3.7-.8-4.5-2"></path></svg></span>
+                    </sc-if>
+                    <sc-if value="{{m.sysGroup}}" hint-placeholder-val="{{false}}">
+                      <span aria-hidden="true" style="width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: #F6DC6A; display: grid; place-items: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"></path></svg></span>
+                    </sc-if>
+                    <span style="min-width: 0"><b style="font-weight: 700">{{m.text}}</b> <span style="color: #6E6259">· {{m.time}}</span></span>
+                  </span>
+                </div>
+              </sc-if>
+              <sc-if value="{{m.isRow}}" hint-placeholder-val="{{true}}">
+                <div style="display: flex; justify-content: {{m.justify}}; align-items: flex-start; gap: 8px; margin-top: {{m.gap}}px">
+                  <sc-if value="{{m.avatarSlot}}" hint-placeholder-val="{{false}}">
+                    <a href="Perfil.dc.html" aria-label="Perfil de {{m.name}}" style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: {{m.c}}; visibility: {{m.avVis}}; display: grid; place-items: center; font-weight: 700; font-size: .66rem; color: #17120F">{{m.ini}}</a>
+                  </sc-if>
+                  <div style="max-width: min(78%, 440px); min-width: 0; display: flex; flex-direction: column; align-items: {{m.align}}; gap: 4px">
+                    <sc-if value="{{m.showName}}" hint-placeholder-val="{{false}}">
+                      <span style="font-size: .76rem; font-weight: 700; color: #6E6259; padding: 0 4px">{{m.name}}</span>
+                    </sc-if>
+                    <sc-if value="{{m.isText}}" hint-placeholder-val="{{true}}">
+                      <div style="background: {{m.bg}}; color: {{m.fg}}; border: 1px solid {{m.border}}; border-radius: {{m.radius}}; padding: 9px 14px; font-size: .94rem; line-height: 1.42; overflow-wrap: anywhere">{{m.text}}</div>
+                    </sc-if>
+                    <sc-if value="{{m.isEvent}}" hint-placeholder-val="{{false}}">
+                      <article style="width: 290px; max-width: 100%; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 18px; overflow: hidden; color: #17120F">
+                        <div role="img" aria-label="[Foto del evento]" style="position: relative; height: 104px; background: radial-gradient(circle at 70% 30%, {{m.evBg1}} 0, transparent 58%), {{m.evBg2}}">
+                          <span style="position: absolute; top: 10px; left: 10px; background: #FFFFFF; border-radius: 10px; padding: 5px 9px 4px; text-align: center; line-height: 1; min-width: 42px; box-sizing: border-box">
+                            <b style="display: block; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.15rem">{{m.evD}}</b>
+                            <span style="font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6E6259">oct</span>
+                          </span>
+                        </div>
+                        <div style="padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 2px; line-height: 1.3">
+                          <span style="font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #C23A24">{{m.evCat}}</span>
+                          <a href="Evento.dc.html" style="font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; line-height: 1.2">{{m.evTitle}}</a>
+                          <span style="font-size: .8rem; color: #6E6259">{{m.evMeta}}</span>
+                          <span style="font-size: .82rem; font-weight: 700; margin-top: 3px">{{m.evPrice}}</span>
+                          <div style="display: flex; gap: 8px; margin-top: 10px">
+                            <button type="button" aria-pressed="{{m.repPressed}}" onClick="{{m.toggleRepost}}" style="flex: 1; height: 40px; border-radius: 999px; border: 1px solid #17120F; background: {{m.repBg}}; color: {{m.repFg}}; font-size: .82rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"></path><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"></path><path d="M21 13v2a3 3 0 0 1-3 3H3"></path></svg>{{m.repLabel}}</button>
+                            <a href="Evento.dc.html" aria-label="Ver evento: {{m.evTitle}}" style="width: 40px; height: 40px; flex-shrink: 0; box-sizing: border-box; border-radius: 50%; border: 1px solid #EAE1D8; display: grid; place-items: center">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+                          </div>
+                        </div>
+                      </article>
+                    </sc-if>
+                    <sc-if value="{{m.isPoll}}" hint-placeholder-val="{{false}}">
+                      <div style="width: 300px; max-width: 100%; box-sizing: border-box; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 8px; color: #17120F">
+                        <span style="display: flex; align-items: center; gap: 6px; font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #C23A24">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 20V11M12 20V5M18 20v-6"></path></svg>Encuesta</span>
+                        <b style="font-size: 1rem; line-height: 1.3">{{m.q}}</b>
+                        <div role="group" aria-label="{{m.q}}" style="display: flex; flex-direction: column; gap: 6px">
+                          <sc-for list="{{m.opts}}" as="o" hint-placeholder-count="3">
+                            <button type="button" aria-pressed="{{o.pressed}}" aria-label="{{o.aria}}" onClick="{{o.vote}}" style="position: relative; overflow: hidden; min-height: 44px; border-radius: 12px; border: 1.5px solid {{o.border}}; background: #FFFFFF; color: #17120F; padding: 0 12px; display: flex; align-items: center; gap: 10px; text-align: left; font-size: .88rem; font-weight: 500">
+                              <span aria-hidden="true" data-fx="1" style="position: absolute; left: 0; top: 0; bottom: 0; width: {{o.pct}}%; background: {{o.fill}}; transition: width 300ms ease"></span>
+                              <span aria-hidden="true" style="position: relative; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; border: 2px solid #17120F; flex-shrink: 0; display: grid; place-items: center; background: {{o.dotBg}}; color: #FFFFFF"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="visibility: {{o.checkVis}}"><path d="m5 12 5 5L20 7"></path></svg></span>
+                              <span style="position: relative; flex: 1; min-width: 0; padding: 8px 0">{{o.label}}</span>
+                              <span style="position: relative; font-weight: 700; font-size: .84rem">{{o.n}}</span>
+                            </button>
+                          </sc-for>
+                        </div>
+                        <span style="font-size: .76rem; color: #6E6259">{{m.pollFoot}}</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{m.isPhoto}}" hint-placeholder-val="{{false}}">
+                      <div style="width: 260px; max-width: 100%; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 18px; overflow: hidden">
+                        <div role="img" aria-label="{{m.alt}}" style="position: relative; aspect-ratio: 4 / 3; background: radial-gradient(circle at 28% 30%, {{m.pBg1}} 0, transparent 50%), radial-gradient(circle at 76% 72%, {{m.pBg3}} 0, transparent 42%), {{m.pBg2}}">
+                          <span aria-hidden="true" style="position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px); box-sizing: border-box; background: rgba(23,18,15,.66); border-radius: 999px; padding: 2px 9px; font-size: .68rem; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.alt}}</span>
+                        </div>
+                        <sc-if value="{{m.hasCaption}}" hint-placeholder-val="{{true}}">
+                          <div style="padding: 9px 12px; font-size: .9rem; line-height: 1.4; color: #17120F">{{m.caption}}</div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{m.hasRx}}" hint-placeholder-val="{{false}}">
+                      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                        <sc-for list="{{m.rx}}" as="r" hint-placeholder-count="2">
+                          <button type="button" aria-pressed="{{r.pressed}}" aria-label="{{r.aria}}" onClick="{{r.toggle}}" style="height: 36px; border-radius: 999px; padding: 0 11px; border: 1px solid {{r.border}}; background: {{r.bg}}; color: #17120F; display: inline-flex; align-items: center; gap: 5px; font-size: .8rem; font-weight: 700">
+                            <sc-if value="{{r.isHeart}}" hint-placeholder-val="{{true}}">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C23A24" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.3 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.3 3.4 3.8 6.4C19 15.6 12 20 12 20z"></path></svg>
+                            </sc-if>
+                            <sc-if value="{{r.isFire}}" hint-placeholder-val="{{false}}">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C23A24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c3.9 0 6.5-2.6 6.5-6.3 0-3.4-2.2-5.6-3.9-8-.4 1.8-1.3 2.9-2.5 3.3.2-2.7-.8-5.3-3-7.5.2 3.7-3.6 6.3-3.6 12.2 0 3.7 2.6 6.3 6.5 6.3z"></path></svg>
+                            </sc-if>
+                            <sc-if value="{{r.isLike}}" hint-placeholder-val="{{false}}">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10z"></path><path d="M7 10l4-7c1.4 0 2.4 1.2 2.1 2.6L12.5 9H19a2 2 0 0 1 2 2.3l-1.2 6.9A2.2 2.2 0 0 1 17.6 20H7"></path></svg>
+                            </sc-if>{{r.n}}</button>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{m.showMeta}}" hint-placeholder-val="{{true}}">
+                      <span style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; color: #6E6259; padding: 0 4px">{{m.meta}}<sc-if value="{{m.mine}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 13 4 4 8-9M10 15l2 2 9-10"></path></svg></sc-if></span>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-if>
+            </sc-for>
+            <sc-if value="{{cv.empty}}" hint-placeholder-val="{{false}}">
+              <div style="margin: 20px auto 0; max-width: 34ch; text-align: center; color: #6E6259; font-size: .9rem">{{cv.emptyText}}</div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div data-ch="composer" style="flex-shrink: 0; background: #FFFFFF; border-top: 1px solid #EAE1D8; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px">
+          <sc-if value="{{trayOpen}}" hint-placeholder-val="{{false}}">
+            <div role="group" aria-label="Elige un evento para compartir" style="display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 2px">
+              <span style="flex-shrink: 0; font-size: .78rem; font-weight: 700; color: #6E6259">Compartir:</span>
+              <sc-for list="{{trayEvents}}" as="te" hint-placeholder-count="4">
+                <button type="button" onClick="{{te.share}}" style="flex-shrink: 0; height: 40px; border-radius: 999px; border: 1px solid #EAE1D8; background: #FBF7F3; color: #17120F; padding: 0 14px 0 5px; display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; white-space: nowrap">
+                  <span aria-hidden="true" style="width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 70% 30%, {{te.bg1}} 0, transparent 58%), {{te.bg2}}"></span>{{te.label}}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+            <div style="display: flex; gap: 2px; flex-shrink: 0">
+              <button type="button" aria-label="Compartir evento" aria-expanded="{{trayExpanded}}" onClick="{{toggleTray}}" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: {{trayBg}}; color: {{trayFg}}; display: grid; place-items: center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"></path></svg></button>
+              <button type="button" aria-label="Crear encuesta" onClick="{{addPoll}}" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: #17120F; display: grid; place-items: center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 20V11M12 20V5M18 20v-6"></path></svg></button>
+              <button type="button" aria-label="Enviar foto" onClick="{{addPhoto}}" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: #17120F; display: grid; place-items: center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.5"></circle><path d="m21 16-5-5-9 8"></path></svg></button>
+            </div>
+            <label style="position: relative; flex: 1 1 120px; min-width: 0">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Escribe un mensaje</span>
+              <input type="text" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onDraftKey}}" placeholder="{{placeholder}}" autocomplete="off" style="width: 100%; box-sizing: border-box; height: 44px; border: 1px solid #EAE1D8; border-radius: 999px; padding: 0 16px; background: #FBF7F3; font-size: .95rem; color: #17120F; outline: 0">
+            </label>
+            <button type="button" data-ch="send" onClick="{{send}}" disabled="{{sendDisabled}}" style="position: relative; height: 44px; min-width: 44px; box-sizing: border-box; flex-shrink: 0; border: 0; border-radius: 999px; padding: 0 18px; background: {{sendBg}}; color: {{sendFg}}; font-weight: 700; font-size: .9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px"><span data-ch="sendtxt">Enviar</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"></path></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <aside data-ch="info" data-info-wide="{{infoWideAttr}}" data-info-narrow="{{infoNarrowAttr}}" aria-label="{{infoLabel}}" style="position: relative; width: 296px; flex-shrink: 0; min-height: 0; overflow-y: auto; background: #FFFFFF; border-left: 1px solid #EAE1D8; display: flex; flex-direction: column">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 0 18px">
+          <span style="font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #6E6259">{{infoLabel}}</span>
+          <button type="button" onClick="{{closeInfo}}" aria-label="Cerrar información" style="width: 40px; height: 40px; border: 0; border-radius: 50%; background: #FBF7F3; color: #17120F; display: grid; place-items: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </div>
+        <div style="padding: 4px 18px 18px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; border-bottom: 1px solid #EAE1D8">
+          <span aria-hidden="true" style="width: 72px; height: 72px; border-radius: {{cv.avRadiusLg}}; background: {{cv.avBg}}; color: {{cv.avFg}}; display: grid; place-items: center; font-family: {{cv.avFont}}; font-weight: {{cv.avWeight}}; font-size: 1.25rem">{{cv.ini}}</span>
+          <h2 style="margin: 4px 0 0; font-size: 1.15rem; line-height: 1.25; display: flex; align-items: center; gap: 6px">{{cv.name}}<sc-if value="{{cv.isOrg}}" hint-placeholder-val="{{false}}"><svg width="17" height="17" viewBox="0 0 24 24" role="img" aria-label="Cuenta verificada" style="flex-shrink: 0"><path d="M12 2.5l2.4 1.8 3-.1.9 2.8 2.4 1.8-.9 2.9.9 2.9-2.4 1.8-.9 2.8-3-.1L12 21.5l-2.4-1.8-3 .1-.9-2.8-2.4-1.8.9-2.9-.9-2.9 2.4-1.8.9-2.8 3 .1z" fill="#C23A24"></path><path d="m8.5 12.2 2.3 2.3 4.7-4.9" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></h2>
+          <span style="font-size: .84rem; color: #6E6259">{{cv.infoSub}}</span>
+          <sc-if value="{{cv.isPersonish}}" hint-placeholder-val="{{false}}">
+            <a href="Perfil.dc.html" style="margin-top: 6px; height: 38px; box-sizing: border-box; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; border: 1px solid #17120F; font-size: .84rem; font-weight: 700">{{cv.profileLabel}}</a>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{hasPlan}}" hint-placeholder-val="{{true}}">
+          <div style="padding: 16px 18px; border-bottom: 1px solid #EAE1D8; display: flex; flex-direction: column; gap: 10px">
+            <h3 style="margin: 0; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #C23A24">Evento del parche</h3>
+            <a href="Evento.dc.html" style="display: flex; align-items: center; gap: 12px">
+              <span role="img" aria-label="[Foto del evento]" style="width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; background: radial-gradient(circle at 70% 30%, {{plan.bg1}} 0, transparent 58%), {{plan.bg2}}"></span>
+              <span style="min-width: 0; line-height: 1.3"><b style="display: block; font-size: .92rem">{{plan.title}}</b><span style="font-size: .78rem; color: #6E6259">{{plan.metaShort}}</span></span>
+            </a>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{cv.isGroup}}" hint-placeholder-val="{{true}}">
+          <div style="padding: 16px 18px; border-bottom: 1px solid #EAE1D8">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+              <h3 style="margin: 0; font-size: .95rem">Miembros · {{cv.memberCount}}</h3>
+              <span style="font-size: .76rem; color: #6E6259">{{cv.ticketsShort}}</span>
+            </div>
+            <ul style="list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column">
+              <sc-for list="{{members}}" as="u" hint-placeholder-count="8">
+                <li style="display: flex; align-items: center; gap: 10px; padding: 6px 0">
+                  <span aria-hidden="true" style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: {{u.c}}; display: grid; place-items: center; font-weight: 700; font-size: .7rem">{{u.ini}}</span>
+                  <span style="flex: 1; min-width: 0; line-height: 1.25; font-size: .88rem"><span style="display: block; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{u.name}}</span><sc-if value="{{u.hasRole}}" hint-placeholder-val="{{false}}"><span style="display: block; font-size: .74rem; color: #6E6259">{{u.role}}</span></sc-if></span>
+                  <sc-if value="{{u.has}}" hint-placeholder-val="{{true}}">
+                    <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; font-size: .74rem; font-weight: 700"><span aria-hidden="true" style="width: 20px; height: 20px; border-radius: 50%; background: #B9E07A; display: grid; place-items: center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"></path></svg></span>Tiene boleta</span>
+                  </sc-if>
+                  <sc-if value="{{u.hasNot}}" hint-placeholder-val="{{false}}">
+                    <span style="flex-shrink: 0; font-size: .74rem; color: #6E6259">Sin boleta</span>
+                  </sc-if>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+          <sc-if value="{{hasPlan}}" hint-placeholder-val="{{true}}">
+            <div style="padding: 16px 18px; border-bottom: 1px solid #EAE1D8">
+              <button type="button" aria-pressed="{{splitPressed}}" onClick="{{toggleSplit}}" style="width: 100%; min-height: 44px; border-radius: 999px; border: 1px solid #17120F; background: {{splitBg}}; color: {{splitFg}}; font-weight: 700; font-size: .88rem; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"></path><path d="M16.5 7.5c-.8-1.2-2.4-2-4.5-2-2.5 0-4 1.2-4 3s1.6 2.4 4 3 4 1.4 4 3.2-1.7 3-4.2 3c-2.1 0-3.7-.8-4.5-2"></path></svg>{{splitLabel}}</button>
+              <p style="margin: 8px 0 0; font-size: .8rem; line-height: 1.4; color: #6E6259">Cada uno paga su parte de la boleta desde su cuenta: nadie tiene que adelantar la plata de todos.</p>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{hasCommon}}" hint-placeholder-val="{{false}}">
+          <div style="padding: 16px 18px; border-bottom: 1px solid #EAE1D8; display: flex; flex-direction: column; gap: 10px">
+            <h3 style="margin: 0; font-size: .95rem">{{commonTitle}}</h3>
+            <sc-for list="{{common}}" as="e" hint-placeholder-count="2">
+              <a href="Evento.dc.html" style="display: flex; align-items: center; gap: 12px">
+                <span role="img" aria-label="[Foto del evento]" style="width: 46px; height: 46px; flex-shrink: 0; border-radius: 12px; background: radial-gradient(circle at 70% 30%, {{e.bg1}} 0, transparent 58%), {{e.bg2}}"></span>
+                <span style="min-width: 0; line-height: 1.3"><b style="display: block; font-size: .88rem">{{e.t}}</b><span style="font-size: .76rem; color: #6E6259">{{e.meta}}</span></span>
+              </a>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="padding: 10px 18px 18px; display: flex; flex-direction: column; gap: 4px">
+          <button type="button" aria-pressed="{{mutePressed}}" onClick="{{toggleMute}}" style="width: 100%; min-height: 48px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; gap: 12px; text-align: left; color: #17120F; font-size: .9rem; font-weight: 500">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M8.7 3.6A6 6 0 0 1 18 8c0 3.2.6 5.4 1.3 6.8M17 17H3s3-2 3-9c0-.5 0-1 .1-1.4"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path><path d="m3 3 18 18"></path></svg>
+            <span style="flex: 1">Silenciar notificaciones</span>
+            <span aria-hidden="true" style="position: relative; width: 44px; height: 26px; flex-shrink: 0; border-radius: 999px; background: {{muteTrack}}">
+              <span data-fx="1" style="position: absolute; top: 3px; left: {{muteKnob}}px; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(23,18,15,.3); transition: left 160ms ease"></span>
+            </span>
+          </button>
+          <sc-if value="{{cv.isGroup}}" hint-placeholder-val="{{true}}">
+            <sc-if value="{{notLeaving}}" hint-placeholder-val="{{true}}">
+              <button type="button" onClick="{{askLeave}}" style="align-self: flex-start; min-height: 44px; border: 0; background: transparent; padding: 0; color: #C23A24; font-weight: 700; font-size: .9rem; display: flex; align-items: center; gap: 12px">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l-5-5 5-5M5 12h11"></path></svg>Salir del parche</button>
+            </sc-if>
+            <sc-if value="{{leaving}}" hint-placeholder-val="{{false}}">
+              <div role="group" aria-label="Confirmar salida del parche" style="margin-top: 4px; background: #FBF7F3; border: 1px solid #EAE1D8; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+                <p style="margin: 0; font-size: .86rem; line-height: 1.4">¿Seguro que quieres salir de <b>{{cv.name}}</b>? Ya no verás los mensajes ni el plan.</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                  <button type="button" onClick="{{cancelLeave}}" style="height: 40px; border-radius: 999px; border: 1px solid #17120F; background: #FFFFFF; color: #17120F; padding: 0 14px; font-size: .84rem; font-weight: 700">Me quedo</button>
+                  <button type="button" onClick="{{confirmLeave}}" style="height: 40px; border-radius: 999px; border: 0; background: #C23A24; color: #FFFFFF; padding: 0 14px; font-size: .84rem; font-weight: 700">Sí, salir</button>
+                </div>
+              </div>
+            </sc-if>
+          </sc-if>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <sc-if value="{{modalOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box">
+      <div aria-hidden="true" onClick="{{closeModal}}" style="position: absolute; inset: 0; background: rgba(23,18,15,.55)"></div>
+      <div role="dialog" aria-modal="true" aria-labelledby="ch-modal-title" onKeyDown="{{modalKey}}" style="position: relative; width: 100%; max-width: 540px; max-height: calc(100vh - 32px); overflow-y: auto; background: #FFFFFF; border-radius: 24px; padding: 22px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 24px 60px rgba(23,18,15,.3)">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <h2 id="ch-modal-title" style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.4rem; letter-spacing: -0.02em">{{modalTitle}}</h2>
+          <button type="button" onClick="{{closeModal}}" aria-label="Cerrar" style="width: 40px; height: 40px; flex-shrink: 0; border: 0; border-radius: 50%; background: #FBF7F3; color: #17120F; display: grid; place-items: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </div>
+        <div role="group" aria-label="Tipo de chat" style="display: flex; background: #FBF7F3; border: 1px solid #EAE1D8; border-radius: 999px; padding: 4px">
+          <button type="button" aria-pressed="{{mGroupPressed}}" onClick="{{setModeGroup}}" style="flex: 1; height: 38px; border: 0; border-radius: 999px; background: {{mGroupBg}}; color: {{mGroupFg}}; font-size: .86rem; font-weight: 700">Parche (grupo)</button>
+          <button type="button" aria-pressed="{{mDmPressed}}" onClick="{{setModeDm}}" style="flex: 1; height: 38px; border: 0; border-radius: 999px; background: {{mDmBg}}; color: {{mDmFg}}; font-size: .86rem; font-weight: 700">Con una persona</button>
+        </div>
+
+        <sc-if value="{{mIsGroup}}" hint-placeholder-val="{{true}}">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: .88rem; font-weight: 700">Nombre del parche
+            <input type="text" value="{{mName}}" onChange="{{onMName}}" maxlength="40" placeholder="Ej.: Previa del viernes" autocomplete="off" style="height: 46px; box-sizing: border-box; border: 1px solid #EAE1D8; border-radius: 14px; padding: 0 14px; font-size: .95rem; font-weight: 400; background: #FBF7F3; color: #17120F; outline: 0"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: .88rem; font-weight: 700"><span>Evento del plan <span style="font-weight: 400; color: #6E6259">(opcional)</span></span>
+            <select value="{{mEvent}}" onChange="{{onMEvent}}" style="height: 46px; box-sizing: border-box; border: 1px solid #EAE1D8; border-radius: 14px; padding: 0 12px; font-size: .9rem; font-weight: 400; background: #FBF7F3; color: #17120F; max-width: 100%">
+              <option value="">Sin evento por ahora</option>
+              <option value="e1">Noche de salsa y boleros en vivo · Vie 9 oct · Bogotá</option>
+              <option value="e4">Santa Fe vs. Millonarios · Dom 11 oct · Bogotá</option>
+              <option value="e3">Rock en el Movistar Arena · Sáb 10 oct · Bogotá</option>
+              <option value="e7">Noche de reguetón en Provenza · Vie 9 oct · Medellín</option>
+            </select></label>
+          <sc-if value="{{mHasEvent}}" hint-placeholder-val="{{false}}">
+            <p style="margin: -6px 0 0; font-size: .8rem; color: #6E6259">El evento queda fijado arriba del chat y todos ven quién ya tiene boleta.</p>
+          </sc-if>
+        </sc-if>
+
+        <fieldset style="border: 0; margin: 0; padding: 0; min-width: 0">
+          <legend style="padding: 0; margin-bottom: 8px; font-size: .88rem; font-weight: 700">{{mLegend}}</legend>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px">
+            <sc-for list="{{friends}}" as="f" hint-placeholder-count="7">
+              <button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.toggle}}" style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px 6px 6px; border-radius: 14px; border: 1.5px solid {{f.border}}; background: {{f.bg}}; color: #17120F; text-align: left">
+                <span aria-hidden="true" style="width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; background: {{f.c}}; display: grid; place-items: center; font-weight: 700; font-size: .72rem">{{f.ini}}</span>
+                <span style="flex: 1; min-width: 0; line-height: 1.25"><b style="display: block; font-size: .88rem">{{f.name}}</b><span style="font-size: .76rem; color: #6E6259">{{f.city}}</span></span>
+                <span aria-hidden="true" style="width: 22px; height: 22px; box-sizing: border-box; flex-shrink: 0; border-radius: {{f.boxRadius}}; border: 2px solid #17120F; background: {{f.boxBg}}; color: #FFFFFF; display: grid; place-items: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" style="visibility: {{f.checkVis}}"><path d="m5 12 5 5L20 7"></path></svg></span>
+              </button>
+            </sc-for>
+          </div>
+        </fieldset>
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px">
+          <span style="flex: 1 1 180px; font-size: .8rem; color: #6E6259">{{mHelp}}</span>
+          <button type="button" onClick="{{closeModal}}" style="height: 46px; border: 0; background: transparent; padding: 0 14px; font-weight: 700; color: #17120F">Cancelar</button>
+          <button type="button" onClick="{{mPrimary}}" disabled="{{mPrimaryDisabled}}" style="height: 46px; border: 0; border-radius: 999px; padding: 0 22px; background: {{mPrimaryBg}}; color: {{mPrimaryFg}}; font-weight: 700">{{mPrimaryLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      city: 'all',
+      openId: 'salseros',
+      pane: 'list',
+      filter: 'todos',
+      q: '',
+      read: {},
+      order: ['salseros', 'laura', 'galeria', 'clasico', 'andres', 'rockeros', 'sofia'],
+      extra: {},
+      sent: {},
+      drafts: {},
+      votes: {},
+      reacted: {},
+      reposted: {},
+      muted: { rockeros: true },
+      split: {},
+      left: {},
+      leaving: false,
+      infoWide: true,
+      infoNarrow: false,
+      tray: false,
+      seq: 1,
+      modal: '',
+      mName: '',
+      mEvent: '',
+      mPicked: {},
+      mPerson: ''
+    };
+  }
+
+  flip(key, id) {
+    const next = Object.assign({}, this.state[key]);
+    next[id] = !next[id];
+    const patch = {};
+    patch[key] = next;
+    this.setState(patch);
+  }
+
+  // Appends Camila's items to a conversation, marks it read and moves it to the top of the list
+  push(convId, list, extra) {
+    const st = this.state;
+    const items = list.map((m, i) => Object.assign({ id: 'm' + (st.seq + i), time: 'Ahora' }, m));
+    const sent = Object.assign({}, st.sent);
+    sent[convId] = (sent[convId] || []).concat(items);
+    const read = Object.assign({}, st.read);
+    read[convId] = true;
+    const order = [convId].concat(st.order.filter((x) => x !== convId));
+    this.setState(Object.assign({ sent: sent, read: read, order: order, seq: st.seq + items.length }, extra || {}));
+  }
+
+  takeDraft(convId) {
+    const drafts = Object.assign({}, this.state.drafts);
+    const text = (drafts[convId] || '').trim();
+    drafts[convId] = '';
+    return { text: text, drafts: drafts };
+  }
+
+  send(convId) {
+    const d = this.takeDraft(convId);
+    if (!d.text) return;
+    this.push(convId, [{ type: 'text', from: 'me', text: d.text }], { drafts: d.drafts, tray: false });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const fmt = (n) => n.toLocaleString('es-CO');
+    const norm = (x) => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const joinNames = (arr) => arr.length <= 1 ? arr.join('') : arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length - 1];
+
+    // People (same names, initials and colors as the rest of the canvas)
+    const P = {
+      me: { name: 'Camila Vargas', short: 'Camila', ini: 'CV', c: '#8FD3D0', city: 'Bogotá' },
+      lm: { name: 'Laura Martínez', short: 'Laura', ini: 'LM', c: '#F3B27E', city: 'Bogotá' },
+      ar: { name: 'Andrés Ramírez', short: 'Andrés', ini: 'AR', c: '#A3A8F0', city: 'Medellín' },
+      sc: { name: 'Sofía Cárdenas', short: 'Sofía', ini: 'SC', c: '#EE93BC', city: 'Bogotá' },
+      jp: { name: 'Juan Pablo Rojas', short: 'Juan Pablo', ini: 'JP', c: '#B9E07A', city: 'Bogotá' },
+      mg: { name: 'María F. Gómez', short: 'Mafe', ini: 'MG', c: '#F6DC6A', city: 'Bogotá' },
+      dt: { name: 'Daniel Torres', short: 'Daniel', ini: 'DT', c: '#8FD3D0', city: 'Bogotá' },
+      vq: { name: 'Valentina Quintero', short: 'Vale', ini: 'VQ', c: '#A3A8F0', city: 'Medellín' },
+      nh: { name: 'Natalia Herrera', short: 'Natalia', ini: 'NH', c: '#F6DC6A', city: 'Bogotá' },
+      cr: { name: 'Carolina Ruiz', short: 'Caro', ini: 'CR', c: '#EE93BC', city: 'Bogotá' },
+      sb: { name: 'Sebastián Becerra', short: 'Sebas', ini: 'SB', c: '#8FD3D0', city: 'Bogotá' },
+      mj: { name: 'Majo Pineda', short: 'Majo', ini: 'MJ', c: '#B9E07A', city: 'Bogotá' },
+      gc: { name: 'Galería Café Libro', short: 'Galería Café Libro', ini: 'GC', c: '#17120F', city: 'Bogotá' }
+    };
+    const FRIENDS = ['lm', 'ar', 'sc', 'jp', 'mg', 'dt', 'vq'];
+
+    // Shared events (same data as Agenda / Main / Mapa)
+    const EV = {
+      e1: { t: 'Noche de salsa y boleros en vivo', short: 'Noche de salsa y boleros', cat: 'Rumba', tag: 'Salsa', day: 'Vie', d: 9, hour: '8:00 p. m.', venue: 'Galería Café Libro', zone: 'Zona T', city: 'Bogotá', p: 45000, bg1: '#E8A04F', bg2: '#B5372B', left: 3 },
+      e4: { t: 'Santa Fe vs. Millonarios', short: 'Santa Fe vs. Millonarios', cat: 'Deporte', tag: 'Fútbol', day: 'Dom', d: 11, hour: '4:00 p. m.', venue: 'Estadio El Campín', zone: 'Teusaquillo', city: 'Bogotá', p: 60000, bg1: '#C4302B', bg2: '#1F3A8A', left: 5 },
+      e3: { t: 'Rock en el Movistar Arena', short: 'Rock en el Movistar Arena', cat: 'Conciertos', tag: 'Rock', day: 'Sáb', d: 10, hour: '', venue: 'Movistar Arena', zone: 'Salitre', city: 'Bogotá', p: 180000, bg1: '#D9452F', bg2: '#2B0F12', left: 4 },
+      e7: { t: 'Noche de reguetón en Provenza', short: 'Reguetón en Provenza', cat: 'Rumba', tag: 'Reguetón', day: 'Vie', d: 9, hour: '10:00 p. m.', venue: 'Barrio Provenza', zone: 'El Poblado', city: 'Medellín', p: 50000, bg1: '#6B3FA0', bg2: '#0E0A1A', left: 3 }
+    };
+    const EV_ORDER = ['e1', 'e4', 'e3', 'e7'];
+
+    // Conversations. Groups are parches tied to an event; tickets = who already has a boleta.
+    const BASE = {
+      salseros: {
+        id: 'salseros', kind: 'group', name: 'Salseros de jueves', ini: 'SL', c: '#F6DC6A', ev: 'e1', admin: 'lm',
+        members: ['me', 'lm', 'ar', 'vq', 'jp', 'sc', 'mg', 'dt', 'nh', 'cr', 'sb', 'mj'],
+        tickets: { lm: 1, ar: 1, vq: 1, jp: 1, sc: 1, mg: 1, dt: 1 },
+        unread: 3, newCount: 3, time: '9:41 a. m.',
+        msgs: [
+          { id: 's0', type: 'date', text: 'Ayer' },
+          { id: 's1', type: 'text', from: 'lm', text: '¡Gente! Quedó confirmado: el viernes nos vamos para la noche de salsa y boleros.', time: '7:02 p. m.' },
+          { id: 's2', type: 'event', from: 'lm', ev: 'e1', time: '7:02 p. m.' },
+          { id: 's3', type: 'text', from: 'jp', text: 'Me apunto. ¿Hasta qué hora tocan?', time: '7:15 p. m.' },
+          { id: 's4', type: 'text', from: 'lm', text: 'La última vez tocaron hasta las 2. Lleven zapatos cómodos.', time: '7:18 p. m.', rx: [['heart', 4], ['fire', 2]] },
+          { id: 's5', type: 'date', text: 'Hoy' },
+          { id: 's6', type: 'system', icon: 'ticket', text: 'Andrés compró 2 boletas · General', time: '8:05 a. m.' },
+          { id: 's7', type: 'text', from: 'ar', text: 'Listo, compré la mía y la de Vale. Llego a Bogotá el jueves.', time: '8:06 a. m.', rx: [['like', 3]] },
+          { id: 's8', type: 'text', from: 'me', text: '¡Qué nivel! Yo compro la mía hoy en la noche.', time: '8:20 a. m.' },
+          { id: 's9', type: 'poll', from: 'sc', q: '¿Dónde hacemos la previa?', opts: [['o1', 'Donde Laura, en Chapinero', 5], ['o2', 'Un bar en la Zona T', 3], ['o3', 'Directo al evento', 1]], time: '9:30 a. m.' },
+          { id: 's10', type: 'photo', from: 'mg', alt: '[Foto: la pista en la edición pasada]', caption: 'Así quedó la pista la última vez', bg1: '#F3B27E', bg2: '#5A2340', bg3: '#E8A04F', time: '9:38 a. m.' },
+          { id: 's11', type: 'text', from: 'sc', text: 'Voto por donde Laura: queda cerca y caminamos juntos.', time: '9:41 a. m.' }
+        ]
+      },
+      laura: {
+        id: 'laura', kind: 'dm', who: 'lm', status: 'En línea', unread: 1, newCount: 1, time: '9:12 a. m.',
+        msgs: [
+          { id: 'l0', type: 'date', text: 'Ayer' },
+          { id: 'l1', type: 'text', from: 'me', text: 'Lau, ¿a qué hora es la previa en tu casa el viernes?', time: '6:40 p. m.' },
+          { id: 'l2', type: 'text', from: 'lm', text: 'Desde las 7:30. Trae algo de picar si puedes.', time: '6:52 p. m.', rx: [['heart', 1]] },
+          { id: 'l3', type: 'date', text: 'Hoy' },
+          { id: 'l4', type: 'text', from: 'lm', text: 'Y compra hoy la boleta, no la dejes para el viernes.', time: '9:12 a. m.' }
+        ]
+      },
+      galeria: {
+        id: 'galeria', kind: 'org', who: 'gc', status: 'Organizador verificado · Responde en ~1 h', unread: 1, newCount: 1, time: '8:30 a. m.', events: ['e1'],
+        msgs: [
+          { id: 'g0', type: 'date', text: 'Ayer' },
+          { id: 'g1', type: 'text', from: 'me', text: 'Hola, ¿a qué hora abren puertas el viernes?', time: '9:10 p. m.' },
+          { id: 'g2', type: 'date', text: 'Hoy' },
+          { id: 'g3', type: 'text', from: 'gc', text: '¡Hola, Camila! Abrimos a las 8:00 p. m. y la clase de baile gratis arranca a las 8:30 p. m.', time: '8:30 a. m.' }
+        ]
+      },
+      clasico: {
+        id: 'clasico', kind: 'group', name: 'Clásico capitalino', ini: 'CC', c: '#B9E07A', ev: 'e4', admin: 'sc', cupos: 6,
+        members: ['me', 'sc', 'jp', 'dt'],
+        tickets: { sc: 1, me: 1 },
+        time: 'Ayer',
+        msgs: [
+          { id: 'c0', type: 'date', text: 'Ayer' },
+          { id: 'c1', type: 'text', from: 'sc', text: 'Armé el parche para el clásico. Nos vemos a las 2 en la tienda de la 57 y caminamos al estadio.', time: '3:10 p. m.' },
+          { id: 'c2', type: 'system', icon: 'ticket', text: 'Sofía compró 2 boletas · Oriental', time: '3:12 p. m.' },
+          { id: 'c3', type: 'text', from: 'me', text: '¡Gracias, Sofi! Ya te pasé lo mío.', time: '3:20 p. m.' },
+          { id: 'c4', type: 'system', icon: 'group', text: 'Juan Pablo y Daniel se unieron al parche', time: '5:02 p. m.' },
+          { id: 'c5', type: 'text', from: 'jp', text: '¿Todos somos de Santa Fe o hay infiltrados?', time: '5:10 p. m.' },
+          { id: 'c6', type: 'text', from: 'dt', text: 'Yo soy de Millos, pero voy en paz.', time: '5:14 p. m.', rx: [['fire', 3]] },
+          { id: 'c7', type: 'text', from: 'dt', text: 'Faltan dos cupos. ¿Invitamos a Mafe?', time: '6:40 p. m.' },
+          { id: 'c8', type: 'text', from: 'me', text: 'Yo le escribo.', time: '6:45 p. m.' }
+        ]
+      },
+      andres: {
+        id: 'andres', kind: 'dm', who: 'ar', status: 'Activo hace 2 h', time: 'Ayer',
+        msgs: [
+          { id: 'a0', type: 'date', text: 'Ayer' },
+          { id: 'a1', type: 'text', from: 'ar', text: 'Llego a Bogotá el jueves en la noche para la salsa.', time: '4:15 p. m.' },
+          { id: 'a2', type: 'text', from: 'me', text: '¡Qué bien! ¿Y cuándo me recibes en Medellín?', time: '4:20 p. m.' },
+          { id: 'a3', type: 'event', from: 'ar', ev: 'e7', time: '4:30 p. m.' },
+          { id: 'a4', type: 'text', from: 'ar', text: 'Cuando quieras. Nos vemos en el parque Lleras y arrancamos para Provenza.', time: '4:31 p. m.' }
+        ]
+      },
+      rockeros: {
+        id: 'rockeros', kind: 'group', name: 'Rockeros del Arena', ini: 'RK', c: '#A3A8F0', ev: 'e3', admin: 'jp',
+        members: ['me', 'jp', 'vq', 'dt', 'lm', 'mg', 'sb', 'mj'],
+        tickets: { jp: 1, vq: 1, dt: 1, lm: 1, mg: 1 },
+        time: 'Dom',
+        msgs: [
+          { id: 'r0', type: 'date', text: 'Dom 4 oct' },
+          { id: 'r1', type: 'text', from: 'jp', text: '¿Alguien tiene el setlist de la gira?', time: '7:10 p. m.' },
+          { id: 'r2', type: 'text', from: 'vq', text: 'Yo llego directo del trabajo. Nos vemos en la entrada.', time: '7:25 p. m.' },
+          { id: 'r3', type: 'system', icon: 'ticket', text: 'Daniel compró 1 boleta · General', time: '8:02 p. m.' },
+          { id: 'r4', type: 'photo', from: 'dt', alt: '[Foto: la fila del concierto pasado]', caption: 'Así estaba la fila la última vez: lleguen temprano.', bg1: '#D9452F', bg2: '#2B0F12', bg3: '#F3B27E', time: '8:10 p. m.' },
+          { id: 'r5', type: 'text', from: 'lm', text: 'Yo llevo tapones para los oídos para el que quiera.', time: '8:30 p. m.', rx: [['like', 4]] }
+        ]
+      },
+      sofia: {
+        id: 'sofia', kind: 'dm', who: 'sc', status: 'Activa hace 20 min', time: 'Sáb',
+        msgs: [
+          { id: 'f0', type: 'date', text: 'Sáb 3 oct' },
+          { id: 'f1', type: 'text', from: 'sc', text: '¿Vas al clásico del domingo 11?', time: '11:02 a. m.' },
+          { id: 'f2', type: 'text', from: 'me', text: '¡Obvio! Ya estoy en el parche.', time: '11:05 a. m.' },
+          { id: 'f3', type: 'text', from: 'sc', text: 'Perfecto, te guardo puesto al lado.', time: '11:06 a. m.', rx: [['heart', 1]] }
+        ]
+      }
+    };
+
+    const ALL = Object.assign({}, BASE, s.extra);
+    const ids = s.order.filter((id) => ALL[id] && !s.left[id]);
+    const oid = ALL[s.openId] && !s.left[s.openId] ? s.openId : ids[0];
+
+    // Per-conversation derived data
+    const nameOf = (c) => c.kind === 'group' ? c.name : P[c.who].name;
+    const avatarOf = (c) => {
+      if (c.kind === 'group') return { ini: c.ini, avBg: c.c, avFg: '#17120F', avRadius: '14px', avRadiusLg: '20px', avFont: "'Archivo', sans-serif", avWeight: 900 };
+      if (c.kind === 'org') return { ini: 'GC', avBg: '#17120F', avFg: '#F6DC6A', avRadius: '14px', avRadiusLg: '20px', avFont: "'Archivo', sans-serif", avWeight: 900 };
+      const p = P[c.who];
+      return { ini: p.ini, avBg: p.c, avFg: '#17120F', avRadius: '50%', avRadiusLg: '50%', avFont: "'DM Sans', system-ui, sans-serif", avWeight: 700 };
+    };
+    const allMsgs = (c) => c.msgs.concat(s.sent[c.id] || []);
+    const hasSent = (c) => !!(s.sent[c.id] && s.sent[c.id].length);
+    const unreadOf = (c) => (c.unread && !s.read[c.id] && !hasSent(c)) ? c.unread : 0;
+    const previewOf = (c) => {
+      const list = allMsgs(c).filter((m) => m.type !== 'date');
+      const m = list[list.length - 1];
+      if (!m) return 'Chat nuevo · escribe el primer mensaje';
+      if (m.type === 'system') return m.text;
+      const pre = m.from === 'me' ? 'Tú: ' : (c.kind === 'group' ? P[m.from].short + ': ' : '');
+      if (m.type === 'event') return pre + 'compartió «' + EV[m.ev].t + '»';
+      if (m.type === 'poll') return pre + 'Encuesta: ' + m.q;
+      if (m.type === 'photo') return pre + 'envió una foto';
+      return pre + m.text;
+    };
+
+    // ----- List -----
+    const views = ids.map((id) => {
+      const c = ALL[id];
+      const unread = unreadOf(c);
+      const ev = c.ev ? EV[c.ev] : null;
+      return { c: c, id: id, name: nameOf(c), unread: unread, ev: ev };
+    });
+    const unreadConvs = views.filter((v) => v.unread > 0).length;
+    const tabDefs = [
+      { id: 'todos', label: 'Todos' },
+      { id: 'parches', label: 'Parches' },
+      { id: 'personas', label: 'Personas' },
+      { id: 'noleidos', label: 'No leídos' }
+    ];
+    const tabs = tabDefs.map((t) => {
+      const on = s.filter === t.id;
+      return Object.assign({}, t, {
+        pressed: on ? 'true' : 'false',
+        bg: on ? '#17120F' : 'transparent',
+        fg: on ? '#FFFFFF' : '#17120F',
+        pick: () => this.setState({ filter: t.id })
+      });
+    });
+    const qn = norm(s.q.trim());
+    const items = views.filter((v) => {
+      if (s.filter === 'parches' && v.c.kind !== 'group') return false;
+      if (s.filter === 'personas' && v.c.kind === 'group') return false;
+      if (s.filter === 'noleidos' && !v.unread) return false;
+      if (qn && norm(v.name + ' ' + (v.ev ? v.ev.t : '')).indexOf(qn) === -1) return false;
+      return true;
+    }).map((v) => {
+      const c = v.c;
+      const on = v.id === oid;
+      const sentNow = hasSent(c);
+      return Object.assign({}, avatarOf(c), {
+        name: v.name,
+        isOrg: c.kind === 'org',
+        isMuted: !!s.muted[v.id],
+        time: sentNow ? 'Ahora' : (c.time || 'Ahora'),
+        timeColor: v.unread ? '#C23A24' : '#6E6259',
+        timeWeight: v.unread ? 700 : 400,
+        preview: previewOf(c),
+        pvColor: v.unread ? '#17120F' : '#6E6259',
+        pvWeight: v.unread ? 700 : 400,
+        showBadge: v.unread > 0,
+        unread: String(v.unread),
+        unreadText: v.unread === 1 ? ', 1 mensaje sin leer' : ', ' + v.unread + ' mensajes sin leer',
+        hasEvent: !!v.ev,
+        evPill: v.ev ? v.ev.day + ' ' + v.ev.d + ' oct · ' + v.ev.tag : '',
+        current: on ? 'true' : 'false',
+        bg: on ? '#FBF7F3' : 'transparent',
+        border: on ? '#EAE1D8' : 'transparent',
+        open: () => {
+          const read = Object.assign({}, this.state.read);
+          read[v.id] = true;
+          this.setState({ openId: v.id, pane: 'chat', read: read, tray: false, leaving: false, infoNarrow: false });
+        }
+      });
+    });
+    const listEmpty = items.length === 0;
+    const listEmptyMsg = s.filter === 'noleidos' && !qn ? 'Estás al día: no tienes mensajes sin leer.' : 'No encontramos chats con ese filtro.';
+
+    // ----- Open conversation -----
+    const C = ALL[oid];
+    const isGroup = C.kind === 'group';
+    const isOrg = C.kind === 'org';
+    const convName = nameOf(C);
+    const cEv = C.ev ? EV[C.ev] : null;
+    const memberKeys = isGroup ? C.members : [];
+    const withTicket = memberKeys.filter((k) => C.tickets && C.tickets[k]).length;
+    const total = memberKeys.length;
+    const meHas = !!(isGroup && C.tickets && C.tickets.me);
+
+    let sub = '';
+    if (isGroup) sub = total + ' miembros' + (C.cupos ? ' · ' + (C.cupos - total) + ' cupos libres' : '') + (cEv ? ' · ' + withTicket + ' con boleta' : '');
+    else if (isOrg) sub = C.status;
+    else sub = C.status || P[C.who].city;
+
+    // Shared events with a person = events of the parches you both belong to
+    let common = [];
+    let commonTitle = '';
+    if (isOrg) {
+      common = (C.events || []).map((e) => EV[e]);
+      commonTitle = 'Sus próximos eventos';
+    } else if (!isGroup) {
+      const seen = {};
+      ids.forEach((id) => {
+        const g = ALL[id];
+        if (g.kind === 'group' && g.ev && g.members.indexOf(C.who) !== -1 && g.members.indexOf('me') !== -1 && !seen[g.ev]) {
+          seen[g.ev] = true;
+          common.push(Object.assign({}, EV[g.ev], { via: g.name }));
+        }
+      });
+      commonTitle = 'Planes en común';
+    }
+    common = common.map((e) => Object.assign({}, e, { meta: e.day + ' ' + e.d + ' oct · ' + e.city + (e.via ? ' · ' + e.via : '') }));
+
+    const cvMsgs = allMsgs(C);
+    const cv = Object.assign({}, avatarOf(C), {
+      name: convName,
+      sub: sub,
+      online: C.status === 'En línea',
+      isOrg: isOrg,
+      isGroup: isGroup,
+      isPersonish: !isGroup,
+      profileLabel: isOrg ? 'Ver perfil del organizador' : 'Ver perfil',
+      convAria: 'Conversación con ' + convName,
+      infoSub: isGroup ? 'Parche · ' + total + ' miembros' : (isOrg ? 'Organizador verificado · Responde en ~1 h' : P[C.who].city + ' · ' + (C.status || 'Amigo en Fulleventos')),
+      memberCount: String(total),
+      ticketsShort: cEv ? withTicket + ' de ' + total + ' con boleta' : '',
+      empty: cvMsgs.filter((m) => m.type !== 'date').length === 0,
+      emptyText: isGroup ? 'Arranquen el plan: escriban, compartan un evento o armen una encuesta.' : 'Escríbele a ' + P[C.who || 'me'].short + ' para arrancar el plan.'
+    });
+
+    // Pinned plan
+    const hasPlan = !!cEv;
+    const plan = cEv ? {
+      title: cEv.t,
+      d: String(cEv.d),
+      bg1: cEv.bg1,
+      bg2: cEv.bg2,
+      meta: cEv.day + ' ' + cEv.d + ' oct' + (cEv.hour ? ' · ' + cEv.hour : '') + ' · ' + cEv.venue + ' · ' + cEv.city,
+      metaShort: cEv.day + ' ' + cEv.d + ' oct · ' + cEv.venue + ' · ' + cEv.city,
+      countdown: 'Faltan ' + cEv.left + ' días',
+      ticketsLine: withTicket + ' de ' + total,
+      pct: total ? Math.round(withTicket / total * 100) : 0,
+      barAria: withTicket + ' de ' + total + ' miembros ya tienen boleta',
+      needsTicket: !meHas,
+      hasTicket: meHas,
+      price: 'Desde $' + fmt(cEv.p)
+    } : { title: '', d: '', bg1: '#EAE1D8', bg2: '#EAE1D8', meta: '', metaShort: '', countdown: '', ticketsLine: '', pct: 0, barAria: '', needsTicket: false, hasTicket: false, price: '' };
+
+    // Messages
+    const rowTypes = { text: 1, event: 1, poll: 1, photo: 1 };
+    let stream = cvMsgs.slice();
+    if (C.newCount && !hasSent(C)) {
+      const at = C.msgs.length - C.newCount;
+      stream.splice(at, 0, { id: 'new-' + C.id, type: 'new', text: C.newCount === 1 ? '1 mensaje nuevo' : C.newCount + ' mensajes nuevos' });
+    }
+    const rxLabel = { heart: 'Me encanta', fire: 'Prendido', like: 'Me gusta' };
+    const msgs = stream.map((m, i) => {
+      const prev = stream[i - 1];
+      const next = stream[i + 1];
+      const isRow = !!rowTypes[m.type];
+      const samePrev = isRow && prev && rowTypes[prev.type] && prev.from === m.from;
+      const sameNext = isRow && next && rowTypes[next.type] && next.from === m.from;
+      const mine = m.from === 'me';
+      const person = P[m.from] || P.me;
+      const ev = m.ev ? EV[m.ev] : null;
+      const rep = !!s.reposted[m.id];
+
+      let opts = [];
+      let pollFoot = '';
+      if (m.type === 'poll') {
+        const chosen = s.votes[m.id];
+        const counts = m.opts.map((o) => o[2] + (chosen === o[0] ? 1 : 0));
+        const sum = counts.reduce((a, b) => a + b, 0);
+        opts = m.opts.map((o, k) => {
+          const picked = chosen === o[0];
+          return {
+            label: o[1],
+            n: String(counts[k]),
+            pct: sum ? Math.round(counts[k] / sum * 100) : 0,
+            pressed: picked ? 'true' : 'false',
+            aria: o[1] + ', ' + counts[k] + (counts[k] === 1 ? ' voto' : ' votos'),
+            border: picked ? '#17120F' : '#EAE1D8',
+            fill: picked ? '#F6DC6A' : '#F3ECE5',
+            dotBg: picked ? '#17120F' : '#FFFFFF',
+            checkVis: picked ? 'visible' : 'hidden',
+            vote: () => {
+              const v = Object.assign({}, this.state.votes);
+              if (v[m.id] === o[0]) delete v[m.id]; else v[m.id] = o[0];
+              this.setState({ votes: v });
+            }
+          };
+        });
+        const pickedOpt = m.opts.filter((o) => o[0] === chosen)[0];
+        pollFoot = pickedOpt
+          ? 'Votaste por «' + pickedOpt[1] + '» · ' + sum + ' votos · Toca otra opción para cambiar'
+          : (sum ? sum + ' votos · ' : '') + 'Toca una opción para votar';
+      }
+
+      const rx = (m.rx || []).map((r) => {
+        const key = m.id + ':' + r[0];
+        const on = !!s.reacted[key];
+        const n = r[1] + (on ? 1 : 0);
+        return {
+          n: String(n),
+          pressed: on ? 'true' : 'false',
+          aria: rxLabel[r[0]] + ', ' + n,
+          bg: on ? '#F6DC6A' : '#FFFFFF',
+          border: on ? '#17120F' : '#EAE1D8',
+          isHeart: r[0] === 'heart',
+          isFire: r[0] === 'fire',
+          isLike: r[0] === 'like',
+          toggle: () => this.flip('reacted', key)
+        };
+      });
+
+      return {
+        isDate: m.type === 'date',
+        isNew: m.type === 'new',
+        isSystem: m.type === 'system',
+        sysTicket: m.icon === 'ticket',
+        sysPay: m.icon === 'pay',
+        sysGroup: m.type === 'system' && m.icon !== 'ticket' && m.icon !== 'pay',
+        isRow: isRow,
+        isText: m.type === 'text',
+        isEvent: m.type === 'event',
+        isPoll: m.type === 'poll',
+        isPhoto: m.type === 'photo',
+        text: m.text || '',
+        time: m.time || '',
+        mine: mine,
+        name: person.name,
+        ini: person.ini,
+        c: person.c,
+        avatarSlot: isRow && !mine && isGroup,
+        avVis: samePrev ? 'hidden' : 'visible',
+        showName: isRow && !mine && isGroup && !samePrev,
+        justify: mine ? 'flex-end' : 'flex-start',
+        align: mine ? 'flex-end' : 'flex-start',
+        gap: samePrev ? 3 : 12,
+        bg: mine ? '#17120F' : '#FFFFFF',
+        fg: mine ? '#FFFFFF' : '#17120F',
+        border: mine ? '#17120F' : '#EAE1D8',
+        radius: mine ? '18px 18px 4px 18px' : (samePrev ? '18px' : '4px 18px 18px 18px'),
+        showMeta: isRow && !sameNext && !!m.time,
+        meta: m.time || '',
+        evTitle: ev ? ev.t : '',
+        evCat: ev ? ev.cat : '',
+        evD: ev ? String(ev.d) : '',
+        evMeta: ev ? ev.day + ' ' + ev.d + ' oct · ' + ev.venue + ' · ' + ev.city : '',
+        evPrice: ev ? 'Desde $' + fmt(ev.p) : '',
+        evBg1: ev ? ev.bg1 : '#EAE1D8',
+        evBg2: ev ? ev.bg2 : '#EAE1D8',
+        repPressed: rep ? 'true' : 'false',
+        repLabel: rep ? 'Reposteado' : 'Repostear',
+        repBg: rep ? '#17120F' : '#FFFFFF',
+        repFg: rep ? '#FFFFFF' : '#17120F',
+        toggleRepost: () => this.flip('reposted', m.id),
+        q: m.q || '',
+        opts: opts,
+        pollFoot: pollFoot,
+        alt: m.alt || '[Foto]',
+        caption: m.caption || '',
+        hasCaption: !!m.caption,
+        pBg1: m.bg1 || '#F6DC6A',
+        pBg2: m.bg2 || '#5A2340',
+        pBg3: m.bg3 || '#EE93BC',
+        hasRx: rx.length > 0,
+        rx: rx
+      };
+    });
+
+    // Members (info panel)
+    const members = memberKeys.slice().sort((a, b) => {
+      const score = (k) => (k === 'me' ? 0 : (C.tickets[k] ? 1 : 2));
+      return score(a) - score(b);
+    }).map((k) => {
+      const p = P[k];
+      const has = !!C.tickets[k];
+      const role = k === C.admin ? (k === 'me' ? 'Creaste el parche' : 'Creó el parche') : '';
+      return {
+        name: k === 'me' ? 'Tú (Camila)' : p.name,
+        ini: p.ini,
+        c: p.c,
+        has: has && !!cEv,
+        hasNot: !has && !!cEv,
+        role: role,
+        hasRole: !!role
+      };
+    });
+
+    // Info panel visibility: wide screens show it by default; narrow screens open it as a drawer
+    const infoLabel = isGroup ? 'Info del grupo' : 'Info del chat';
+    const muted = !!s.muted[oid];
+    const splitOn = !!s.split[oid];
+
+    // Composer
+    const draft = s.drafts[oid] || '';
+    const canSend = draft.trim().length > 0;
+    const trayEvents = EV_ORDER.map((id) => ({
+      label: EV[id].short,
+      bg1: EV[id].bg1,
+      bg2: EV[id].bg2,
+      share: () => this.push(oid, [{ type: 'event', from: 'me', ev: id }], { tray: false })
+    }));
+
+    // ----- Modal (Nuevo parche / Nuevo chat) -----
+    const mIsGroup = s.modal === 'group';
+    const picked = FRIENDS.filter((k) => s.mPicked[k]);
+    const friends = FRIENDS.map((k) => {
+      const p = P[k];
+      const on = mIsGroup ? !!s.mPicked[k] : s.mPerson === k;
+      return {
+        name: p.name,
+        ini: p.ini,
+        c: p.c,
+        city: p.city,
+        pressed: on ? 'true' : 'false',
+        border: on ? '#17120F' : '#EAE1D8',
+        bg: on ? '#FBF7F3' : '#FFFFFF',
+        boxRadius: mIsGroup ? '6px' : '50%',
+        boxBg: on ? '#17120F' : '#FFFFFF',
+        checkVis: on ? 'visible' : 'hidden',
+        toggle: () => {
+          if (this.state.modal === 'group') {
+            const n = Object.assign({}, this.state.mPicked);
+            n[k] = !n[k];
+            this.setState({ mPicked: n });
+          } else {
+            this.setState({ mPerson: this.state.mPerson === k ? '' : k });
+          }
+        }
+      };
+    });
+    const groupReady = s.mName.trim().length > 0 && picked.length > 0;
+    const dmReady = !!s.mPerson;
+    const mReady = mIsGroup ? groupReady : dmReady;
+    let mHelp = '';
+    if (mIsGroup) {
+      if (!s.mName.trim() && !picked.length) mHelp = 'Ponle nombre y elige al menos a un amigo.';
+      else if (!s.mName.trim()) mHelp = 'Falta el nombre del parche.';
+      else if (!picked.length) mHelp = 'Elige al menos a un amigo.';
+      else mHelp = 'Serán ' + (picked.length + 1) + ' en el parche, contándote a ti.';
+    } else {
+      mHelp = dmReady ? 'Abrirás tu chat con ' + P[s.mPerson].short + '.' : 'Elige con quién quieres hablar.';
+    }
+
+    const createGroup = () => {
+      const st = this.state;
+      const name = st.mName.trim();
+      const pk = FRIENDS.filter((k) => st.mPicked[k]);
+      if (!name || !pk.length) return;
+      const id = 'g' + st.seq;
+      const stop = { de: 1, del: 1, la: 1, el: 1, los: 1, las: 1, y: 1, en: 1 };
+      const words = name.split(/\s+/).filter((w) => w && !stop[norm(w)]);
+      const w0 = words[0] || name;
+      const ini = ((w0[0] || 'P') + (words[1] ? words[1][0] : (w0[1] || ''))).toUpperCase();
+      const palette = ['#F3B27E', '#EE93BC', '#8FD3D0', '#B9E07A', '#F6DC6A', '#A3A8F0'];
+      const conv = {
+        id: id, kind: 'group', name: name, ini: ini, c: palette[st.seq % palette.length], ev: st.mEvent || '', admin: 'me',
+        members: ['me'].concat(pk), tickets: {}, time: 'Ahora',
+        msgs: [
+          { id: id + '-d', type: 'date', text: 'Hoy' },
+          { id: id + '-s1', type: 'system', icon: 'group', text: 'Camila creó el parche «' + name + '»', time: 'Ahora' },
+          { id: id + '-s2', type: 'system', icon: 'group', text: 'Camila añadió a ' + joinNames(pk.map((k) => P[k].short)), time: 'Ahora' }
+        ]
+      };
+      const extra = Object.assign({}, st.extra);
+      extra[id] = conv;
+      this.setState({
+        extra: extra, order: [id].concat(st.order), openId: id, pane: 'chat', modal: '', mName: '', mEvent: '', mPicked: {},
+        seq: st.seq + 1, filter: 'todos', q: '', tray: false, leaving: false, infoNarrow: false
+      });
+    };
+    const openDm = () => {
+      const st = this.state;
+      const k = st.mPerson;
+      if (!k) return;
+      const all = Object.assign({}, BASE, st.extra);
+      const found = Object.keys(all).filter((id) => all[id].kind === 'dm' && all[id].who === k)[0];
+      const reset = { modal: '', mPerson: '', pane: 'chat', filter: 'todos', q: '', tray: false, leaving: false, infoNarrow: false };
+      if (found) {
+        const read = Object.assign({}, st.read);
+        read[found] = true;
+        this.setState(Object.assign({ openId: found, read: read }, reset));
+        return;
+      }
+      const id = 'dm-' + k;
+      const extra = Object.assign({}, st.extra);
+      extra[id] = { id: id, kind: 'dm', who: k, status: '', time: 'Ahora', msgs: [{ id: id + '-d', type: 'date', text: 'Hoy' }] };
+      this.setState(Object.assign({ extra: extra, order: [id].concat(st.order.filter((x) => x !== id)), openId: id }, reset));
+    };
+
+    const navAria = unreadConvs ? 'Mensajes, ' + unreadConvs + (unreadConvs === 1 ? ' chat sin leer' : ' chats sin leer') : 'Mensajes';
+
+    return {
+      city: s.city,
+      onCity: (e) => { const v = e && e.target ? e.target.value : ''; if (v) this.setState({ city: v }); },
+      navUnread: String(unreadConvs),
+      hasNavUnread: unreadConvs > 0,
+      msgNavAria: navAria,
+      pane: s.pane,
+      unreadSummary: unreadConvs ? (unreadConvs === 1 ? '1 chat sin leer' : unreadConvs + ' chats sin leer') : 'Al día',
+      openNewChat: () => this.setState({ modal: 'dm', mPerson: '' }),
+      openNewGroup: () => this.setState({ modal: 'group', mName: '', mEvent: '', mPicked: {} }),
+      q: s.q,
+      onSearch: (e) => this.setState({ q: e && e.target ? e.target.value : '' }),
+      tabs: tabs,
+      items: items,
+      listEmpty: listEmpty,
+      listEmptyMsg: listEmptyMsg,
+      clearListFilters: () => this.setState({ filter: 'todos', q: '' }),
+
+      cv: cv,
+      msgs: msgs,
+      hasPlan: hasPlan,
+      plan: plan,
+      members: members,
+      common: common,
+      hasCommon: common.length > 0,
+      commonTitle: commonTitle,
+      backToList: () => this.setState({ pane: 'list', tray: false, infoNarrow: false }),
+
+      infoLabel: infoLabel,
+      infoWideAttr: s.infoWide ? 'on' : 'off',
+      infoNarrowAttr: s.infoNarrow ? 'on' : 'off',
+      infoWidePressed: s.infoWide ? 'true' : 'false',
+      infoNarrowPressed: s.infoNarrow ? 'true' : 'false',
+      infoWideBg: s.infoWide ? '#17120F' : 'transparent',
+      infoWideFg: s.infoWide ? '#FFFFFF' : '#17120F',
+      infoNarrowBg: s.infoNarrow ? '#17120F' : 'transparent',
+      infoNarrowFg: s.infoNarrow ? '#FFFFFF' : '#17120F',
+      toggleInfoWide: () => this.setState({ infoWide: !this.state.infoWide }),
+      toggleInfoNarrow: () => this.setState({ infoNarrow: !this.state.infoNarrow }),
+      closeInfo: () => this.setState({ infoWide: false, infoNarrow: false, leaving: false }),
+
+      isMuted: muted,
+      notMuted: !muted,
+      mutePressed: muted ? 'true' : 'false',
+      muteBg: muted ? '#17120F' : 'transparent',
+      muteFg: muted ? '#FFFFFF' : '#17120F',
+      muteTrack: muted ? '#17120F' : '#EAE1D8',
+      muteKnob: muted ? 21 : 3,
+      toggleMute: () => this.flip('muted', oid),
+
+      splitPressed: splitOn ? 'true' : 'false',
+      splitLabel: splitOn ? 'Pago dividido activo' : 'Dividir pago del parche',
+      splitBg: splitOn ? '#17120F' : '#FFFFFF',
+      splitFg: splitOn ? '#FFFFFF' : '#17120F',
+      toggleSplit: () => {
+        const sp = Object.assign({}, this.state.split);
+        if (sp[oid]) {
+          sp[oid] = false;
+          this.setState({ split: sp });
+        } else {
+          sp[oid] = true;
+          this.push(oid, [{ type: 'system', icon: 'pay', text: 'Camila activó el pago dividido: cada uno paga su parte' }], { split: sp });
+        }
+      },
+
+      leaving: s.leaving,
+      notLeaving: !s.leaving,
+      askLeave: () => this.setState({ leaving: true }),
+      cancelLeave: () => this.setState({ leaving: false }),
+      confirmLeave: () => {
+        const st = this.state;
+        const left = Object.assign({}, st.left);
+        left[oid] = true;
+        const nextId = st.order.filter((x) => x !== oid && !left[x] && (BASE[x] || st.extra[x]))[0];
+        this.setState({ left: left, openId: nextId, pane: 'list', leaving: false, infoNarrow: false, tray: false });
+      },
+
+      trayOpen: s.tray,
+      trayExpanded: s.tray ? 'true' : 'false',
+      trayBg: s.tray ? '#17120F' : 'transparent',
+      trayFg: s.tray ? '#FFFFFF' : '#17120F',
+      toggleTray: () => this.setState({ tray: !this.state.tray }),
+      trayEvents: trayEvents,
+      addPoll: () => {
+        const d = this.takeDraft(oid);
+        this.push(oid, [{ type: 'poll', from: 'me', q: d.text || '¿A qué hora nos vemos?', opts: [['a', '7:00 p. m.', 0], ['b', '8:00 p. m.', 0], ['c', '9:00 p. m.', 0]] }], { drafts: d.drafts, tray: false });
+      },
+      addPhoto: () => {
+        const d = this.takeDraft(oid);
+        this.push(oid, [{ type: 'photo', from: 'me', alt: '[Foto que compartiste]', caption: d.text, bg1: '#F6DC6A', bg2: '#C46A2B', bg3: '#EE93BC' }], { drafts: d.drafts, tray: false });
+      },
+      draft: draft,
+      placeholder: isGroup ? 'Escríbele al parche' : 'Escríbele a ' + (isOrg ? 'Galería Café Libro' : P[C.who].short),
+      onDraft: (e) => {
+        const drafts = Object.assign({}, this.state.drafts);
+        drafts[oid] = e && e.target ? e.target.value : '';
+        this.setState({ drafts: drafts });
+      },
+      onDraftKey: (e) => {
+        if (e && e.key === 'Enter' && !e.shiftKey) {
+          if (e.preventDefault) e.preventDefault();
+          this.send(oid);
+        }
+      },
+      send: () => this.send(oid),
+      sendDisabled: !canSend,
+      sendBg: canSend ? '#C23A24' : '#EAE1D8',
+      sendFg: canSend ? '#FFFFFF' : '#6E6259',
+
+      modalOpen: !!s.modal,
+      modalTitle: mIsGroup ? 'Nuevo parche' : 'Nuevo chat',
+      mIsGroup: mIsGroup,
+      mGroupPressed: mIsGroup ? 'true' : 'false',
+      mDmPressed: mIsGroup ? 'false' : 'true',
+      mGroupBg: mIsGroup ? '#17120F' : 'transparent',
+      mGroupFg: mIsGroup ? '#FFFFFF' : '#17120F',
+      mDmBg: mIsGroup ? 'transparent' : '#17120F',
+      mDmFg: mIsGroup ? '#17120F' : '#FFFFFF',
+      setModeGroup: () => this.setState({ modal: 'group' }),
+      setModeDm: () => this.setState({ modal: 'dm' }),
+      mName: s.mName,
+      onMName: (e) => this.setState({ mName: e && e.target ? e.target.value : '' }),
+      mEvent: s.mEvent,
+      onMEvent: (e) => this.setState({ mEvent: e && e.target ? e.target.value : '' }),
+      mHasEvent: !!s.mEvent,
+      mLegend: mIsGroup ? '¿A quién invitas?' : '¿Con quién quieres hablar?',
+      friends: friends,
+      mHelp: mHelp,
+      mPrimaryLabel: mIsGroup ? 'Crear parche' : 'Abrir chat',
+      mPrimary: mIsGroup ? createGroup : openDm,
+      mPrimaryDisabled: !mReady,
+      mPrimaryBg: mReady ? '#C23A24' : '#EAE1D8',
+      mPrimaryFg: mReady ? '#FFFFFF' : '#6E6259',
+      closeModal: () => this.setState({ modal: '' }),
+      modalKey: (e) => { if (e && e.key === 'Escape') this.setState({ modal: '' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

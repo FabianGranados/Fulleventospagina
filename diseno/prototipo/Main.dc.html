@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fulleventos · Inicio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF7F3}
+a{color:#17120F;text-decoration:none}a:hover{color:#C23A24}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FBF7F3; color: #17120F; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+  <header style="position: sticky; top: 0; z-index: 5; background: #FBF7F3; border-bottom: 1px solid #EAE1D8">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+      <a href="Main.dc.html" style="font-weight: 700; font-size: 1.55rem; letter-spacing: -0.03em; color: #D9452F">fulleventos</a>
+      <div role="search" style="flex: 1 1 260px; max-width: 500px; min-width: 0; display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 999px; padding: 0 6px 0 16px; height: 44px; box-sizing: border-box">
+        <label style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E6259" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input type="search" placeholder="Busca planes, gente o lugares" aria-label="Buscar" style="flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: .95rem; color: #17120F">
+        </label>
+        <label style="display: flex; align-items: center; gap: 4px; padding-left: 10px; border-left: 1px solid #EAE1D8; font-size: .9rem; white-space: nowrap; flex-shrink: 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Ciudad</span>
+          <select name="ciudad" value="{{city}}" onChange="{{pickCitySelect}}" style="height: 36px; max-width: 8.6em; border: 0; background: transparent; font-size: .9rem; font-weight: 500; color: #17120F; cursor: pointer">
+            <option value="all">Toda Colombia</option>
+            <option value="bogota">Bogotá</option>
+            <option value="medellin">Medellín</option>
+            <option value="cali">Cali</option>
+            <option value="barranquilla">Barranquilla</option>
+            <option value="cartagena">Cartagena</option>
+            <option value="santamarta">Santa Marta</option>
+            <option value="bucaramanga">Bucaramanga</option>
+            <option value="pereira">Pereira</option>
+            <option value="villavicencio">Villavicencio</option>
+            <option value="pasto">Pasto</option>
+            <option value="leticia">Leticia</option>
+          </select>
+        </label>
+      </div>
+      <nav aria-label="Principal" style="margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px">
+        <a href="Main.dc.html" aria-label="Inicio" aria-current="page" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #17120F; color: #FFFFFF">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>
+        </a>
+        <a href="Agenda.dc.html" aria-label="Agenda de eventos" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+        </a>
+        <a href="Mapa.dc.html" aria-label="Mapa de eventos" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"></path><path d="M9 4v13.5M15 6.5V20"></path></svg>
+        </a>
+        <a href="Chat.dc.html" aria-label="Mensajes, 3 sin leer" style="position: relative; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path></svg>
+          <span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; box-sizing: border-box; border-radius: 9px; background: #C23A24; color: #FFFFFF; font-size: .66rem; font-weight: 700; line-height: 1; display: grid; place-items: center; padding: 0 4px">3</span>
+        </a>
+        <button aria-label="Notificaciones" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; color: #17120F; display: grid; place-items: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
+        </button>
+        <button style="height: 44px; border: 0; border-radius: 999px; padding: 0 18px; background: #17120F; color: #FFFFFF; font-weight: 700; font-size: .9rem; margin-left: 6px">Crear evento</button>
+        <a href="Perfil.dc.html" aria-label="Tu perfil" style="width: 40px; height: 40px; border-radius: 50%; background: #8FD3D0; display: grid; place-items: center; font-weight: 700; font-size: .78rem; margin-left: 4px">CV</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 1240px; margin: 0 auto; padding: 24px 24px 64px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px">
+
+    <aside aria-label="Tu cuenta" style="flex: 1 1 220px; max-width: 260px; display: flex; flex-direction: column; gap: 16px">
+      <div style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+        <a href="Perfil.dc.html" style="display: flex; align-items: center; gap: 12px">
+          <span style="width: 48px; height: 48px; border-radius: 50%; background: #8FD3D0; display: grid; place-items: center; font-weight: 700">CV</span>
+          <span style="display: flex; flex-direction: column; line-height: 1.25"><b>Camila Vargas</b><span style="color: #6E6259; font-size: .85rem">@camivargas</span></span>
+        </a>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; text-align: center">
+          <div><b style="display: block; font-size: 1.05rem">38</b><span style="font-size: .74rem; color: #6E6259">Planes</span></div>
+          <div><b style="display: block; font-size: 1.05rem">412</b><span style="font-size: .74rem; color: #6E6259">Seguidores</span></div>
+          <div><b style="display: block; font-size: 1.05rem">289</b><span style="font-size: .74rem; color: #6E6259">Siguiendo</span></div>
+        </div>
+      </div>
+
+      <nav aria-label="Secciones" style="display: flex; flex-direction: column; gap: 2px; font-weight: 500">
+        <a href="Main.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; background: #FFFFFF; border: 1px solid #EAE1D8; font-weight: 700">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Inicio</a>
+        <a href="Agenda.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>Explorar agenda</a>
+        <a href="Mapa.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"></path><path d="M9 4v13.5M15 6.5V20"></path></svg>Mapa de eventos<span style="margin-left: auto; background: #F6DC6A; color: #17120F; border-radius: 999px; padding: 1px 8px; font-size: .7rem; font-weight: 700">Nuevo</span></a>
+        <a href="#parches" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><circle cx="17" cy="9" r="2.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M15 14.5a5 5 0 0 1 6.5 5"></path></svg>Mis parches</a>
+        <a href="Chat.dc.html" aria-label="Mensajes, 3 sin leer" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path></svg>Mensajes<span aria-hidden="true" style="margin-left: auto; min-width: 22px; height: 22px; box-sizing: border-box; border-radius: 999px; background: #C23A24; color: #FFFFFF; padding: 0 7px; font-size: .72rem; font-weight: 700; line-height: 1; display: grid; place-items: center">3</span></a>
+        <a href="Perfil.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>Guardados</a>
+        <a href="Perfil.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 15 5-4 4 3 3-2 6 4"></path></svg>Recuerdos</a>
+      </nav>
+
+      <div id="parches" style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: #C23A24">Tus parches</h2>
+        <a href="Chat.dc.html" style="display: flex; align-items: center; gap: 10px">
+          <span style="width: 36px; height: 36px; border-radius: 10px; background: #F6DC6A; display: grid; place-items: center; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: .8rem">SL</span>
+          <span style="line-height: 1.25"><b style="font-size: .9rem">Salseros de jueves</b><span style="display: block; font-size: .78rem; color: #6E6259">12 miembros · 2 nuevos</span></span></a>
+        <a href="Chat.dc.html" style="display: flex; align-items: center; gap: 10px">
+          <span style="width: 36px; height: 36px; border-radius: 10px; background: #A3A8F0; display: grid; place-items: center; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: .8rem">RK</span>
+          <span style="line-height: 1.25"><b style="font-size: .9rem">Rockeros del Arena</b><span style="display: block; font-size: .78rem; color: #6E6259">8 miembros</span></span></a>
+        <a href="Chat.dc.html" style="display: flex; align-items: center; gap: 10px">
+          <span style="width: 36px; height: 36px; border-radius: 10px; background: #B9E07A; display: grid; place-items: center; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: .8rem">CC</span>
+          <span style="line-height: 1.25"><b style="font-size: .9rem">Clásico capitalino</b><span style="display: block; font-size: .78rem; color: #6E6259">4 de 6 cupos</span></span></a>
+      </div>
+    </aside>
+
+    <section aria-label="Feed" style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+
+      <div style="display: flex; gap: 14px; overflow-x: auto; padding-bottom: 4px">
+        <sc-for list="{{stories}}" as="s" hint-placeholder-count="8">
+          <a href="Evento.dc.html" aria-label="{{s.aria}}" style="flex: 0 0 auto; width: 80px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+            <span style="width: 68px; height: 68px; border-radius: 50%; padding: 3px; background: {{s.ring}}; display: grid; place-items: center">
+              <span style="width: 100%; height: 100%; border-radius: 50%; border: 3px solid #FBF7F3; background: {{s.c}}; display: grid; place-items: center; font-weight: 700; font-size: .85rem; box-sizing: border-box">{{s.ini}}</span>
+            </span>
+            <span style="font-size: .74rem; line-height: 1.2; color: #17120F">{{s.name}}<span style="display: block; color: #6E6259">{{s.city}}</span></span>
+          </a>
+        </sc-for>
+      </div>
+
+      <div role="group" aria-label="Publicar un plan" style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span style="width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; background: #8FD3D0; display: grid; place-items: center; font-weight: 700; font-size: .8rem">CV</span>
+          <label style="flex: 1; min-width: 0">
+            <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Publica tu plan</span>
+            <input type="text" placeholder="¿Qué plan tienes, Camila? Etiqueta un evento con @" style="width: 100%; box-sizing: border-box; height: 44px; border: 1px solid #EAE1D8; border-radius: 999px; padding: 0 16px; background: #FBF7F3; font-size: .95rem; outline: 0">
+          </label>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <button type="button" style="height: 36px; border: 1px solid #EAE1D8; background: #FFFFFF; border-radius: 999px; padding: 0 14px; font-size: .84rem; font-weight: 500; display: flex; align-items: center; gap: 6px; color: #17120F">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Etiquetar evento</button>
+          <button type="button" style="height: 36px; border: 1px solid #EAE1D8; background: #FFFFFF; border-radius: 999px; padding: 0 14px; font-size: .84rem; font-weight: 500; display: flex; align-items: center; gap: 6px; color: #17120F">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"></path></svg>Armar parche</button>
+          <button type="button" style="height: 36px; border: 1px solid #EAE1D8; background: #FFFFFF; border-radius: 999px; padding: 0 14px; font-size: .84rem; font-weight: 500; display: flex; align-items: center; gap: 6px; color: #17120F">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.5"></circle><path d="m21 16-5-5-9 8"></path></svg>Foto</button>
+          <button type="button" style="height: 36px; border: 1px solid #EAE1D8; background: #FFFFFF; border-radius: 999px; padding: 0 14px; font-size: .84rem; font-weight: 500; display: flex; align-items: center; gap: 6px; color: #17120F">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>Reseña</button>
+          <button type="button" style="margin-left: auto; height: 36px; border: 0; background: #C23A24; color: #FFFFFF; border-radius: 999px; padding: 0 18px; font-size: .86rem; font-weight: 700">Publicar</button>
+        </div>
+      </div>
+
+      <div role="group" aria-label="Filtrar feed" style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+          <button aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="height: 38px; border-radius: 999px; padding: 0 16px; font-size: .88rem; font-weight: 500; border: 1px solid {{t.border}}; background: {{t.bg}}; color: {{t.fg}}">{{t.label}}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{showCityRow}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 16px; padding: 10px 10px 10px 16px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: .9rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C23A24" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+            <span>Planes de tu gente en <b>{{cityLabel}}</b></span>
+          </span>
+          <span style="display: flex; flex-wrap: wrap; gap: 8px">
+            <a href="Mapa.dc.html" style="height: 38px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 999px; border: 1px solid #EAE1D8; font-size: .84rem; font-weight: 700">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"></path><path d="M9 4v13.5M15 6.5V20"></path></svg>Ver en el mapa</a>
+            <button onClick="{{clearCity}}" style="height: 38px; border-radius: 999px; border: 1px solid #17120F; background: #FFFFFF; color: #17120F; padding: 0 14px; font-size: .84rem; font-weight: 700">Ver todo Colombia</button>
+          </span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{feedEmpty}}" hint-placeholder-val="{{false}}">
+        <div style="text-align: center; padding: 36px 16px; background: #FFFFFF; border: 1px dashed #EAE1D8; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 14px">
+          <p style="margin: 0; color: #6E6259; max-width: 46ch">{{emptyMsg}}</p>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px">
+            <button onClick="{{clearCity}}" style="height: 44px; border-radius: 999px; border: 1px solid #17120F; background: #FFFFFF; color: #17120F; padding: 0 20px; font-size: .9rem; font-weight: 700">Ver todo Colombia</button>
+            <a href="Mapa.dc.html" style="height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 999px; background: #C23A24; color: #FFFFFF; font-size: .9rem; font-weight: 700">Ver {{cityLabel}} en el mapa</a>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-for list="{{posts}}" as="p" hint-placeholder-count="4">
+        <article style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; overflow: hidden">
+          <div style="padding: 16px 18px 0; display: flex; align-items: flex-start; gap: 12px">
+            <a href="Perfil.dc.html" aria-label="Perfil de {{p.name}}" style="width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; background: {{p.c}}; display: grid; place-items: center; font-weight: 700; font-size: .8rem">{{p.ini}}</a>
+            <div style="flex: 1; min-width: 0; line-height: 1.35">
+              <div><a href="Perfil.dc.html" style="font-weight: 700">{{p.name}}</a> <span style="color: #6E6259">{{p.action}}</span></div>
+              <div style="font-size: .8rem; color: #6E6259">{{p.time}}</div>
+            </div>
+            <button aria-label="Más opciones" style="width: 36px; height: 36px; border: 0; background: transparent; border-radius: 50%; color: #6E6259; display: grid; place-items: center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+            </button>
+          </div>
+          <p style="margin: 10px 18px 14px; font-size: .97rem">{{p.text}}</p>
+
+          <sc-if value="{{p.hasStars}}" hint-placeholder-val="{{false}}">
+            <div role="img" aria-label="Calificación 5 de 5" style="margin: -6px 18px 12px; display: flex; gap: 2px; color: #E0A21B">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>
+            </div>
+          </sc-if>
+
+          <div style="margin: 0 18px; border: 1px solid #EAE1D8; border-radius: 16px; overflow: hidden; display: flex; flex-wrap: wrap">
+            <div role="img" aria-label="[Foto del evento]" style="flex: 1 1 180px; min-height: 150px; position: relative; background: radial-gradient(circle at 70% 30%, {{p.bg1}} 0, transparent 58%), {{p.bg2}}">
+              <span style="position: absolute; top: 10px; left: 10px; background: #FFFFFF; border-radius: 10px; padding: 5px 9px 4px; text-align: center; line-height: 1; min-width: 44px">
+                <b style="display: block; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.2rem">{{p.day}}</b>
+                <span style="font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6E6259">{{p.mon}}</span>
+              </span>
+            </div>
+            <div style="flex: 2 1 260px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+              <span style="font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #C23A24">{{p.cat}}</span>
+              <a href="Evento.dc.html" style="font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; line-height: 1.15">{{p.event}}</a>
+              <span style="font-size: .85rem; color: #6E6259">{{p.where}} · <span style="color: #17120F; font-weight: 700">{{p.cityName}}</span></span>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px">
+                <span style="display: flex; align-items: center; gap: 8px; font-size: .8rem; color: #6E6259">
+                  <span style="display: flex">
+                    <span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #FFFFFF; background: #F3B27E"></span>
+                    <span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #FFFFFF; background: #A3A8F0; margin-left: -8px"></span>
+                    <span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #FFFFFF; background: #EE93BC; margin-left: -8px"></span>
+                  </span>{{p.goingLabel}}</span>
+                <button aria-pressed="{{p.goingPressed}}" onClick="{{p.toggleGoing}}" style="height: 38px; border-radius: 999px; padding: 0 16px; font-size: .84rem; font-weight: 700; border: 1px solid #17120F; background: {{p.goingBg}}; color: {{p.goingFg}}">{{p.goingText}}</button>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{p.isParche}}" hint-placeholder-val="{{false}}">
+            <div style="margin: 12px 18px 0; background: #FBF7F3; border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px">
+              <div style="flex: 1 1 200px">
+                <div style="display: flex; justify-content: space-between; font-size: .84rem"><b>Parche: {{p.parcheName}}</b><span style="color: #6E6259">{{p.cupos}}</span></div>
+                <div style="height: 8px; border-radius: 4px; background: #EAE1D8; margin-top: 6px; overflow: hidden"><div style="height: 100%; width: {{p.pct}}%; background: #C23A24; border-radius: 4px"></div></div>
+              </div>
+              <button aria-pressed="{{p.joinPressed}}" onClick="{{p.toggleJoin}}" style="height: 38px; border: 0; border-radius: 999px; padding: 0 16px; font-size: .84rem; font-weight: 700; background: {{p.joinBg}}; color: #FFFFFF">{{p.joinText}}</button>
+            </div>
+          </sc-if>
+
+          <div style="padding: 10px 10px 10px; display: flex; align-items: center; gap: 4px; margin-top: 8px; border-top: 1px solid #F1EAE3">
+            <button aria-pressed="{{p.likePressed}}" onClick="{{p.toggleLike}}" aria-label="Me gusta, {{p.likes}}" style="height: 40px; border: 0; background: transparent; border-radius: 999px; padding: 0 12px; display: flex; align-items: center; gap: 6px; font-size: .86rem; font-weight: 700; color: {{p.likeColor}}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="{{p.heartFill}}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.3 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.3 3.4 3.8 6.4C19 15.6 12 20 12 20z"></path></svg>{{p.likes}}</button>
+            <button aria-label="Comentarios, {{p.comments}}" style="height: 40px; border: 0; background: transparent; border-radius: 999px; padding: 0 12px; display: flex; align-items: center; gap: 6px; font-size: .86rem; font-weight: 700; color: #6E6259">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path></svg>{{p.comments}}</button>
+            <button aria-label="Compartir" style="height: 40px; border: 0; background: transparent; border-radius: 999px; padding: 0 12px; display: flex; align-items: center; gap: 6px; font-size: .86rem; font-weight: 700; color: #6E6259">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"></path></svg>Compartir</button>
+            <button aria-label="Guardar evento" style="margin-left: auto; width: 40px; height: 40px; border: 0; background: transparent; border-radius: 50%; color: #6E6259; display: grid; place-items: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>
+            </button>
+          </div>
+        </article>
+      </sc-for>
+    </section>
+
+    <aside aria-label="Descubre" style="flex: 1 1 280px; max-width: 340px; display: flex; flex-direction: column; gap: 16px">
+      <div style="background: #17120F; color: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+        <span style="align-self: flex-start; background: #F6DC6A; color: #17120F; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: .8rem; text-transform: uppercase; padding: 3px 9px">Tu semana</span>
+        <h2 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 1.5rem; letter-spacing: -0.03em; line-height: 1.05; text-transform: uppercase">3 planes confirmados</h2>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px">
+          <a href="Evento.dc.html" style="display: flex; gap: 12px; align-items: center; color: #FFFFFF"><span style="width: 44px; flex-shrink: 0; text-align: center; line-height: 1.1"><b style="display: block; font-family: 'Archivo', sans-serif; font-size: 1.2rem">9</b><span style="font-size: .68rem; text-transform: uppercase; color: #D8CEC6">vie</span></span><span style="font-size: .88rem; line-height: 1.3">Noche de salsa y boleros<span style="display: block; color: #D8CEC6; font-size: .78rem">9:00 p. m. · con 3 amigos</span></span></a>
+          <a href="Evento.dc.html" style="display: flex; gap: 12px; align-items: center; color: #FFFFFF"><span style="width: 44px; flex-shrink: 0; text-align: center; line-height: 1.1"><b style="display: block; font-family: 'Archivo', sans-serif; font-size: 1.2rem">10</b><span style="font-size: .68rem; text-transform: uppercase; color: #D8CEC6">sáb</span></span><span style="font-size: .88rem; line-height: 1.3">Festival de jazz al parque<span style="display: block; color: #D8CEC6; font-size: .78rem">2:00 p. m. · gratis</span></span></a>
+          <a href="Evento.dc.html" style="display: flex; gap: 12px; align-items: center; color: #FFFFFF"><span style="width: 44px; flex-shrink: 0; text-align: center; line-height: 1.1"><b style="display: block; font-family: 'Archivo', sans-serif; font-size: 1.2rem">11</b><span style="font-size: .68rem; text-transform: uppercase; color: #D8CEC6">dom</span></span><span style="font-size: .88rem; line-height: 1.3">Santa Fe vs. Millonarios<span style="display: block; color: #D8CEC6; font-size: .78rem">4:00 p. m. · parche de 4</span></span></a>
+        </div>
+      </div>
+
+      <div style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+          <h2 style="margin: 0; font-size: 1rem">Mapa de eventos</h2>
+          <span style="background: #F6DC6A; color: #17120F; border-radius: 999px; padding: 2px 9px; font-size: .72rem; font-weight: 700">Nuevo</span>
+        </div>
+        <p style="margin: 0; font-size: .86rem; color: #6E6259"><b style="color: #17120F">{{mapTotal}}</b> {{mapWhere}}</p>
+        <a href="Mapa.dc.html" style="display: flex; flex-direction: column; gap: 12px; color: #17120F">
+          <span aria-hidden="true" style="display: block; background-color: #140E10; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1.5px); background-size: 14px 14px; border-radius: 16px; padding: 14px; overflow: hidden">
+            <span style="display: block; position: relative; width: min(100%, 240px); aspect-ratio: 130 / 175; margin: 0 auto">
+              <svg viewBox="0 0 130 175" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">
+                <path d="M21.4 43.2 L26.5 46.0 L27.5 49.5 L27.2 45.5 L30.7 41.5 L38.2 36.0 L39.2 34.5 L38.5 30.0 L39.5 26.0 L42.5 22.0 L46.5 20.0 L51.0 19.0 L52.9 17.6 L58.0 17.0 L65.9 14.6 L70.0 12.0 L73.3 8.0 L78.3 5.4 L81.0 8.0 L81.7 11.5 L75.5 14.5 L72.5 19.0 L66.5 25.5 L64.5 33.0 L61.5 39.0 L67.5 43.5 L71.0 47.0 L70.3 51.0 L73.0 56.0 L83.0 59.5 L94.0 59.2 L101.0 60.5 L120.2 68.0 L117.0 78.0 L116.5 86.0 L119.0 91.3 L123.0 102.0 L124.0 111.0 L126.3 118.3 L116.0 119.0 L113.0 113.0 L101.0 112.0 L96.0 117.5 L94.5 123.5 L94.5 131.0 L99.0 137.5 L100.5 144.0 L97.0 152.0 L95.5 163.0 L95.6 172.2 L91.0 168.0 L92.0 158.0 L84.0 154.0 L75.0 153.0 L66.0 154.5 L60.0 151.0 L53.0 142.0 L47.2 132.0 L41.0 129.0 L32.0 127.0 L26.0 126.0 L18.5 121.5 L14.0 118.0 L6.5 115.5 L7.0 112.0 L9.0 108.0 L16.0 104.3 L20.0 98.0 L23.0 91.2 L21.0 85.0 L20.5 75.0 L20.5 68.0 L17.0 60.0 L17.5 55.0 L20.5 50.5 L22.0 47.0 Z" fill="#2E2220" stroke="#8A6A55" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+              </svg>
+              <sc-for list="{{miniPins}}" as="m" hint-placeholder-count="11">
+                <span style="position: absolute; left: {{m.left}}%; top: {{m.top}}%; transform: translate(-50%, -50%); width: {{m.size}}px; height: {{m.size}}px; border-radius: 50%; background: #F6DC6A; box-shadow: 0 0 0 2px #140E10; display: grid; place-items: center; font-family: 'Archivo', sans-serif; font-weight: 900; font-size: {{m.fs}}px; line-height: 1; color: #17120F">{{m.count}}</span>
+              </sc-for>
+              <sc-for list="{{miniLabels}}" as="l" hint-placeholder-count="5">
+                <span style="position: absolute; left: {{l.left}}%; top: {{l.top}}%; transform: {{l.tf}}; white-space: nowrap; font-size: .68rem; font-weight: 700; line-height: 1.2; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0,0,0,.7)">{{l.name}}</span>
+              </sc-for>
+            </span>
+          </span>
+          <span style="min-height: 44px; box-sizing: border-box; border-radius: 999px; padding: 8px 16px; background: #17120F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; font-weight: 700; font-size: .88rem">Ver qué pasa en todo el país<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+        </a>
+      </div>
+
+      <div style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0 0 6px; font-size: 1rem">Gente con tus gustos</h2>
+        <sc-for list="{{people}}" as="u" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0">
+            <a href="Perfil.dc.html" style="width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: {{u.c}}; display: grid; place-items: center; font-weight: 700; font-size: .78rem">{{u.ini}}</a>
+            <div style="flex: 1; min-width: 0; line-height: 1.3"><a href="Perfil.dc.html" style="font-weight: 700; font-size: .9rem">{{u.name}}</a><span style="display: block; font-size: .78rem; color: #6E6259">{{u.why}}</span></div>
+            <button aria-pressed="{{u.pressed}}" onClick="{{u.toggle}}" style="height: 36px; border-radius: 999px; padding: 0 14px; font-size: .8rem; font-weight: 700; border: 1px solid #17120F; background: {{u.bg}}; color: {{u.fg}}">{{u.label}}</button>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background: #FFFFFF; border: 1px solid #EAE1D8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 1rem">Tendencias en Colombia</h2>
+        <sc-for list="{{trends}}" as="tr" hint-placeholder-count="5">
+          <a href="Agenda.dc.html" style="line-height: 1.3"><span style="display: block; font-size: .74rem; color: #6E6259"><b style="color: #17120F">{{tr.city}}</b> · {{tr.meta}}</span><b>{{tr.tag}}</b></a>
+        </sc-for>
+      </div>
+
+      <p style="margin: 0; font-size: .76rem; color: #6E6259">Compra segura dentro de Fulleventos. Las boletas las emite la boletera oficial del evento o el organizador. · Contenido de ejemplo</p>
+    </aside>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2520}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'amigos', city: 'all', liked: {}, going: { p1: true }, joined: {}, follow: {} };
+  }
+  toggle(key, id) {
+    const next = Object.assign({}, this.state[key]);
+    next[id] = !next[id];
+    const patch = {};
+    patch[key] = next;
+    this.setState(patch);
+  }
+  renderVals() {
+    const s = this.state;
+    const planes = (n) => n + (n === 1 ? ' plan' : ' planes');
+
+    // Shared national data (same as Agenda / Mapa)
+    const cities = [
+      { id: 'bogota', name: 'Bogotá', left: 41.8, top: 47.4 },
+      { id: 'medellin', name: 'Medellín', left: 30.2, top: 38.6 },
+      { id: 'cali', name: 'Cali', left: 22.8, top: 54.6 },
+      { id: 'barranquilla', name: 'Barranquilla', left: 36.2, top: 11.7 },
+      { id: 'cartagena', name: 'Cartagena', left: 30.9, top: 14.9 },
+      { id: 'santamarta', name: 'Santa Marta', left: 40.8, top: 10.1 },
+      { id: 'bucaramanga', name: 'Bucaramanga', left: 49.1, top: 33.6 },
+      { id: 'pereira', name: 'Pereira', left: 29.3, top: 46.8 },
+      { id: 'villavicencio', name: 'Villavicencio', left: 45.2, top: 50.6 },
+      { id: 'pasto', name: 'Pasto', left: 17.1, top: 67.4 },
+      { id: 'leticia', name: 'Leticia', left: 73.5, top: 97 }
+    ];
+    const cityName = {};
+    cities.forEach((c) => { cityName[c.id] = c.name; });
+
+    const all = [
+      { id: 'e1', t: 'Noche de salsa y boleros en vivo', cat: 'Rumba', tags: ['rumba'], city: 'bogota', d: 9, v: 'Galería Café Libro · Zona T', p: 45000, b: 'TuBoleta', bg1: '#E8A04F', bg2: '#B5372B' },
+      { id: 'e2', t: 'Festival de jazz al parque', cat: 'Conciertos', tags: ['conciertos', 'gratis'], city: 'bogota', d: 10, v: 'Parque El Country · Usaquén', p: 0, b: 'Idartes', bg1: '#4F6DD8', bg2: '#1E2550' },
+      { id: 'e3', t: 'Rock en el Movistar Arena', cat: 'Conciertos', tags: ['conciertos'], city: 'bogota', d: 10, v: 'Movistar Arena · Salitre', p: 180000, b: 'TuBoleta', bg1: '#D9452F', bg2: '#2B0F12' },
+      { id: 'e4', t: 'Santa Fe vs. Millonarios', cat: 'Deporte', tags: ['deporte'], city: 'bogota', d: 11, v: 'Estadio El Campín · Teusaquillo', p: 60000, b: 'Ticketmaster', bg1: '#C4302B', bg2: '#1F3A8A' },
+      { id: 'e5', t: 'Stand-up: risas de domingo', cat: 'Arte y teatro', tags: ['teatro'], city: 'bogota', d: 11, v: 'Teatro Libre · Chapinero', p: 55000, b: 'TuBoleta', bg1: '#EE93BC', bg2: '#5A2340' },
+      { id: 'e6', t: 'Mercado gastronómico de las Américas', cat: 'Comida', tags: ['comida', 'gratis'], city: 'bogota', d: 10, v: 'Plaza de los Artesanos', p: 0, b: 'Entrada libre', bg1: '#F6DC6A', bg2: '#C46A2B' },
+      { id: 'e7', t: 'Noche de reguetón en Provenza', cat: 'Rumba', tags: ['rumba'], city: 'medellin', d: 9, v: 'Barrio Provenza · El Poblado', p: 50000, b: 'Fever', bg1: '#6B3FA0', bg2: '#0E0A1A' },
+      { id: 'e8', t: 'Atlético Nacional vs. Junior', cat: 'Deporte', tags: ['deporte'], city: 'medellin', d: 12, v: 'Estadio Atanasio Girardot', p: 70000, b: 'Ticketmaster', bg1: '#3E9B63', bg2: '#0F2A1C' },
+      { id: 'e9', t: 'Milonga en Manrique', cat: 'Rumba', tags: ['rumba'], city: 'medellin', d: 10, v: 'Casa del tango · Manrique', p: 25000, b: 'TuBoleta', bg1: '#B88A5A', bg2: '#3A2414' },
+      { id: 'e10', t: 'Viejoteca de salsa caleña', cat: 'Rumba', tags: ['rumba'], city: 'cali', d: 10, v: 'Juanchito', p: 40000, b: 'TuBoleta', bg1: '#F3B27E', bg2: '#8A2E1F' },
+      { id: 'e11', t: 'Concierto de músicas del Pacífico', cat: 'Conciertos', tags: ['conciertos'], city: 'cali', d: 11, v: 'Teatro Municipal', p: 35000, b: 'TuBoleta', bg1: '#8FD3D0', bg2: '#12343A' },
+      { id: 'e12', t: 'Vallenato en el Gran Malecón', cat: 'Conciertos', tags: ['conciertos', 'gratis'], city: 'barranquilla', d: 10, v: 'Gran Malecón del Río', p: 0, b: 'Entrada libre', bg1: '#F6DC6A', bg2: '#1E5A7A' },
+      { id: 'e13', t: 'Noche de champeta en Getsemaní', cat: 'Rumba', tags: ['rumba'], city: 'cartagena', d: 9, v: 'Plaza de la Trinidad · Getsemaní', p: 30000, b: 'Fever', bg1: '#EE93BC', bg2: '#4A1A3A' },
+      { id: 'e14', t: 'Atardecer electrónico en la playa', cat: 'Rumba', tags: ['rumba'], city: 'santamarta', d: 10, v: 'Playa El Rodadero', p: 90000, b: 'Fever', bg1: '#F3B27E', bg2: '#1E2550' },
+      { id: 'e15', t: 'Festival de cerveza artesanal', cat: 'Comida', tags: ['comida'], city: 'bucaramanga', d: 11, v: 'Parque San Pío', p: 25000, b: 'TuBoleta', bg1: '#E8A04F', bg2: '#5A3A14' },
+      { id: 'e16', t: 'Noche de trova en el lago', cat: 'Conciertos', tags: ['conciertos', 'gratis'], city: 'pereira', d: 9, v: 'Parque Lago Uribe Uribe', p: 0, b: 'Entrada libre', bg1: '#A3A8F0', bg2: '#2A2550' },
+      { id: 'e17', t: 'Joropo en Los Fundadores', cat: 'Conciertos', tags: ['conciertos', 'gratis'], city: 'villavicencio', d: 11, v: 'Parque Los Fundadores', p: 0, b: 'Entrada libre', bg1: '#B9E07A', bg2: '#2A3A14' },
+      { id: 'e18', t: 'Concierto andino en la plaza', cat: 'Conciertos', tags: ['conciertos', 'gratis'], city: 'pasto', d: 10, v: 'Plaza de Nariño', p: 0, b: 'Entrada libre', bg1: '#8FD3D0', bg2: '#2A1F3A' },
+      { id: 'e19', t: 'Música y comida en el malecón del Amazonas', cat: 'Comida', tags: ['comida', 'gratis'], city: 'leticia', d: 11, v: 'Malecón de Leticia', p: 0, b: 'Entrada libre', bg1: '#B9E07A', bg2: '#12343A' }
+    ];
+    const evById = {};
+    all.forEach((e) => { evById[e.id] = e; });
+    const dayName = { 9: 'Vie', 10: 'Sáb', 11: 'Dom', 12: 'Lun' };
+
+    const tabDefs = [
+      { id: 'amigos', label: 'Amigos' },
+      { id: 'parches', label: 'Parches abiertos' },
+      { id: 'resenas', label: 'Reseñas' },
+      { id: 'cerca', label: 'Cerca de ti' }
+    ];
+    const tabs = tabDefs.map((t) => {
+      const on = s.tab === t.id;
+      return Object.assign({}, t, {
+        pressed: on ? 'true' : 'false',
+        bg: on ? '#17120F' : '#FFFFFF',
+        fg: on ? '#FFFFFF' : '#17120F',
+        border: on ? '#17120F' : '#EAE1D8',
+        pick: () => this.setState({ tab: t.id })
+      });
+    });
+
+    // Posts reference the shared national events by id (ev) so title, venue, city and photo always agree
+    const raw = [
+      { id: 'p1', ev: 'e1', hour: '9:00 p. m.', tags: ['amigos', 'cerca'], name: 'Laura Martínez', ini: 'LM', c: '#F3B27E', action: 'va a un evento', time: 'Hace 1 h · Bogotá',
+        text: '¿Quién se apunta el viernes? Tengo dos boletas de más y la orquesta en vivo es una locura.',
+        going: 23, likes: 24, comments: 6 },
+      { id: 'p4', ev: 'e7', hour: '10:00 p. m.', tags: ['amigos', 'parches'], name: 'Andrés Ramírez', ini: 'AR', c: '#A3A8F0', action: 'abrió un parche', time: 'Hace 2 h · Medellín',
+        text: '¿Alguien de Bogotá se viene a Medellín por el puente? Armé parche para el viernes en Provenza: nos vemos a las 9 en el parque Lleras y arrancamos.',
+        going: 34, likes: 27, comments: 9,
+        parche: 'Provenza de viernes', cuposUsed: 5, cuposMax: 8 },
+      { id: 'p2', ev: 'e4', hour: '4:00 p. m.', tags: ['amigos', 'parches', 'cerca'], name: 'Sofía Cárdenas', ini: 'SC', c: '#EE93BC', action: 'armó un parche', time: 'Hace 3 h · Bogotá',
+        text: 'Armé parche para el clásico. Nos vemos a las 2 en la tienda de la 57 y caminamos al estadio. Faltan dos.',
+        going: 41, likes: 18, comments: 11,
+        parche: 'Clásico capitalino', cuposUsed: 4, cuposMax: 6 },
+      { id: 'p5', ev: 'e12', hour: '5:00 p. m.', tags: ['amigos'], name: 'Natalia Herrera', ini: 'NH', c: '#F6DC6A', action: 'compartió un plan gratis', time: 'Hace 5 h · Barranquilla',
+        text: 'Para los que vienen a la costa este puente: el sábado hay vallenato gratis en el Malecón, frente al río. Lleguen temprano que se llena.',
+        going: 112, likes: 45, comments: 12 },
+      { id: 'p3', ev: 'e5', hour: '7:00 p. m.', tags: ['amigos', 'resenas'], name: 'Juan Pablo Rojas', ini: 'JP', c: '#B9E07A', action: 'reseñó un evento', time: 'Ayer · Bogotá',
+        text: 'Me dolió la barriga de reír. El cierre con improvisación del público vale cada peso. Vayan en grupo.',
+        going: 9, likes: 52, comments: 14, stars: true }
+    ];
+
+    const visible = raw.filter((p) => p.tags.indexOf(s.tab) !== -1 && (s.city === 'all' || evById[p.ev].city === s.city));
+    const posts = visible.map((p) => {
+      const e = evById[p.ev];
+      const liked = !!s.liked[p.id];
+      const going = !!s.going[p.id];
+      const joined = !!s.joined[p.id];
+      const used = (p.cuposUsed || 0) + (joined ? 1 : 0);
+      return Object.assign({}, p, {
+        cat: e.cat + (e.p ? '' : ' · Gratis'),
+        event: e.t,
+        where: dayName[e.d] + ' ' + e.d + ' oct · ' + p.hour + ' · ' + e.v.split(' · ').join(', '),
+        cityName: cityName[e.city],
+        day: String(e.d),
+        mon: 'oct',
+        bg1: e.bg1,
+        bg2: e.bg2,
+        likes: p.likes + (liked ? 1 : 0),
+        likePressed: liked ? 'true' : 'false',
+        likeColor: liked ? '#C23A24' : '#6E6259',
+        heartFill: liked ? 'currentColor' : 'none',
+        toggleLike: () => this.toggle('liked', p.id),
+        goingLabel: (p.going + (going ? 1 : 0)) + ' van · 3 amigos',
+        goingPressed: going ? 'true' : 'false',
+        goingText: going ? 'Vas' : 'Voy',
+        goingBg: going ? '#17120F' : '#FFFFFF',
+        goingFg: going ? '#FFFFFF' : '#17120F',
+        toggleGoing: () => this.toggle('going', p.id),
+        isParche: !!p.parche,
+        parcheName: p.parche || '',
+        cupos: used + ' de ' + (p.cuposMax || 0) + ' cupos',
+        pct: p.cuposMax ? Math.round(used / p.cuposMax * 100) : 0,
+        joinPressed: joined ? 'true' : 'false',
+        joinText: joined ? 'Estás en el parche' : 'Unirme al parche',
+        joinBg: joined ? '#17120F' : '#C23A24',
+        toggleJoin: () => this.toggle('joined', p.id),
+        hasStars: !!p.stars
+      });
+    });
+
+    const cityLabel = s.city === 'all' ? 'Colombia' : cityName[s.city];
+    const feedEmpty = posts.length === 0;
+
+    const ring = 'linear-gradient(135deg, #F3B27E, #D9452F)';
+    const stories = [
+      { ini: '+', name: 'Tu plan', city: '', c: '#FFFFFF', ring: '#EAE1D8', aria: 'Sube tu plan' },
+      { ini: 'LM', name: 'Laura', city: 'Bogotá', c: '#F3B27E', ring: ring },
+      { ini: 'AR', name: 'Andrés', city: 'Medellín', c: '#A3A8F0', ring: ring },
+      { ini: 'NH', name: 'Nata', city: 'Barranquilla', c: '#F6DC6A', ring: ring },
+      { ini: 'CR', name: 'Caro', city: 'Cali', c: '#EE93BC', ring: ring },
+      { ini: 'SB', name: 'Sebas', city: 'Santa Marta', c: '#8FD3D0', ring: '#EAE1D8' },
+      { ini: 'MJ', name: 'Majo', city: 'Pereira', c: '#B9E07A', ring: '#EAE1D8' },
+      { ini: 'DR', name: 'Dani', city: 'Leticia', c: '#A3A8F0', ring: '#EAE1D8' }
+    ].map((st) => Object.assign({}, st, { aria: st.aria || ('Historia de ' + st.name + ' en ' + st.city) }));
+
+    const people = [
+      { id: 'u1', ini: 'MG', name: 'María F. Gómez', why: 'Bogotá · Va a 4 eventos que te gustan', c: '#F6DC6A' },
+      { id: 'u2', ini: 'DT', name: 'Daniel Torres', why: 'Bogotá · Amigo de Laura y Andrés', c: '#8FD3D0' },
+      { id: 'u3', ini: 'VQ', name: 'Valentina Quintero', why: 'Medellín · Le encanta el techno', c: '#A3A8F0' }
+    ].map((u) => {
+      const on = !!s.follow[u.id];
+      return Object.assign({}, u, {
+        pressed: on ? 'true' : 'false',
+        label: on ? 'Siguiendo' : 'Seguir',
+        bg: on ? '#FFFFFF' : '#17120F',
+        fg: on ? '#17120F' : '#FFFFFF',
+        toggle: () => this.toggle('follow', u.id)
+      });
+    });
+
+    const trends = [
+      { city: 'Bogotá', meta: 'Fútbol · 1.150 planes', tag: '#ClásicoCapitalino' },
+      { city: 'Medellín', meta: 'Rumba · 900 planes', tag: '#ProvenzaDeViernes' },
+      { city: 'Todo el país', meta: 'Salsa · 870 planes', tag: '#ViernesDeSalsa' },
+      { city: 'Barranquilla', meta: 'Gratis · 640 planes', tag: '#VallenatoEnElMalecón' },
+      { city: 'Cali', meta: 'Conciertos · 410 planes', tag: '#PacíficoEnVivo' }
+    ];
+
+    // Mini map: one pin per city, size by number of plans this weekend; smaller pins drawn first
+    const countBy = {};
+    all.forEach((e) => { countBy[e.city] = (countBy[e.city] || 0) + 1; });
+    const activeCities = cities.filter((c) => countBy[c.id]);
+    const miniPins = activeCities.map((c) => {
+      const n = countBy[c.id];
+      return {
+        n: n,
+        left: c.left,
+        top: c.top,
+        size: n >= 5 ? 20 : n >= 3 ? 16 : n === 2 ? 13 : 9,
+        fs: n >= 5 ? 11 : n >= 3 ? 10 : 9,
+        count: n > 1 ? String(n) : ''
+      };
+    }).sort((a, b) => a.n - b.n);
+    const labelTf = {
+      bogota: 'translate(12px, -85%)',
+      medellin: 'translate(calc(-100% - 11px), -50%)',
+      cali: 'translate(calc(-100% - 10px), -50%)',
+      barranquilla: 'translate(-50%, calc(-100% - 12px))',
+      leticia: 'translate(calc(-100% - 9px), -50%)'
+    };
+    const miniLabels = cities.filter((c) => labelTf[c.id]).map((c) => ({ name: c.name, left: c.left, top: c.top, tf: labelTf[c.id] }));
+
+    return {
+      tabs, posts, stories, people, trends, miniPins, miniLabels,
+      city: s.city,
+      cityLabel,
+      pickCitySelect: (ev) => {
+        const v = ev && ev.target ? ev.target.value : '';
+        if (v) this.setState({ city: v });
+      },
+      clearCity: () => this.setState({ city: 'all' }),
+      showCityRow: s.city !== 'all' && !feedEmpty,
+      feedEmpty,
+      emptyMsg: 'Todavía nadie de tu gente ha publicado planes en ' + cityLabel + ' en esta pestaña. Mira lo que hay allá en el mapa o vuelve a todo Colombia.',
+      mapTotal: planes(all.length),
+      mapWhere: 'este finde en ' + activeCities.length + ' ciudades, de la costa al Amazonas.'
+    };
+  }
+}
+</script>
+</body>
+</html>
