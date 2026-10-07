@@ -5,6 +5,7 @@
 import Icono from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
+import { rutaNuevoParche } from '../../data/mensajes';
 
 const nombrePila = usuaria.nombre.split(' ')[0];
 ---
@@ -27,7 +28,7 @@ const nombrePila = usuaria.nombre.split(' ')[0];
     <button type="button" class="secundario" data-proximamente="etiquetar eventos en tus publicaciones">
       <Icono nombre="agenda" tamano={16} />Etiquetar evento
     </button>
-    <a href="/mensajes?nuevo=parche" class="secundario">
+    <a href={rutaNuevoParche()} class="secundario">
       <Icono nombre="armarParche" tamano={16} />Armar parche
     </a>
     <button type="button" class="secundario" data-proximamente="subir fotos">

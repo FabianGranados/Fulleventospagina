@@ -7,6 +7,7 @@ import type { Persona } from '../../data/personas';
 import { coloresGusto, type Perfil } from '../../data/perfil';
 import { nombreCiudad } from '../../data/ciudades';
 import { cifra } from '../../lib/formato';
+import { rutaChatCon } from '../../data/mensajes';
 
 interface Props {
   persona: Persona;
@@ -44,8 +45,8 @@ const linea = [`@${persona.id}`, ubicacion].filter(Boolean).join(' · ');
         ) : (
           <>
             <BotonSeguir nombre={nombreCorto} />
-            {/* La conversación directa con la persona (/mensajes/:conversacion) todavía no existe (H42) */}
-            <a href="/mensajes" class="secundario">Mensaje<span class="solo-lectores"> a {nombreCorto}</span></a>
+            {/* Abre la conversación con la persona o, si no existe, "Nuevo chat" con ella elegida (H42) */}
+            <a href={rutaChatCon(persona.id)} class="secundario">Mensaje<span class="solo-lectores"> a {nombreCorto}</span></a>
           </>
         )
       }

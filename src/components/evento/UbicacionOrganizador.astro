@@ -3,6 +3,7 @@
 // "Escribir al organizador" su conversación. La insignia de verificado depende de P9 (H48).
 import Icono from '../ui/Icono.astro';
 import type { ModeloEvento } from './modelo';
+import { organizador } from '../../data/mensajes';
 
 interface Props {
   m: ModeloEvento;
@@ -56,7 +57,7 @@ const direccion = d ? `${m.lugarDetalle} · ${d.direccion}` : m.lugarDetalle;
           <p class="dudas">
             ¿Dudas sobre mesas, cumpleaños o accesibilidad? Escríbele directo por el chat de Fulleventos.
           </p>
-          <a href="/mensajes?con=galeria-cafe-libro" class="escribir">
+          <a href={`/mensajes/${organizador.id}`} class="escribir">
             <Icono nombre="mensajes" tamano={18} />
             Escribir al organizador
           </a>

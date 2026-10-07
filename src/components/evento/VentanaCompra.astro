@@ -7,6 +7,7 @@ import Icono from '../ui/Icono.astro';
 import Cantidad from './Cantidad.astro';
 import { mediosPago, bancosPse } from '../../data/evento';
 import { persona } from '../../data/personas';
+import { conversaciones, YO } from '../../data/mensajes';
 import { pesos } from '../../lib/formato';
 import type { ModeloEvento } from './modelo';
 
@@ -28,6 +29,8 @@ const colorDe: Record<string, string> = {
 const amigos = (d?.amigosParche ?? []).map((id) => persona(id)!);
 const corto = (nombre: string) => nombre.split(' ').slice(0, -1).join(' ') || nombre;
 const pasos = ['Boletas', 'Datos', 'Pago', 'Listo'];
+// "Avisar a mi parche" abre el chat del parche de Camila para este evento (H42); sin parche, la bandeja
+const chatParche = conversaciones.find((c) => c.tipo === 'parche' && c.evento === e.id && c.miembros?.includes(YO));
 const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
 ---
 
@@ -352,7 +355,7 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
           <ul data-pagos-lista></ul>
         </div>
         <div class="acciones-listo">
-          <a href="/mensajes" class="avisar">
+          <a href={chatParche ? `/mensajes/${chatParche.slug}` : '/mensajes'} class="avisar">
             <Icono nombre="mensajes" tamano={18} />
             Avisar a mi parche
           </a>

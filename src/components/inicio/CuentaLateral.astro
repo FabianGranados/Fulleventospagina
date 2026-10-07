@@ -5,6 +5,7 @@ import Icono, { type NombreIcono } from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
 import { contadores, misParches } from '../../data/inicio';
+import { conversaciones } from '../../data/mensajes';
 import { cifra } from '../../lib/formato';
 
 interface Props {
@@ -78,7 +79,7 @@ const estadoParche = (p: (typeof misParches)[number]) =>
     <h2 id="parches-titulo">Tus parches</h2>
     {
       misParches.map((p) => (
-        <a href={`/mensajes?conversacion=${p.id}`} class="parche">
+        <a href={`/mensajes/${conversaciones.find((c) => c.id === p.id)!.slug}`} class="parche">
           <span class="cuadro" style={`background: ${p.fondo}`} aria-hidden="true">{p.iniciales}</span>
           <span class="texto">
             <b>{p.nombre}</b>

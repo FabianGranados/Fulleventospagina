@@ -4,6 +4,7 @@
 import Icono from '../ui/Icono.astro';
 import { persona, usuaria } from '../../data/personas';
 import type { DetalleEvento } from '../../data/evento';
+import { rutaNuevoParche } from '../../data/mensajes';
 
 interface Props {
   d: DetalleEvento;
@@ -28,7 +29,7 @@ const pct = (usados: number, maximo: number) => Math.round((usados / maximo) * 1
       <h2 id="h-parches" class="titulo-seccion">Parches para este evento</h2>
       <p class="sub">Únete a un grupo para llegar acompañado, o arma el tuyo.</p>
     </div>
-    <a class="armar" href={`/mensajes?nuevo=parche&evento=${eventoId}`}>
+    <a class="armar" href={rutaNuevoParche(eventoId)}>
       <Icono nombre="mas" tamano={16} grosor={2.2} />
       Armar parche
     </a>

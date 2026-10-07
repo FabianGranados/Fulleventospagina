@@ -1,7 +1,7 @@
 // Comportamiento del chat en el navegador (6.2.7). Demo local: no hay red ni tiempo real (P6, H13).
 // Regla común "enviar" del prototipo: lo que publica Camila va al final con hora "Ahora", marca la
 // conversación como leída y la sube al primer lugar de la lista.
-import { AMIGOS, YO, type Conversacion, type Mensaje, type Reaccion } from '../../data/mensajes';
+import { AMIGOS, YO, ciudadDe, type Conversacion, type Mensaje, type Reaccion } from '../../data/mensajes';
 import * as E from './estado';
 import * as P from './plantillas';
 
@@ -536,11 +536,54 @@ export const iniciar = () => {
     principal.setAttribute('aria-disabled', String(!v.listo));
   };
 
+  // Llegar con ?nuevo=parche[&evento=<id>] o ?nuevo=chat[&persona=<id>] (H38, H42) abre la ventana con el
+  // evento o la persona ya elegidos. Se aplica una sola vez, en la primera apertura.
+  let preseleccion: { evento?: string; persona?: string } | null = null;
+
+  // El select solo trae los eventos de la bandeja: un evento ligado desde otra pantalla se agrega
+  const asegurarEvento = (id: string) => {
+    if ([...campos.evento.options].some((o) => o.value === id)) return true;
+    let ev: E.EventoChat;
+    try {
+      ev = E.eventoDe(id);
+    } catch {
+      return false;
+    }
+    campos.evento.add(new Option(`${ev.titulo} · ${E.fechaCorta(ev)} · ${ev.ciudad}`, id));
+    return true;
+  };
+
+  // La lista de "Nuevo chat" son los amigos; otra persona del demo (por ejemplo, desde su perfil) se agrega arriba
+  const asegurarPersona = (id: string) => {
+    if (form.querySelector(`input[name="persona"][value="${CSS.escape(id)}"]`)) return true;
+    const nombre = E.nombreDe(id);
+    const grupo = $('[data-amigos-persona] .rejilla-amigos', form);
+    const modelo = grupo.querySelector<HTMLLabelElement>('label');
+    if (!nombre || !modelo) return false;
+    const fila = modelo.cloneNode(true) as HTMLLabelElement;
+    const radio = fila.querySelector<HTMLInputElement>('input')!;
+    radio.value = id;
+    radio.checked = false;
+    const av = fila.querySelector<HTMLElement>('.av-amigo')!;
+    av.textContent = E.inicialesDe(id);
+    av.className = av.className.replace(/\bc[1-6]\b/, E.colorDe(id));
+    fila.querySelector('.amigo-texto b')!.textContent = nombre;
+    fila.querySelector('.amigo-texto span')!.textContent = ciudadDe[id] ?? '';
+    grupo.prepend(fila);
+    return true;
+  };
+
   // Cada vez que se abre, la ventana arranca vacía (detalle fino 43) en el modo del botón que la abrió
   dialogo.addEventListener('modal:abierta', (ev) => {
     const origen = (ev as CustomEvent<{ origen: HTMLElement }>).detail.origen;
     form.reset();
     campos.tipo.value = origen.dataset.modo === 'persona' ? 'persona' : 'parche';
+    if (preseleccion) {
+      const { evento, persona } = preseleccion;
+      preseleccion = null;
+      if (evento && asegurarEvento(evento)) campos.evento.value = evento;
+      if (persona && asegurarPersona(persona)) campos.persona.value = persona;
+    }
     actualizarVentana();
   });
 
@@ -617,6 +660,28 @@ export const iniciar = () => {
   ultimo.set(barra, P.barraHTML(e, true));
   ultimo.set(plan, P.planHTML(e));
   ultimo.set(info, P.infoHTML(e));
-  history.replaceState({ mensajes: true, abierta: paginaAbierta, panel: paginaVista, desdeLista: false }, '');
+  const consulta = new URLSearchParams(location.search);
+  const nuevo = consulta.get('nuevo');
+  // La consulta ?nuevo= solo abre la ventana al llegar: no se queda en la dirección
+  history.replaceState({ mensajes: true, abierta: paginaAbierta, panel: paginaVista, desdeLista: false }, '', location.pathname);
   pintar();
+
+  if (nuevo === 'parche' || nuevo === 'chat') {
+    preseleccion = { evento: consulta.get('evento') ?? undefined, persona: consulta.get('persona') ?? undefined };
+    const modo = nuevo === 'chat' ? 'persona' : 'parche';
+    const boton = raiz.querySelector<HTMLElement>(`[data-abrir-modal="nuevo-chat"][data-modo="${modo}"]`);
+    // Se abre con el clic del botón para que, al cerrar, el foco vuelva a él (Modal, H7). Espera a que el
+    // script del Modal registre su escucha de clics.
+    let abierta = false;
+    const abrir = () => {
+      if (abierta) return;
+      abierta = true;
+      boton?.click();
+    };
+    if (document.readyState === 'complete') setTimeout(abrir, 0);
+    else {
+      document.addEventListener('DOMContentLoaded', abrir, { once: true });
+      addEventListener('load', abrir, { once: true });
+    }
+  }
 };

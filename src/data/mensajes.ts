@@ -267,3 +267,12 @@ export const conversaciones: Conversacion[] = [
 export const CONVERSACION_INICIAL = 'salseros';
 
 export const conversacionPorSlug = (s: string) => conversaciones.find((c) => c.slug === s);
+
+// Enlaces de otras pantallas al chat (H42): la conversación va en la dirección (/mensajes/:slug).
+// Sin conversación, "Mensaje" abre la ventana "Nuevo chat" con la persona elegida.
+export const rutaChatCon = (personaId: string) => {
+  const c = conversaciones.find((x) => x.tipo !== 'parche' && x.con === personaId);
+  return c ? `/mensajes/${c.slug}` : `/mensajes?nuevo=chat&persona=${encodeURIComponent(personaId)}`;
+};
+export const rutaNuevoParche = (eventoId?: string) =>
+  eventoId ? `/mensajes?nuevo=parche&evento=${encodeURIComponent(eventoId)}` : '/mensajes?nuevo=parche';
