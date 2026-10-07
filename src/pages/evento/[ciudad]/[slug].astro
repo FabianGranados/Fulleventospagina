@@ -1,0 +1,292 @@
+---
+// 4.8 · Evento y compra. Una página por evento (H36), generada en el servidor e indexable (H34).
+// e1 tiene todo el detalle del prototipo; los demás usan la misma plantilla con los datos que existen.
+// La compra es una DEMOSTRACIÓN sin backend: P1 (modo de compra), P3 (pasarela), P4 (cargo), P7 y P8 siguen pendientes.
+import Base from '../../../layouts/Base.astro';
+import EncabezadoApp from '../../../components/layout/EncabezadoApp.astro';
+import Pie from '../../../components/layout/Pie.astro';
+import Modal from '../../../components/ui/Modal.astro';
+import HeroeEvento from '../../../components/evento/HeroeEvento.astro';
+import DatosClave from '../../../components/evento/DatosClave.astro';
+import AccionesEvento from '../../../components/evento/AccionesEvento.astro';
+import AtajosSeccion from '../../../components/evento/AtajosSeccion.astro';
+import SobreEvento from '../../../components/evento/SobreEvento.astro';
+import Programacion from '../../../components/evento/Programacion.astro';
+import Localidades from '../../../components/evento/Localidades.astro';
+import ParchesMuro from '../../../components/evento/ParchesMuro.astro';
+import LoQueDebesSaber from '../../../components/evento/LoQueDebesSaber.astro';
+import UbicacionOrganizador from '../../../components/evento/UbicacionOrganizador.astro';
+import PlanesParecidos from '../../../components/evento/PlanesParecidos.astro';
+import TarjetaCompra from '../../../components/evento/TarjetaCompra.astro';
+import BarraCompra from '../../../components/evento/BarraCompra.astro';
+import VentanaCompra from '../../../components/evento/VentanaCompra.astro';
+import BoletaDigital from '../../../components/evento/BoletaDigital.astro';
+import { modeloEvento } from '../../../components/evento/modelo';
+import { eventos, type Evento } from '../../../data/eventos';
+import { persona } from '../../../data/personas';
+import { CARGO_DEMO } from '../../../data/evento';
+import { slug, pesos } from '../../../lib/formato';
+
+export function getStaticPaths() {
+  return eventos.map((evento) => ({
+    params: { ciudad: evento.ciudad, slug: slug(evento.titulo) },
+    props: { evento },
+  }));
+}
+
+interface Props {
+  evento: Evento;
+}
+
+const m = modeloEvento(Astro.props.evento);
+const { evento: e, detalle: d } = m;
+const vende = !m.gratis;
+
+const titulo = `${e.titulo} · ${m.ciudad} · Fulleventos`;
+const descripcion =
+  `${m.fechaLarga} de ${m.anio}${d ? `, puertas ${d.puertas}` : ''} en ${m.lugarCompleto}. ` +
+  `${m.gratis ? 'Gratis' : `${m.precioDesde} + cargo por servicio`}. Mira quién va y arma parche en Fulleventos.`;
+
+const atajos = [
+  d && { href: '#sobre', texto: 'Sobre el evento' },
+  d && { href: '#programacion', texto: 'Programación' },
+  d && { href: '#localidades', texto: 'Localidades' },
+  d && { href: '#parches', texto: 'Parches y muro' },
+  d && { href: '#saber', texto: 'Lo que debes saber' },
+  { href: '#ubicacion', texto: 'Ubicación' },
+].filter(Boolean) as { href: string; texto: string }[];
+
+// schema.org/Event (H34): fecha con zona -05:00 cuando hay hora; precio en COP
+const esquema = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: e.titulo,
+  startDate: d ? d.showIso : e.fecha,
+  ...(d && { doorTime: d.puertasIso }),
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  location: {
+    '@type': 'Place',
+    name: m.lugarNombre,
+    address: {
+      '@type': 'PostalAddress',
+      ...(m.lugarDetalle !== m.ciudad && { streetAddress: m.lugarDetalle.split(',')[0] }),
+      addressLocality: m.ciudad,
+      addressCountry: 'CO',
+    },
+  },
+  ...(d && { organizer: { '@type': 'Organization', name: d.organizador.nombre } }),
+  ...(d && { description: d.descripcion[0] }),
+  offers: m.gratis
+    ? { '@type': 'Offer', price: 0, priceCurrency: 'COP', availability: 'https://schema.org/InStock', url: m.url }
+    : m.localidades.map((l) => ({
+        '@type': 'Offer',
+        name: l.completo,
+        price: l.precio,
+        priceCurrency: 'COP',
+        availability: 'https://schema.org/InStock',
+        url: m.url,
+      })),
+};
+
+const colorDe: Record<string, string> = {
+  c1: '#F3B27E',
+  c2: '#A3A8F0',
+  c3: '#EE93BC',
+  c4: '#B9E07A',
+  c5: '#F6DC6A',
+  c6: '#8FD3D0',
+};
+
+const datosCompra = {
+  titulo: e.titulo,
+  localidades: m.localidades.map(({ id, nombre, completo, corto, precio, maximo, puestos }) => ({
+    id,
+    nombre,
+    completo,
+    corto,
+    precio,
+    maximo,
+    puestos,
+  })),
+  amigos: (d?.amigosParche ?? []).map((id) => {
+    const p = persona(id)!;
+    return {
+      id,
+      nombre: p.nombre,
+      corto: p.nombre.split(' ').slice(0, -1).join(' '),
+      iniciales: p.iniciales,
+      color: colorDe[p.color],
+    };
+  }),
+  parche: d?.parcheCompra.nombre ?? null,
+  mayores18: Boolean(d?.mayoresDe18),
+  cargo: CARGO_DEMO,
+  saludoPista: e.id === 'e1',
+  inicioIso: d?.puertasIso ?? null,
+  fecha: e.fecha,
+  lugar: m.lugarCompleto,
+  url: m.url,
+};
+---
+
+<Base titulo={titulo} descripcion={descripcion} tamanoBase={15}>
+  {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>Ir a comprar boletas</a>}
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
+  <div class:list={['pagina-evento', { 'con-barra': vende }]}>
+    <EncabezadoApp variante="detalle" />
+    <main id="contenido" class="contenedor principal">
+      <HeroeEvento m={m} />
+      <DatosClave m={m} />
+
+      <div class="columnas">
+        <div class="contenido">
+          <AccionesEvento m={m} />
+          {atajos.length > 1 && <AtajosSeccion atajos={atajos} />}
+          {d && <SobreEvento d={d} />}
+          {d && <Programacion momentos={d.programacion} />}
+          {d && <Localidades localidades={d.localidades} />}
+          {d && <ParchesMuro d={d} eventoId={e.id} />}
+          {d && <LoQueDebesSaber politicas={d.politicas} />}
+          <UbicacionOrganizador m={m} />
+        </div>
+        {vende && <TarjetaCompra m={m} />}
+      </div>
+
+      <PlanesParecidos m={m} />
+    </main>
+    <Pie />
+    {vende && <BarraCompra m={m} />}
+    {
+      vende && (
+        <>
+          <VentanaCompra m={m} />
+          <BoletaDigital m={m} />
+          <Modal id="visor-boleta" titulo="Tus boletas">
+            <div class="visor" data-visor-boletas />
+          </Modal>
+          <script type="application/json" id="datos-compra" set:html={JSON.stringify(datosCompra)} />
+        </>
+      )
+    }
+  </div>
+</Base>
+
+<script>
+  import { iniciarAsistencia, iniciarCompra, type DatosCompra } from '../../../components/evento/compra';
+
+  const marcarVoy = iniciarAsistencia();
+  const datos = document.getElementById('datos-compra');
+  if (datos) iniciarCompra(JSON.parse(datos.textContent!) as DatosCompra, marcarVoy);
+
+  // "Invitar amigos" y "Compartir" comparten la URL del evento (H34, H38)
+  document.querySelectorAll<HTMLButtonElement>('[data-compartir]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      const aviso = document.querySelector<HTMLElement>('[data-aviso-compartir]')!;
+      const url = location.href.split('#')[0];
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: document.title, url });
+          return;
+        }
+        await navigator.clipboard.writeText(url);
+        aviso.textContent = 'Copiamos el enlace del evento para que lo compartas.';
+      } catch {
+        aviso.textContent = `Comparte este enlace: ${url}`;
+      }
+    }),
+  );
+
+  // "Ir a comprar boletas" (H59): lleva el foco al botón de compra visible
+  document.querySelector('[data-ir-comprar]')?.addEventListener('click', (ev) => {
+    const botones = [...document.querySelectorAll<HTMLElement>('[data-abrir-compra]')];
+    const visible = botones.find((b) => b.offsetParent !== null);
+    if (visible) {
+      ev.preventDefault();
+      visible.focus();
+      visible.scrollIntoView({ block: 'center' });
+    }
+  });
+
+  // H16: el foco no queda debajo del encabezado, los atajos fijos ni la barra de compra
+  const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
+  const atajos = document.querySelector<HTMLElement>('[data-atajos]');
+  const barra = document.querySelector<HTMLElement>('[data-barra-compra]');
+  const ajustar = () =>
+    requestAnimationFrame(() => {
+      const raiz = document.documentElement;
+      const fijo = encabezado && getComputedStyle(encabezado).position === 'sticky' ? encabezado.offsetHeight : 0;
+      const atajosFijos = atajos && getComputedStyle(atajos).position === 'sticky' ? atajos.offsetHeight : 0;
+      raiz.style.scrollPaddingTop = `${fijo + atajosFijos + 12}px`;
+      raiz.style.scrollPaddingBottom = barra && barra.offsetHeight ? `${barra.offsetHeight + 12}px` : '';
+    });
+  const observador = new ResizeObserver(ajustar);
+  [encabezado, atajos, barra].forEach((el) => el && observador.observe(el));
+  addEventListener('resize', ajustar);
+</script>
+
+<style>
+  .pagina-evento {
+    /* H52: bordes de campo e interruptor apagado con al menos 3:1 */
+    --borde-campo: #857870;
+  }
+
+  @media (max-width: 979px) {
+    .con-barra {
+      padding-bottom: 84px;
+    }
+  }
+
+  .principal {
+    padding-top: 24px;
+    padding-bottom: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .columnas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 28px;
+  }
+
+  .contenido {
+    flex: 999 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .pagina-evento :global(.seccion-evento) {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pagina-evento :global(.titulo-seccion) {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .pagina-evento :global(.pie) {
+    margin-top: 0;
+  }
+
+  .visor {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    --muesca: var(--surface);
+  }
+
+  :global(html.con-ventana) {
+    overflow: hidden;
+  }
+</style>

@@ -1,0 +1,131 @@
+---
+// N29 · Línea de programación
+import type { Momento } from '../../data/evento';
+
+interface Props {
+  momentos: Momento[];
+}
+
+const { momentos } = Astro.props;
+---
+
+<section id="programacion" class="seccion-evento" aria-labelledby="h-prog">
+  <h2 id="h-prog" class="titulo-seccion">Programación</h2>
+  <ol class="linea">
+    {
+      momentos.map((m, i) => (
+        <li class:list={{ primero: i === 0, ultimo: i === momentos.length - 1 }}>
+          <span class="hora">{m.hora}</span>
+          <span class="riel" aria-hidden="true">
+            <span class="tramo" />
+            <span class="punto" style={`background: ${m.color}`} />
+            <span class="tramo abajo" />
+          </span>
+          <div class="contenido">
+            <span class="cabeza">
+              <b>{m.titulo}</b>
+              {m.etiqueta && <span class="destacado">{m.etiqueta}</span>}
+            </span>
+            <span class="descripcion">{m.descripcion}</span>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .linea {
+    list-style: none;
+    padding: 4px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+  }
+
+  li {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .hora {
+    flex: 0 0 84px;
+    padding-top: 16px;
+    font-weight: 700;
+    font-size: .92rem;
+  }
+
+  .riel {
+    flex: 0 0 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tramo {
+    height: 20px;
+    width: 2px;
+    background: var(--line);
+  }
+
+  .tramo.abajo {
+    flex: 1;
+    height: auto;
+  }
+
+  .primero .tramo:not(.abajo),
+  .ultimo .tramo.abajo {
+    background: transparent;
+  }
+
+  .punto {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+  }
+
+  .contenido {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-soft);
+    line-height: 1.35;
+  }
+
+  .ultimo .contenido {
+    border-bottom-color: transparent;
+  }
+
+  .cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+  }
+
+  .cabeza b {
+    font-size: 1rem;
+  }
+
+  .destacado {
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 2px 9px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .descripcion {
+    display: block;
+    font-size: .86rem;
+    color: var(--muted);
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+  }
+</style>

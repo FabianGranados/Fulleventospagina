@@ -1,0 +1,171 @@
+---
+// N27 · Acciones del evento y "quién va". "Invitar amigos" y "Compartir" comparten la URL del evento (H34, H38).
+import Icono from '../ui/Icono.astro';
+import { cifra } from '../../lib/formato';
+import type { ModeloEvento } from './modelo';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const { evento: e, detalle: d } = m;
+---
+
+<div class="acciones-evento">
+  <div class="fila">
+    <button type="button" class="boton voy" aria-pressed="false" data-voy>
+      <Icono nombre="visto" tamano={18} grosor={2.4} />
+      <span data-texto-voy>Voy</span>
+    </button>
+    <button type="button" class="boton claro interes" aria-pressed="false" data-interes>
+      <Icono nombre="estrella" tamano={18} />
+      Me interesa
+    </button>
+    <button type="button" class="boton claro" data-compartir="invitar">
+      <Icono nombre="avion" tamano={18} />
+      Invitar amigos
+    </button>
+    <button type="button" class="boton claro circulo" aria-label="Compartir evento" data-compartir="compartir">
+      <Icono nombre="compartirEvento" tamano={18} />
+    </button>
+  </div>
+  <p class="aviso" role="status" data-aviso-compartir></p>
+
+  {
+    d && (
+      <div class="quien-va">
+        <span class="pila" aria-hidden="true">
+          {d.amigos.avatares.map((a) => (
+            <span class="av" style={`background: ${a.color}`}>{a.iniciales}</span>
+          ))}
+          <span class="av mas">+{d.amigos.mas}</span>
+        </span>
+        <p>
+          <b>{d.amigos.texto}</b> van.{' '}
+          <span class="gris">
+            <span data-conteo-van data-base={e.van} data-solo-numero>{cifra(e.van)}</span> personas confirmadas ·{' '}
+            <span data-conteo-interes data-base={d.interesados}>{cifra(d.interesados)}</span> interesadas
+          </span>
+        </p>
+        <a href="#parches" class="enlace">Ver parches</a>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .acciones-evento {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .boton {
+    height: 48px;
+    border-radius: var(--radius-pill);
+    padding: 0 22px;
+    font-size: .95rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .voy {
+    padding: 0 24px;
+    border-color: var(--ink);
+  }
+
+  .voy[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .interes[aria-pressed='true'] {
+    color: var(--brand);
+  }
+
+  .interes[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
+  }
+
+  .circulo {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .aviso:empty {
+    display: none;
+  }
+
+  .aviso {
+    font-size: .86rem;
+    color: var(--muted);
+    margin-top: -4px;
+  }
+
+  .quien-va {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 20px;
+  }
+
+  .pila {
+    display: flex;
+  }
+
+  /* 40 px + borde blanco de 3 px por lado: 46 px dibujados */
+  .av {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 3px solid var(--surface);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .74rem;
+  }
+
+  .av + .av {
+    margin-left: -12px;
+  }
+
+  .mas {
+    background: var(--ink);
+    color: var(--on-dark);
+    font-size: .7rem;
+  }
+
+  .quien-va p {
+    flex: 1 1 220px;
+  }
+
+  .gris {
+    color: var(--muted);
+  }
+
+  .enlace {
+    font-size: .86rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1px;
+  }
+</style>

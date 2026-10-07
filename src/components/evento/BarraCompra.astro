@@ -1,0 +1,103 @@
+---
+// N37 · Barra de compra fija por debajo de 980 px.
+import type { ModeloEvento } from './modelo';
+import { pesos } from '../../lib/formato';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const inicial = m.localidades[0];
+---
+
+<div class="barra" role="region" aria-label="Comprar boletas" data-barra-compra>
+  <div class="texto">
+    <b>{m.precioDesde}</b>
+    <span class="cargo">+ cargo por servicio</span>
+    <span class="sub" data-barra-sub>{inicial.nombre} · 1 boleta · {pesos(inicial.precio)}</span>
+  </div>
+  <button type="button" class="ver" data-ver-boleta data-abrir-modal="visor-boleta" hidden>Ver boleta</button>
+  <button type="button" class="comprar" data-abrir-compra>Comprar</button>
+</div>
+
+<style>
+  .barra {
+    display: none;
+  }
+
+  @media (max-width: 979px) {
+    .barra {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 15;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      box-shadow: 0 -10px 30px rgba(23, 18, 15, .08);
+      padding: 10px var(--margen-lateral) calc(10px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  }
+
+  .texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+  }
+
+  .texto b,
+  .sub {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .texto b {
+    font-size: 1rem;
+  }
+
+  .cargo {
+    display: block;
+    font-size: .72rem;
+    line-height: 1.2;
+    color: var(--muted);
+  }
+
+  .sub {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .ver {
+    flex-shrink: 0;
+    height: 44px;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-pill);
+    padding: 0 14px;
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: .86rem;
+  }
+
+  .comprar {
+    flex-shrink: 0;
+    height: 48px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 0 22px;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+    font-size: .95rem;
+  }
+
+  .ver[hidden] {
+    display: none;
+  }
+</style>

@@ -1,0 +1,276 @@
+---
+// N33 · Ubicación y organizador. "Ver en el mapa" abre la ciudad del evento (H42) y
+// "Escribir al organizador" su conversación. La insignia de verificado depende de P9 (H48).
+import Icono from '../ui/Icono.astro';
+import type { ModeloEvento } from './modelo';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const { evento: e, detalle: d } = m;
+const direccion = d ? `${m.lugarDetalle} · ${d.direccion}` : m.lugarDetalle;
+---
+
+<section id="ubicacion" class="seccion-evento" aria-labelledby="h-ubi">
+  <h2 id="h-ubi" class="titulo-seccion">{d ? 'Ubicación y organizador' : 'Ubicación'}</h2>
+  <div class="fila">
+    <div class="tarjeta ubicacion">
+      <div class="mapa" role="img" aria-label="[Mapa de la ubicación]">
+        <svg class="pin" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z" fill="#C23A24" />
+          <circle cx="12" cy="10" r="2.5" fill="#FFFFFF" />
+        </svg>
+        <span class="rotulo">[Mapa]</span>
+      </div>
+      <div class="cuerpo">
+        <div>
+          <b>{m.lugarNombre}</b>
+          <span class="dir">{direccion}</span>
+        </div>
+        <div class="botones">
+          <a href={`/mapa?ciudad=${e.ciudad}`} class="oscuro">
+            <Icono nombre="mapa" tamano={16} grosor={2.2} />
+            Ver en el mapa
+          </a>
+          <button type="button" class="claro" aria-pressed="false" data-copiar={`${m.lugarNombre}, ${direccion}`}>
+            Copiar dirección
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {
+      d && (
+        <div class="tarjeta organizador">
+          <div class="org-fila">
+            <span class="logo" aria-hidden="true">{d.organizador.iniciales}</span>
+            <div class="org-texto">
+              <span class="organiza">Organiza</span>
+              <b>{d.organizador.nombre}</b>
+              <span class="seguidores">{d.organizador.seguidores}</span>
+            </div>
+            <button type="button" class="seguir" aria-pressed="false" data-seguir>Seguir</button>
+          </div>
+          <p class="dudas">
+            ¿Dudas sobre mesas, cumpleaños o accesibilidad? Escríbele directo por el chat de Fulleventos.
+          </p>
+          <a href="/mensajes?con=galeria-cafe-libro" class="escribir">
+            <Icono nombre="mensajes" tamano={18} />
+            Escribir al organizador
+          </a>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copiar]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.dataset.copiar!);
+      } catch {
+        // Sin permiso de portapapeles: el texto igual queda visible en la tarjeta
+      }
+      b.setAttribute('aria-pressed', 'true');
+      b.textContent = 'Dirección copiada';
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-seguir]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const sigue = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(sigue));
+      b.textContent = sigue ? 'Siguiendo' : 'Seguir';
+    });
+  });
+</script>
+
+<style>
+  .fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .tarjeta {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+
+  .ubicacion {
+    flex: 1.3 1 300px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mapa {
+    height: 170px;
+    position: relative;
+    background:
+      linear-gradient(90deg, transparent 47%, #FFFFFF 47%, #FFFFFF 53%, transparent 53%),
+      linear-gradient(0deg, transparent 58%, #FFFFFF 58%, #FFFFFF 63%, transparent 63%),
+      var(--map-placeholder);
+  }
+
+  .pin {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -100%);
+  }
+
+  .rotulo {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .cuerpo {
+    padding: 16px 18px;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .cuerpo b {
+    display: block;
+  }
+
+  .dir {
+    display: block;
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  .botones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .oscuro,
+  .oscuro:hover {
+    height: 42px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    background: var(--ink);
+    color: var(--on-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: .86rem;
+  }
+
+  .claro {
+    height: 42px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: .86rem;
+  }
+
+  .organizador {
+    flex: 1 1 260px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .org-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--ink);
+    color: var(--yellow);
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 15px;
+  }
+
+  .org-texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .org-texto b {
+    display: block;
+  }
+
+  .organiza {
+    font-size: .72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+  }
+
+  .seguidores {
+    display: block;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .seguir {
+    flex-shrink: 0;
+    min-height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 14px;
+    font-size: .82rem;
+    font-weight: 700;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .seguir[aria-pressed='true'] {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .dudas {
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  .escribir {
+    margin-top: auto;
+    height: 46px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: .9rem;
+  }
+</style>

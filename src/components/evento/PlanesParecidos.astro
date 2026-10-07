@@ -1,0 +1,262 @@
+---
+// N34 · Planes parecidos en otras ciudades (+ recuerdos, solo con fotos de ediciones pasadas).
+// Cada tarjeta abre su propio evento (H36).
+import Icono from '../ui/Icono.astro';
+import { nombreCiudad } from '../../data/ciudades';
+import { pesos, placaFecha, rutaEvento } from '../../lib/formato';
+import type { ModeloEvento } from './modelo';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const { detalle: d } = m;
+---
+
+<div class:list={['bloque', { 'con-recuerdos': d }]}>
+  {
+    m.similares.length > 0 && (
+      <section class="parecidos" aria-labelledby="h-parecidos">
+        <div class="cabecera">
+          <div>
+            <h2 id="h-parecidos" class="titulo-seccion">Planes parecidos en otras ciudades</h2>
+            <p class="sub">{m.textoSimilares}</p>
+          </div>
+          <a href={`/mapa?categoria=${encodeURIComponent(m.evento.etiquetas[0])}`} class="enlace">
+            <Icono nombre="mapa" tamano={16} />
+            Ver más planes en el mapa
+          </a>
+        </div>
+        <ul class="rejilla">
+          {m.similares.map((e) => {
+            const { dia, mes } = placaFecha(e.fecha);
+            return (
+              <li>
+                <article class="tarjeta">
+                  <div class="imagen">
+                    <span class="foto" role="img" aria-label="[Foto del evento]" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} />
+                    <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
+                  </div>
+                  <div class="cuerpo">
+                    <span class="categoria">{e.categoria}</span>
+                    <h3><a href={rutaEvento(e.ciudad, e.titulo)}>{e.titulo}</a></h3>
+                    <span class="lugar">{e.lugar} · <b>{nombreCiudad(e.ciudad)}</b></span>
+                    <span class="precio">
+                      {e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}
+                      {e.precio > 0 && <small>+ cargo por servicio</small>}
+                    </span>
+                  </div>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    d && (
+      <section class="recuerdos" aria-labelledby="h-recuerdos">
+        <h2 id="h-recuerdos">Recuerdos de ediciones pasadas</h2>
+        <ul class="fotos">
+          {d.recuerdos.map((fondo) => (
+            <li><span role="img" aria-label="[Foto de asistente]" style={`background: ${fondo}`} /></li>
+          ))}
+        </ul>
+        <a href="/perfil/galeria-cafe-libro" class="enlace solo">Ver las {d.fotosRecuerdos} fotos</a>
+      </section>
+    )
+  }
+</div>
+
+<style>
+  .bloque {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+    margin-top: 16px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+
+  .parecidos {
+    flex: 2 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+
+  .sub {
+    margin-top: 4px;
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  .enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .86rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1px;
+  }
+
+  .rejilla {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  /* Ancho máximo para que una sola tarjeta no se estire de más */
+  .rejilla li {
+    display: flex;
+  }
+
+  .tarjeta {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .imagen {
+    position: relative;
+    aspect-ratio: 16 / 10;
+  }
+
+  .foto {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 58%), var(--bg2);
+  }
+
+  .fecha {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    text-align: center;
+    line-height: 1;
+    min-width: 44px;
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.2rem;
+  }
+
+  .fecha span {
+    font-size: .64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .cuerpo {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  .categoria {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h3 {
+    margin: 4px 0;
+    font-size: .98rem;
+    font-weight: 700;
+  }
+
+  .lugar {
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  .lugar b {
+    color: var(--ink);
+  }
+
+  .precio {
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: .86rem;
+    font-weight: 700;
+  }
+
+  .precio small {
+    display: block;
+    font-weight: 400;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .recuerdos {
+    flex: 1 1 300px;
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .recuerdos h2 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .fotos {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  /* A 768 px los cuadros no pasan de 140 px (el bloque quedaba muy alto) */
+  .fotos span {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: var(--radius-xs);
+  }
+
+  @media (min-width: 600px) and (max-width: 969px) {
+    .recuerdos {
+      max-width: 460px;
+    }
+  }
+
+  .solo {
+    align-self: flex-start;
+  }
+</style>

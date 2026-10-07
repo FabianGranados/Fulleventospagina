@@ -1,0 +1,48 @@
+---
+// N28 · "Sobre el evento" (solo con descripción del organizador)
+import type { DetalleEvento } from '../../data/evento';
+
+interface Props {
+  d: DetalleEvento;
+}
+
+const { d } = Astro.props;
+---
+
+<section id="sobre" class="seccion-evento" aria-labelledby="h-sobre">
+  <h2 id="h-sobre" class="titulo-seccion">Sobre el evento</h2>
+  <div class="texto">
+    {d.descripcion.map((p) => <p>{p}</p>)}
+  </div>
+  <ul class="etiquetas" aria-label="Etiquetas del evento">
+    {d.etiquetas.map((t) => <li>{t}</li>)}
+  </ul>
+</section>
+
+<style>
+  .texto {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 66ch;
+    font-size: 1rem;
+  }
+
+  .etiquetas {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .etiquetas li {
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: .84rem;
+  }
+</style>

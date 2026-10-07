@@ -1,0 +1,424 @@
+---
+// N30 · Plano de localidades y lista de precios. H59: grupos de radio nativos; el nombre accesible
+// de cada zona empieza por su texto visible. La localidad es una sola en toda la página (script de compra).
+import Icono from '../ui/Icono.astro';
+import type { Localidad } from '../../data/evento';
+import { pesos } from '../../lib/formato';
+
+interface Props {
+  localidades: Localidad[];
+}
+
+const { localidades } = Astro.props;
+const loc = (id: string) => localidades.find((l) => l.id === id)!;
+const vip = loc('vip');
+const pref = loc('pref');
+const general = loc('general');
+const precio = (l: Localidad) => `${pesos(l.precio)} ${l.unidad}`;
+---
+
+<section id="localidades" class="seccion-evento" aria-labelledby="h-loc">
+  <div class="cabecera">
+    <h2 id="h-loc" class="titulo-seccion">Localidades</h2>
+    <p class="ayuda">Toca una zona del plano o de la lista para elegirla.</p>
+  </div>
+  <div class="cuerpo">
+    <div class="plano-caja">
+      <fieldset class="plano">
+        <legend class="solo-lectores">Plano del lugar: elige una zona</legend>
+        <div class="escenario" aria-hidden="true">Escenario</div>
+        {
+          ['izquierdo', 'derecho'].map((lado) => (
+            <label class:list={['zona', 'zona-vip', lado]} style={`--color: ${vip.color}; --tinte: ${vip.tinte}`} data-loc-opcion="vip">
+              <input type="radio" name="loc-plano" value="vip" class="radio-oculto" data-loc />
+              <span class="mesas" aria-hidden="true"><i /><i /><i /><i /></span>
+              <span class="rotulo-vip">Mesas VIP</span>
+              <span class="solo-lectores">, lado {lado} del escenario · {precio(vip)}</span>
+              <span class="marca" aria-hidden="true"><Icono nombre="visto" tamano={12} grosor={3} /></span>
+            </label>
+          ))
+        }
+        <div class="pista" aria-hidden="true">
+          <b>Pista</b>
+          <span>Para bailar con cualquier boleta</span>
+        </div>
+        <label class="zona zona-pref" style={`--color: ${pref.color}; --tinte: ${pref.tinte}`} data-loc-opcion="pref">
+          <input type="radio" name="loc-plano" value="pref" class="radio-oculto" data-loc />
+          <span class="sillas" aria-hidden="true">{Array.from({ length: 8 }, () => <i />)}</span>
+          <span class="rotulo-pref">Zona preferencial · mesas compartidas</span>
+          <span class="solo-lectores"> · {precio(pref)}</span>
+          <span class="marca" aria-hidden="true"><Icono nombre="visto" tamano={12} grosor={3} /></span>
+        </label>
+        <label class="zona zona-general" style={`--color: ${general.color}; --tinte: ${general.tinte}`} data-loc-opcion="general" data-elegida>
+          <input type="radio" name="loc-plano" value="general" class="radio-oculto" data-loc checked />
+          <span class="rotulo-general">Zona general · de pie</span>
+          <span class="sub">Acceso a pista y barra</span>
+          <span class="solo-lectores"> · {precio(general)}</span>
+          <span class="marca" aria-hidden="true"><Icono nombre="visto" tamano={12} grosor={3} /></span>
+        </label>
+        <div class="entrada" aria-hidden="true"><Icono nombre="flecha-arriba" tamano={14} grosor={2.4} />Entrada</div>
+      </fieldset>
+      <p class="nota">Plano ilustrativo · [CONFIRMAR DISTRIBUCIÓN CON EL ORGANIZADOR]</p>
+    </div>
+
+    <div class="lista-caja">
+      <fieldset class="lista">
+        <legend class="solo-lectores">Precios por localidad</legend>
+        {
+          localidades.map((l) => (
+            <label class="opcion" style={`--color: ${l.color}; --tinte: ${l.tinte}`} data-loc-opcion={l.id} data-elegida={l.id === 'general' ? '' : undefined}>
+              <input type="radio" name="loc-lista" value={l.id} class="radio-oculto" data-loc checked={l.id === 'general'} />
+              <span class="muestra" aria-hidden="true" />
+              <span class="texto">
+                <b>{l.completo}</b>
+                <span class="desc">{l.descripcion}</span>
+                {l.caliente && <span class="caliente">{l.disponibilidad}</span>}
+              </span>
+              <span class="precio">
+                <b>{pesos(l.precio)}</b>
+                <span>{l.unidad}</span>
+              </span>
+            </label>
+          ))
+        }
+      </fieldset>
+      <p class="nota">Precios en pesos colombianos. El cargo por servicio lo ves antes de pagar.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px 16px;
+  }
+
+  .ayuda {
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  .cuerpo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: flex-start;
+  }
+
+  .plano-caja {
+    flex: 1 1 320px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lista-caja {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  fieldset {
+    border: 0;
+    min-width: 0;
+  }
+
+  .plano {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .escenario {
+    grid-column: 1 / -1;
+    height: 48px;
+    border-radius: 10px 10px 36px 36px;
+    background: var(--ink);
+    color: var(--on-dark);
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: .9rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .zona {
+    position: relative;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    background: var(--tinte);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .zona[data-elegida] {
+    background: var(--color);
+    border-color: var(--ink);
+    box-shadow: 0 6px 18px rgba(23, 18, 15, .18);
+  }
+
+  .zona:has(:focus-visible),
+  .opcion:has(:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .radio-oculto {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .marca {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--on-dark);
+    display: none;
+    place-items: center;
+  }
+
+  [data-elegida] > .marca {
+    display: grid;
+  }
+
+  .zona-vip {
+    grid-row: 2;
+    min-height: 148px;
+    padding: 10px 4px;
+    gap: 8px;
+  }
+
+  .zona-vip .marca {
+    top: 6px;
+    right: 6px;
+  }
+
+  .izquierdo {
+    grid-column: 1;
+  }
+
+  .derecho {
+    grid-column: 3;
+  }
+
+  .mesas {
+    display: grid;
+    grid-template-columns: repeat(2, 14px);
+    gap: 8px;
+  }
+
+  .mesas i,
+  .sillas i {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 2px solid var(--ink);
+  }
+
+  .rotulo-vip {
+    font-size: .72rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .pista {
+    grid-column: 2;
+    grid-row: 2;
+    border-radius: 14px;
+    border: 2px dashed var(--pink);
+    background: repeating-linear-gradient(135deg, #FCE9F2 0 10px, #F8DCEA 10px 20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    gap: 2px;
+  }
+
+  .pista b {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: .95rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .pista span,
+  .zona-general .sub {
+    font-size: .74rem;
+    color: var(--muted);
+    line-height: 1.25;
+  }
+
+  .zona-pref {
+    grid-column: 1 / -1;
+    min-height: 96px;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .sillas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 16px;
+  }
+
+  .sillas i {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+  }
+
+  .rotulo-pref {
+    font-size: .8rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .zona-general {
+    grid-column: 1 / -1;
+    min-height: 84px;
+    padding: 12px;
+    gap: 2px;
+  }
+
+  .zona-general[data-elegida] .sub {
+    color: var(--ink);
+  }
+
+  .rotulo-general {
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .entrada {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .nota {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .lista-caja .nota {
+    font-size: .78rem;
+  }
+
+  .lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .opcion {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-card);
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .opcion[data-elegida] {
+    border-color: var(--ink);
+    background: var(--tinte);
+  }
+
+  .muestra {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    border-radius: 5px;
+    border: 1.5px solid var(--ink);
+    background: var(--color);
+  }
+
+  .texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .texto b {
+    display: block;
+    font-size: .95rem;
+  }
+
+  .desc {
+    display: block;
+    font-size: .8rem;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .caliente {
+    display: inline-block;
+    margin-top: 6px;
+    background: var(--brand);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 2px 10px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .precio {
+    flex-shrink: 0;
+    text-align: right;
+    line-height: 1.2;
+  }
+
+  .precio b {
+    display: block;
+    font-size: 1rem;
+  }
+
+  .precio span {
+    font-size: .72rem;
+    color: var(--muted);
+  }
+</style>
