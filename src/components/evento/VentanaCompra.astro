@@ -1,0 +1,1773 @@
+---
+// N38–N46 · Checkout en panel lateral, 4 pasos. DEMOSTRACIÓN SIN BACKEND: no procesa pagos (P1–P4, P7, P8).
+// <dialog> con showModal(): fondo inerte, Escape y foco atrapado (H7). Cabecera y pie fuera de la zona con
+// scroll y un cuerpo con scroll propio que arranca arriba en cada paso (H6). No usa el Modal compartido
+// porque su cabecera fija (título + "Cerrar") no admite miniatura, pasos ni temporizador.
+import Icono from '../ui/Icono.astro';
+import Cantidad from './Cantidad.astro';
+import { mediosPago, bancosPse } from '../../data/evento';
+import { persona } from '../../data/personas';
+import { pesos } from '../../lib/formato';
+import type { ModeloEvento } from './modelo';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const { evento: e, detalle: d } = m;
+const inicial = m.localidades[0];
+const colorDe: Record<string, string> = {
+  c1: 'var(--peach)',
+  c2: 'var(--lilac)',
+  c3: 'var(--pink)',
+  c4: 'var(--lime)',
+  c5: 'var(--yellow)',
+  c6: 'var(--aqua)',
+};
+const amigos = (d?.amigosParche ?? []).map((id) => persona(id)!);
+const corto = (nombre: string) => nombre.split(' ').slice(0, -1).join(' ') || nombre;
+const pasos = ['Boletas', 'Datos', 'Pago', 'Listo'];
+const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
+---
+
+<dialog id="ventana-compra" class="ventana" aria-labelledby="co-titulo" data-ventana-compra>
+  <div class="panel">
+    <header class="co-cabeza">
+      <div class="co-fila">
+        <span class="mini" role="img" aria-label="[Foto del evento]"></span>
+        <div class="co-titulos">
+          <h2 id="co-titulo">Compra tus boletas</h2>
+          <span class="co-detalle">{e.titulo} · {m.fechaCorta} · {m.lugarNombre}</span>
+        </div>
+        <button type="button" class="cerrar" aria-label="Cerrar la compra" data-cerrar-compra>
+          <Icono nombre="cerrar" tamano={16} grosor={2.4} />
+        </button>
+      </div>
+      <ol class="pasos" aria-label="Pasos de la compra">
+        {
+          pasos.map((p, i) => (
+            <li data-indicador={i + 1} aria-current={i === 0 ? 'step' : undefined}>
+              <span class="circulo" aria-hidden="true">
+                <span class="num">{i + 1}</span>
+                <Icono nombre="visto" tamano={13} grosor={3} class="check" />
+              </span>
+              <span class="rotulo">{p}</span>
+              <span class="solo-lectores" data-estado-indicador />
+            </li>
+          ))
+        }
+      </ol>
+      <p class="paso-compacto" data-paso-compacto>Paso 1 de 4 · Boletas</p>
+      <p class="reloj" data-reloj>
+        <Icono nombre="cronometro" tamano={16} grosor={2.2} />
+        <span>Tus boletas están reservadas por <b>9:58</b> <span class="demo">(demostración)</span></span>
+      </p>
+    </header>
+
+    <div class="co-cuerpo" data-cuerpo>
+      <div class="errores" role="alert" tabindex="-1" data-errores hidden></div>
+
+      <!-- Paso 1 · Boletas -->
+      <div class="paso paso-1" data-paso="1">
+        <fieldset class="grupo">
+          <legend><h3 tabindex="-1" data-titulo-paso>Localidad</h3></legend>
+          {
+            m.localidades.map((l) => (
+              <label class="opcion" style={`--tinte: ${l.tinte}`} data-loc-opcion={l.id} data-elegida={l.id === inicial.id ? '' : undefined}>
+                <input type="radio" name="loc-checkout" value={l.id} data-loc checked={l.id === inicial.id} />
+                <span class="op-texto">
+                  <b>{l.completo}</b>
+                  {l.descripcion && <span>{l.descripcion}</span>}
+                </span>
+                <span class="op-derecha">
+                  <b>{pesos(l.precio)}</b>
+                  {l.disponibilidad && <span class:list={['stock', { caliente: l.caliente }]}>{l.disponibilidad}</span>}
+                </span>
+              </label>
+            ))
+          }
+        </fieldset>
+
+        <div data-solo-para-mi>
+          <Cantidad id="co-cantidad" variante="checkout" />
+        </div>
+
+        {
+          d && (
+            <fieldset class="grupo" id="co-para-quien">
+              <legend><h3>¿Para quién?</h3></legend>
+              <div class="segmentado">
+                <label>
+                  <input type="radio" name="para-quien" value="yo" checked data-para-quien />
+                  <b>Solo para mí</b>
+                  <span>Tú pagas y recibes las boletas</span>
+                </label>
+                <label>
+                  <input type="radio" name="para-quien" value="parche" data-para-quien />
+                  <b>Para mi parche</b>
+                  <span>Elige quién va y dividan</span>
+                </label>
+              </div>
+            </fieldset>
+          )
+        }
+
+        {
+          d && (
+            <div class="parche" data-bloque-parche hidden>
+              <div class="parche-cabeza">
+                <span class="av-parche" aria-hidden="true">{d.parcheCompra.iniciales}</span>
+                <span class="parche-texto">
+                  <b>{d.parcheCompra.nombre}</b>
+                  <span>{d.parcheCompra.miembros} · elige quién va contigo</span>
+                </span>
+                <span class="van" data-van-parche>Van 2</span>
+              </div>
+              <div role="group" aria-label="Miembros del parche" class="miembros" id="co-miembros" tabindex="-1">
+                {amigos.map((a, i) => (
+                  <button type="button" class="miembro" aria-label={a.nombre} aria-pressed={i === 0 ? 'true' : 'false'} data-miembro={a.id}>
+                    <span class="av" style={`background: ${colorDe[a.color]}`} aria-hidden="true">{a.iniciales}</span>
+                    {corto(a.nombre)}
+                    <Icono nombre="visto" tamano={14} grosor={3} class="check" />
+                  </button>
+                ))}
+              </div>
+              <p class="cupo" data-cupo-parche>
+                Y {d.parcheCompra.miembrosMas} miembros más en el parche. Máximo 8 boletas por compra.
+              </p>
+              <p class="aviso-recorte" role="status" data-aviso-recorte></p>
+              <button type="button" role="switch" aria-checked="false" class="interruptor" data-dividir aria-describedby="co-dividir-sub">
+                <span class="pista-switch" aria-hidden="true"><span class="perilla" /></span>
+                <span class="switch-texto">
+                  <b>Dividir el pago: cada uno paga su parte</b>
+                  <span id="co-dividir-sub">Les llega su solicitud de pago dentro de la app, en el chat del parche</span>
+                  <span class="switch-estado" aria-hidden="true" data-estado-dividir>Desactivado</span>
+                </span>
+              </button>
+              <div class="nota-dividida" data-nota-dividida hidden>
+                <Icono nombre="mensajes" tamano={18} />
+                <p>
+                  <b data-nota-parte>Tú pagas 1 de 2 · $48.600.</b> Cada amigo recibe una solicitud de pago dentro de la app, en el
+                  chat de {d.parcheCompra.nombre}, y paga su parte. Sus cupos quedan apartados por [PLAZO DE RESERVA].
+                </p>
+              </div>
+            </div>
+          )
+        }
+
+        {
+          d?.mayoresDe18 && (
+            <label class="casilla" id="co-mayores-caja">
+              <input type="checkbox" id="co-mayores" data-mayores />
+              <span>Confirmo que todos los asistentes son mayores de 18</span>
+            </label>
+          )
+        }
+      </div>
+
+      <!-- Paso 2 · Datos -->
+      <form class="paso paso-2" data-paso="2" hidden novalidate data-form-datos>
+        <div>
+          <h3 tabindex="-1" data-titulo-paso>Tus datos</h3>
+          <p class="ayuda">La boleta sale a tu nombre. Ya llenamos lo que sabemos de tu perfil.</p>
+        </div>
+        <div class="campo">
+          <label for="co-nombre">Nombre completo <span class="oblig">(obligatorio)</span></label>
+          <input id="co-nombre" name="nombre" type="text" autocomplete="name" value="Camila Vargas" required aria-describedby="co-nombre-error" />
+          <p class="error" id="co-nombre-error" data-error-de="co-nombre"></p>
+        </div>
+        <div class="fila-campos">
+          <div class="campo tipo">
+            <label for="co-tipo">Tipo de documento</label>
+            <select id="co-tipo" name="tipo">
+              <option value="CC">CC</option>
+              <option value="CE">CE</option>
+              <option value="PA">Pasaporte</option>
+              <option value="PPT">PPT</option>
+            </select>
+          </div>
+          <div class="campo numero">
+            <label for="co-documento">Número de documento <span class="oblig">(obligatorio)</span></label>
+            <input
+              id="co-documento"
+              name="documento"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="20"
+              placeholder="Sin puntos ni espacios"
+              required
+              aria-describedby="co-documento-error co-documento-aviso"
+            />
+            <p class="error" id="co-documento-error" data-error-de="co-documento"></p>
+          </div>
+        </div>
+        <p class="aviso-datos" id="co-documento-aviso">
+          Pedimos tu documento para emitir la boleta a tu nombre y controlar el ingreso. Lo compartimos con {m.organizador},
+          [BOLETERA] y [PASARELA] y lo guardamos por [TIEMPO DE CONSERVACIÓN]. Más detalles en la [Política de tratamiento de datos].
+        </p>
+        <div class="campo">
+          <label for="co-correo">Correo <span class="oblig">(obligatorio)</span></label>
+          <input id="co-correo" name="correo" type="email" autocomplete="email" value="camila.vargas@correo.co" required aria-describedby="co-correo-error" />
+          <p class="error" id="co-correo-error" data-error-de="co-correo"></p>
+        </div>
+        <div class="campo">
+          <label for="co-celular">Celular <span class="oblig">(obligatorio)</span></label>
+          <input id="co-celular" name="celular" type="tel" autocomplete="tel" inputmode="tel" value="300 123 4567" required aria-describedby="co-celular-error" />
+          <p class="error" id="co-celular-error" data-error-de="co-celular"></p>
+        </div>
+        <div class="asistentes" data-asistentes hidden>
+          <h4>Asistentes</h4>
+          <p class="ayuda" data-asistentes-pista>Opcional. También lo puedes completar después desde Mis boletas.</p>
+          <div class="asistentes-lista" data-asistentes-lista></div>
+        </div>
+      </form>
+
+      <!-- Paso 3 · Pago -->
+      <div class="paso paso-3" data-paso="3" hidden>
+        <fieldset class="grupo" id="co-medios">
+          <legend><h3 tabindex="-1" data-titulo-paso>¿Cómo quieres pagar?</h3></legend>
+          <div class="medios">
+            {
+              mediosPago.map((mp) => (
+                <label class="medio" data-medio-opcion={mp.id}>
+                  <span class="medio-arriba">
+                    <Icono nombre={mp.icono} tamano={22} />
+                    <input type="radio" name="medio" value={mp.id} data-medio />
+                  </span>
+                  <b>{mp.nombre}</b>
+                  <span>{mp.descripcion}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <div class="panel-medio pasarela" data-panel-medio="card" hidden>
+          <p class="pasarela-nota">
+            <Icono nombre="candado" tamano={16} />
+            Campos seguros de [PASARELA] — tus datos de tarjeta no pasan por Fulleventos
+          </p>
+          <p class="pasarela-aqui">Aquí van los campos de [PASARELA]</p>
+          <!-- Maqueta visual: no son campos y no reciben datos (H19) -->
+          <div class="maqueta" aria-hidden="true" inert>
+            <span class="m-rotulo">Número de tarjeta</span>
+            <span class="m-campo">0000 0000 0000 0000</span>
+            <div class="m-fila">
+              <span><span class="m-rotulo">Vence</span><span class="m-campo">MM/AA</span></span>
+              <span><span class="m-rotulo">Código de seguridad</span><span class="m-campo">CVV</span></span>
+            </div>
+            <span class="m-rotulo">Nombre como aparece en la tarjeta</span>
+            <span class="m-campo">CAMILA VARGAS</span>
+            <span class="m-rotulo">Cuotas (solo crédito)</span>
+            <span class="m-campo">1 cuota</span>
+          </div>
+        </div>
+
+        <div class="panel-medio" data-panel-medio="pse" hidden>
+          <div class="campo">
+            <label for="co-banco">Banco <span class="oblig">(obligatorio)</span></label>
+            <select id="co-banco" class="claro" data-banco aria-describedby="co-banco-error">
+              {bancosPse.map((b) => <option value={b.id}>{b.nombre}</option>)}
+            </select>
+            <p class="error" id="co-banco-error" data-error-de="co-banco"></p>
+          </div>
+          <fieldset class="persona">
+            <legend>Tipo de persona</legend>
+            <div class="segmentado-chico">
+              <label><input type="radio" name="persona" value="natural" checked />Natural</label>
+              <label><input type="radio" name="persona" value="juridica" />Jurídica</label>
+            </div>
+          </fieldset>
+          <p class="nota">Tu banco te pide autorizar el débito en su ventana segura y vuelves aquí al terminar. La lista de bancos la entrega PSE.</p>
+        </div>
+
+        <div class="panel-medio" data-panel-medio="billetera" hidden>
+          <div class="campo">
+            <label for="co-billetera">
+              <span data-billetera-rotulo>Celular registrado en Nequi</span> <span class="oblig">(obligatorio)</span>
+            </label>
+            <input id="co-billetera" type="tel" autocomplete="tel" inputmode="tel" value="300 123 4567" class="claro" aria-describedby="co-billetera-error" />
+            <p class="error" id="co-billetera-error" data-error-de="co-billetera"></p>
+          </div>
+          <p class="nota-campana">
+            <Icono nombre="campana" tamano={16} />
+            <span data-billetera-nota>Te llegará una notificación a tu app Nequi para aprobar el pago.</span>
+          </p>
+        </div>
+
+        <div class="panel-medio" data-panel-medio="bcol" hidden>
+          <p class="texto-chico">
+            Se abre la ventana segura de Bancolombia para que apruebes el pago desde tu cuenta, y vuelves aquí al terminar.
+          </p>
+        </div>
+
+        <div class="legal">
+          <p class="vendido">
+            <b>Vendido por</b> [RAZÓN SOCIAL] · NIT [NIT] · Organiza {m.organizador} · Boleta emitida por [BOLETERA]
+          </p>
+          <div class="retracto">
+            <b>Retracto y devoluciones</b>
+            <ul>
+              <li>Retracto: [APLICA O NO APLICA] porque el evento es el {fechaLarga}.</li>
+              <li>Si cancelan o cambian el evento: te devolvemos [%] en [X] días al mismo medio de pago.</li>
+              <li>La devolución la hace [QUIÉN HACE LA DEVOLUCIÓN].</li>
+              <li>[Política de devoluciones]</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="demo-aviso">Esta compra es una demostración: no se cobra nada ni se emite una boleta real.</p>
+
+        <div class="consentimientos">
+          <label class="casilla" id="co-terminos-caja">
+            <input type="checkbox" id="co-terminos" data-terminos />
+            <span>Acepto los términos de la compra.</span>
+          </label>
+          <p class="enlace-legal">[Términos y condiciones]</p>
+          <label class="casilla" id="co-datos-caja">
+            <input type="checkbox" id="co-datos" data-autorizo />
+            <span>Autorizo el tratamiento de mis datos personales por Fulleventos y [BOLETERA].</span>
+          </label>
+          <p class="enlace-legal">[Política de tratamiento de datos]</p>
+        </div>
+
+        <p class="nota-escudo">
+          <Icono nombre="escudo" tamano={16} />
+          <span>Tu pago se procesa por API con [BOLETERA] o con la pasarela de Fulleventos ([PASARELA]).</span>
+        </p>
+      </div>
+
+      <!-- Paso 4 · Listo -->
+      <div class="paso paso-4" data-paso="4" hidden>
+        <div class="confirmacion" role="status">
+          <span class="ok" aria-hidden="true"><Icono nombre="visto" tamano={26} grosor={2.6} /></span>
+          <h3 tabindex="-1" data-titulo-paso data-saludo>¡Listo, Camila!</h3>
+          <p data-mensaje-listo></p>
+        </div>
+        <div data-boleta-destino></div>
+        <div class="pagos-parche" data-pagos-parche hidden>
+          <b>Pagos de tu parche</b>
+          <ul data-pagos-lista></ul>
+        </div>
+        <div class="acciones-listo">
+          <a href="/mensajes" class="avisar">
+            <Icono nombre="mensajes" tamano={18} />
+            Avisar a mi parche
+          </a>
+          <div class="fila-listo">
+            <button type="button" class="contorno" aria-pressed="false" data-calendario>
+              <Icono nombre="agenda" tamano={16} />
+              <span data-calendario-texto>Agregar al calendario</span>
+            </button>
+            <a href="/mis-boletas" class="contorno">
+              <Icono nombre="boleta" tamano={16} />
+              Ver mis boletas
+            </a>
+          </div>
+        </div>
+        <p class="correo">
+          <Icono nombre="sobre" tamano={16} />
+          <span data-linea-correo></span>
+        </p>
+        <button type="button" class="volver" data-cerrar-compra>Volver al evento</button>
+      </div>
+    </div>
+
+    <footer class="co-pie" data-pie>
+      <div role="group" aria-label="Resumen de la compra" class="resumen" data-resumen>
+        <p class="detalle-r"><span data-r-linea>1 × {inicial.completo} ({pesos(inicial.precio)})</span><span data-r-subtotal></span></p>
+        <p class="detalle-r"><span>Cargo por servicio (8%, de ejemplo)</span><span data-r-cargo></span></p>
+        <p class="total"><span>Total</span><span data-r-total></span></p>
+        <p class="dividido" data-r-dividido hidden><span data-r-n></span><b data-r-parte></b></p>
+        <button type="button" class="ver-detalle" aria-expanded="false" data-ver-detalle>Ver detalle</button>
+      </div>
+      <div class="botones">
+        <button type="button" class="atras" data-atras hidden>Atrás</button>
+        <button type="button" class="principal" aria-describedby="co-pista" data-siguiente>
+          <span data-texto-siguiente>Continuar</span>
+          <Icono nombre="flecha" tamano={16} grosor={2.4} />
+        </button>
+      </div>
+      <p id="co-pista" class="pista" data-pista></p>
+    </footer>
+    <p class="solo-lectores" role="status" data-anuncio-paso></p>
+  </div>
+</dialog>
+
+<style>
+  .ventana {
+    --pad: 20px;
+    padding: 0;
+    border: 0;
+    margin: 12px 12px auto auto;
+    width: min(520px, calc(100% - 24px));
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+    background: var(--bg);
+    color: var(--ink);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 24px 60px rgba(23, 18, 15, .35);
+    overflow: hidden;
+    font-size: 15px;
+  }
+
+  .ventana::backdrop {
+    background: rgba(23, 18, 15, .55);
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 24px);
+  }
+
+  /* En celular, pantalla completa (H6) */
+  @media (max-width: 519px) {
+    .ventana {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+    }
+
+    .panel {
+      height: 100%;
+      max-height: 100dvh;
+    }
+  }
+
+  .co-cabeza {
+    flex-shrink: 0;
+    background: var(--bg);
+    padding: 18px var(--pad) 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .co-fila {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mini {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background:
+      radial-gradient(circle at 70% 30%, rgba(232, 160, 79, .9) 0, transparent 55%),
+      radial-gradient(circle at 20% 80%, rgba(181, 55, 43, .8) 0, transparent 50%),
+      var(--hero);
+  }
+
+  .co-titulos {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  #co-titulo {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .co-detalle {
+    display: block;
+    font-size: .82rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .cerrar {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .pasos {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .pasos li {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .pasos li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: calc(50% + 19px);
+    right: calc(-50% + 19px);
+    height: 2px;
+    background: var(--line-input);
+  }
+
+  .pasos li[data-estado='hecho']:not(:last-child)::after {
+    background: var(--ink);
+  }
+
+  .circulo {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-input);
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+
+  .circulo :global(.check) {
+    display: none;
+  }
+
+  [data-estado='actual'] .circulo {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+
+  [data-estado='hecho'] .circulo {
+    background: var(--lime);
+    border-color: var(--ink);
+  }
+
+  [data-estado='hecho'] .num {
+    display: none;
+  }
+
+  [data-estado='hecho'] .circulo :global(.check) {
+    display: block;
+  }
+
+  .rotulo {
+    max-width: 100%;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  [data-estado='actual'] .rotulo {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  [data-estado='hecho'] .rotulo {
+    color: var(--ink);
+  }
+
+  .paso-compacto {
+    display: none;
+    font-size: .86rem;
+    font-weight: 700;
+  }
+
+  .reloj {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--yellow);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: .84rem;
+  }
+
+  .reloj :global(svg) {
+    flex-shrink: 0;
+  }
+
+  .demo {
+    font-size: .76rem;
+  }
+
+  .co-cuerpo {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--pad);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .errores {
+    background: var(--surface);
+    border: 2px solid var(--brand);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: .88rem;
+  }
+
+  .errores:focus {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .errores :global(ul) {
+    margin: 6px 0 0 18px;
+  }
+
+  .errores :global(li + li) {
+    margin-top: 4px;
+  }
+
+  .errores :global(a) {
+    display: inline-block;
+    min-height: 24px;
+    color: var(--brand);
+    text-decoration: underline;
+    font-weight: 700;
+  }
+
+  .paso {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .paso[hidden] {
+    display: none;
+  }
+
+  .paso-1 {
+    gap: 22px;
+  }
+
+  .paso-2 {
+    gap: 14px;
+  }
+
+  .paso-3 {
+    gap: 16px;
+  }
+
+  .paso-4 {
+    gap: 18px;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  h3:focus {
+    outline: none;
+  }
+
+  h3:focus-visible {
+    outline: 3px solid var(--brand);
+  }
+
+  fieldset {
+    border: 0;
+    min-width: 0;
+  }
+
+  .grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grupo legend {
+    margin-bottom: 8px;
+    padding: 0;
+  }
+
+  .opcion {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .opcion[data-elegida] {
+    border-color: var(--ink);
+    background: var(--tinte);
+  }
+
+  .opcion:has(:focus-visible),
+  .medio:has(:focus-visible),
+  .segmentado label:has(:focus-visible),
+  .segmentado-chico label:has(:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  input[type='radio'] {
+    appearance: none;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  input[type='radio']::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  input[type='radio']:checked::before {
+    background: var(--ink);
+  }
+
+  input[type='radio']:focus-visible {
+    outline: none;
+  }
+
+  .op-texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .op-texto b,
+  .op-derecha b {
+    display: block;
+    font-size: .92rem;
+  }
+
+  .op-texto span {
+    display: block;
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .op-derecha {
+    flex-shrink: 0;
+    text-align: right;
+    line-height: 1.2;
+  }
+
+  .stock {
+    display: block;
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .stock.caliente {
+    color: var(--brand);
+  }
+
+  .segmentado {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 5px;
+  }
+
+  .segmentado label {
+    position: relative;
+    min-height: 58px;
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .segmentado input,
+  .segmentado-chico input,
+  .medio input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .segmentado b {
+    font-size: .9rem;
+  }
+
+  .segmentado span {
+    font-size: .74rem;
+    margin-top: 2px;
+    color: var(--muted);
+  }
+
+  .segmentado label:has(:checked) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .segmentado label:has(:checked) span {
+    color: rgba(255, 255, 255, .78);
+  }
+
+  .parche {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .parche[hidden] {
+    display: none;
+  }
+
+  .parche-cabeza {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .av-parche {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--yellow);
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: .9rem;
+  }
+
+  .parche-texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .parche-texto b {
+    display: block;
+    font-size: .95rem;
+  }
+
+  .parche-texto span {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .van {
+    flex-shrink: 0;
+    background: var(--bg);
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  .miembros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .miembros:focus {
+    outline: none;
+  }
+
+  .miembro {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 12px 0 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .86rem;
+    font-weight: 500;
+  }
+
+  .miembro .av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: .7rem;
+    font-weight: 700;
+  }
+
+  .miembro :global(.check) {
+    display: none;
+  }
+
+  .miembro[aria-pressed='true'] {
+    border-color: var(--ink);
+    background: var(--bg);
+  }
+
+  .miembro[aria-pressed='true'] :global(.check) {
+    display: block;
+  }
+
+  .miembro[aria-disabled='true'] {
+    background: var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .cupo {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .aviso-recorte:empty {
+    display: none;
+  }
+
+  .aviso-recorte {
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  .interruptor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    min-height: 52px;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--line-soft);
+    padding: 12px 0 0;
+    color: var(--ink);
+  }
+
+  /* H52: pista apagada con contraste de 3:1 */
+  .pista-switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 46px;
+    height: 28px;
+    border-radius: var(--radius-pill);
+    background: var(--borde-campo);
+  }
+
+  .perilla {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(23, 18, 15, .3);
+  }
+
+  .interruptor[aria-checked='true'] .pista-switch {
+    background: var(--brand);
+  }
+
+  .interruptor[aria-checked='true'] .perilla {
+    left: 21px;
+  }
+
+  .interruptor[aria-disabled='true'] {
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .interruptor[aria-disabled='true'] .pista-switch {
+    background: var(--line);
+  }
+
+  .switch-texto {
+    line-height: 1.3;
+  }
+
+  .switch-texto b {
+    display: block;
+    font-size: .9rem;
+  }
+
+  .switch-texto span {
+    display: block;
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .switch-estado {
+    font-weight: 700;
+  }
+
+  .nota-dividida {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: .86rem;
+    line-height: 1.45;
+  }
+
+  .nota-dividida[hidden] {
+    display: none;
+  }
+
+  .nota-dividida :global(svg) {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .casilla {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: .86rem;
+    line-height: 1.4;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .casilla input {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+
+  .casilla[data-invalido] {
+    color: var(--brand);
+    font-weight: 700;
+  }
+
+  .ayuda {
+    margin-top: 2px;
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .campo label {
+    font-weight: 700;
+    font-size: .86rem;
+  }
+
+  .oblig {
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .campo input,
+  .campo select {
+    height: 48px;
+    width: 100%;
+    border: 1px solid var(--borde-campo);
+    border-radius: var(--radius-field);
+    padding: 0 14px;
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .campo select {
+    padding: 0 10px;
+  }
+
+  .campo .claro {
+    height: 46px;
+    background: var(--bg);
+  }
+
+  .campo input::placeholder {
+    color: var(--placeholder);
+  }
+
+  .campo [aria-invalid='true'] {
+    border: 2px solid var(--brand);
+  }
+
+  .error:empty {
+    display: none;
+  }
+
+  .error {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--brand);
+  }
+
+  .fila-campos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tipo {
+    flex: 1 1 120px;
+  }
+
+  .numero {
+    flex: 2 1 180px;
+  }
+
+  .aviso-datos {
+    margin-top: -6px;
+    font-size: .78rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .asistentes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  .asistentes[hidden] {
+    display: none;
+  }
+
+  h4 {
+    font-size: 1rem;
+  }
+
+  .asistentes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .asistentes-lista :global(.amigo) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    line-height: 1.3;
+  }
+
+  .asistentes-lista :global(.amigo .av) {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .asistentes-lista :global(.amigo b) {
+    display: block;
+    font-size: .9rem;
+  }
+
+  .asistentes-lista :global(.amigo span span) {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .medios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
+  .medio {
+    position: relative;
+    min-height: 92px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .medio:has(:checked) {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  .medio-arriba {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Radio visual de 18 px con punto de 8 px */
+  .medio-arriba::after {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    background: radial-gradient(circle, transparent 0 4px, transparent 4px);
+  }
+
+  .medio:has(:checked) .medio-arriba::after {
+    background: radial-gradient(circle, var(--ink) 0 4px, transparent 4.5px);
+  }
+
+  .medio b {
+    font-size: .88rem;
+    line-height: 1.2;
+  }
+
+  .medio > span:last-child {
+    font-size: .74rem;
+    color: var(--muted);
+    line-height: 1.25;
+  }
+
+  .panel-medio {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .panel-medio[hidden] {
+    display: none;
+  }
+
+  .pasarela {
+    border: 1.5px dashed var(--muted);
+  }
+
+  .pasarela-nota {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .8rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .pasarela-nota :global(svg) {
+    flex-shrink: 0;
+  }
+
+  .pasarela-aqui {
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .maqueta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: .7;
+  }
+
+  .m-rotulo {
+    display: block;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .m-campo {
+    display: flex;
+    align-items: center;
+    height: 46px;
+    border: 1px dashed var(--line-input);
+    border-radius: var(--radius-field);
+    padding: 0 14px;
+    background: var(--bg);
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .m-fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .m-fila > span {
+    flex: 1 1 110px;
+  }
+
+  .persona legend {
+    font-size: .84rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .segmentado-chico {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+  }
+
+  .segmentado-chico label {
+    position: relative;
+    height: 40px;
+    border-radius: var(--radius-xs);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .86rem;
+    cursor: pointer;
+  }
+
+  .segmentado-chico label:has(:checked) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .nota,
+  .texto-chico {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .texto-chico {
+    font-size: .84rem;
+    color: var(--ink);
+  }
+
+  .nota-campana {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .84rem;
+  }
+
+  .nota-campana :global(svg) {
+    flex-shrink: 0;
+  }
+
+  .legal {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 14px;
+    font-size: .8rem;
+    line-height: 1.4;
+  }
+
+  .retracto ul {
+    margin: 4px 0 0 18px;
+    color: var(--muted);
+  }
+
+  .demo-aviso {
+    font-size: .8rem;
+    font-weight: 700;
+    background: var(--yellow);
+    border-radius: var(--radius-field);
+    padding: 8px 12px;
+  }
+
+  .consentimientos {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .enlace-legal {
+    margin: 0 0 6px 32px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .nota-escudo,
+  .correo {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .78rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .nota-escudo :global(svg),
+  .correo :global(svg) {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .correo {
+    font-size: .82rem;
+  }
+
+  .confirmacion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .ok {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--lime);
+    border: 2px solid var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .confirmacion h3 {
+    margin-top: 6px;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.55rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .confirmacion p {
+    color: var(--muted);
+  }
+
+  .pagos-parche {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pagos-parche[hidden] {
+    display: none;
+  }
+
+  .pagos-parche > b {
+    font-size: .92rem;
+  }
+
+  .pagos-parche ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pagos-parche :global(li) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .pagos-parche :global(.av) {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: .72rem;
+  }
+
+  .pagos-parche :global(.nombre) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pagos-parche :global(.pendiente) {
+    flex-shrink: 0;
+    background: var(--yellow);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    font-size: .74rem;
+  }
+
+  .acciones-listo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .avisar,
+  .avisar:hover {
+    height: 52px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: .98rem;
+  }
+
+  .fila-listo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .contorno {
+    flex: 1 1 180px;
+    height: 48px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: .9rem;
+  }
+
+  a.contorno {
+    flex-basis: 160px;
+  }
+
+  .contorno[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .volver {
+    align-self: center;
+    height: 44px;
+    border: 0;
+    background: transparent;
+    padding: 0 16px;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .co-pie {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 14px var(--pad) 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .co-pie[hidden] {
+    display: none;
+  }
+
+  .resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: .86rem;
+  }
+
+  .resumen p {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .detalle-r span:first-child {
+    color: var(--muted);
+  }
+
+  .total {
+    font-size: 1rem;
+    font-weight: 700;
+    padding-top: 4px;
+  }
+
+  .dividido {
+    background: var(--yellow);
+    border-radius: var(--radius-xs);
+    padding: 6px 10px;
+    margin-top: 4px;
+  }
+
+  .dividido[hidden] {
+    display: none;
+  }
+
+  .ver-detalle {
+    display: none;
+  }
+
+  .botones {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .atras {
+    height: 52px;
+    border: 0;
+    background: transparent;
+    padding: 0 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .atras[hidden] {
+    display: none;
+  }
+
+  .principal {
+    flex: 1;
+    height: 52px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Deshabilitado canónico (N69): sigue enfocable y explica por qué (H7) */
+  .principal[aria-disabled='true'] {
+    background: var(--line);
+    color: var(--muted);
+  }
+
+  .pista {
+    margin-top: -4px;
+    text-align: center;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .pista:empty {
+    display: none;
+  }
+
+  /* Ventanas bajas o zoom al 200 % (H6): cabecera compacta y resumen reducido */
+  @media (max-height: 640px) {
+    .co-cabeza {
+      padding-top: 12px;
+      gap: 8px;
+    }
+
+    .mini,
+    .co-detalle,
+    .pasos {
+      display: none;
+    }
+
+    .paso-compacto {
+      display: block;
+    }
+
+    .co-fila {
+      align-items: center;
+    }
+
+    .reloj {
+      padding: 4px 10px;
+    }
+
+    .resumen:not([data-abierto]) .detalle-r,
+    .resumen:not([data-abierto]) .dividido {
+      display: none;
+    }
+
+    .ver-detalle {
+      display: inline-flex;
+      align-self: flex-start;
+      align-items: center;
+      min-height: 32px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font-weight: 700;
+      font-size: .82rem;
+      color: var(--ink);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .co-pie {
+      padding-top: 10px;
+      padding-bottom: 12px;
+      gap: 8px;
+    }
+  }
+
+  /* Muy poca altura (celular en horizontal, 640 × 360): todo el panel desplaza junto, sin partes fijas */
+  @media (max-height: 480px) {
+    .panel {
+      overflow-y: auto;
+    }
+
+    .co-cuerpo {
+      flex: none;
+      overflow: visible;
+    }
+  }
+</style>

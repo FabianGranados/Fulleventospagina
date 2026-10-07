@@ -1,0 +1,104 @@
+---
+// N36 · Selector de cantidad. Arranca en 1 (H22). En los límites usa aria-disabled (H7) para no perder el foco.
+import Icono from '../ui/Icono.astro';
+
+interface Props {
+  id: string;
+  variante: 'tarjeta' | 'checkout';
+}
+
+const { id, variante } = Astro.props;
+---
+
+<div class:list={['cantidad', variante]} data-cantidad-bloque>
+  <div class="rotulos">
+    {variante === 'tarjeta' ? <span id={id} class="rotulo">Cantidad</span> : <b id={id}>Cantidad</b>}
+    <span class="pista" data-pista-cantidad>Máximo 8 por compra</span>
+  </div>
+  <div role="group" aria-labelledby={id} class="control">
+    <button type="button" aria-label="Quitar una boleta" aria-disabled="true" data-menos>
+      <Icono nombre="menos" tamano={16} grosor={2.6} />
+    </button>
+    <span class="numero" aria-live="polite" data-cantidad>1</span>
+    <button type="button" aria-label="Agregar una boleta" data-mas>
+      <Icono nombre="mas" tamano={16} grosor={2.6} />
+    </button>
+  </div>
+</div>
+
+<style>
+  .cantidad {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .checkout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+  }
+
+  .rotulos {
+    line-height: 1.25;
+    min-width: 0;
+  }
+
+  .rotulos > * {
+    display: block;
+  }
+
+  .rotulo {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .checkout b {
+    font-size: .95rem;
+  }
+
+  .pista {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .control {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 4px;
+  }
+
+  button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--bg);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  /* Deshabilitado canónico (N69): legible y sin perder el foco */
+  button[aria-disabled='true'] {
+    color: var(--muted);
+    background: var(--line);
+    cursor: default;
+  }
+
+  .numero {
+    min-width: 30px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+</style>

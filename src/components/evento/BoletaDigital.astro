@@ -1,0 +1,208 @@
+---
+// N45 · Boleta digital. Es una plantilla: el script de compra la clona y llena por cada orden.
+// El QR es un dibujo decorativo, no un código real. Mesa VIP con pago dividido: "Mesa apartada" sin QR (H24).
+import Etiqueta from '../ui/Etiqueta.astro';
+import { patronQr } from '../../data/evento';
+import type { ModeloEvento } from './modelo';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const { evento: e, detalle: d } = m;
+const linea = `${m.fechaLarga} ${m.anio}${d ? ` · Puertas ${d.puertas}` : ''} · ${m.lugarCompleto.replace(' · ', ', ')}`;
+---
+
+<template id="plantilla-boleta">
+  <article class="boleta" aria-label="Tu boleta digital">
+    <div class="boleta-arriba superficie-oscura">
+      <div class="boleta-fila">
+        <Etiqueta tamano="sm" class="boleta-etiqueta">{e.categoria} · {m.fechaCorta}</Etiqueta>
+        <span class="boleta-oficial" data-b-estado>Boleta oficial</span>
+      </div>
+      <b class="boleta-titulo">{e.titulo}</b>
+      <span class="boleta-linea">{linea}</span>
+    </div>
+    <div class="boleta-perforacion" aria-hidden="true"></div>
+    <div class="boleta-abajo">
+      <dl class="boleta-datos">
+        <div><dt>Localidad</dt><dd data-b-loc></dd></div>
+        <div><dt>Cantidad</dt><dd data-b-cantidad></dd></div>
+        <div class="ancho"><dt>Titular</dt><dd data-b-titular></dd></div>
+        <div class="ancho"><dt>Orden</dt><dd data-b-orden></dd></div>
+      </dl>
+      <div class="boleta-qr" data-b-qr>
+        <div class="qr" role="img" aria-label="[QR de la boleta] · dibujo decorativo, no es un código real">
+          {patronQr.flatMap((fila) => [...fila].map((c) => <i class={c === '1' ? 'lleno' : undefined} />))}
+        </div>
+        <span>[QR de la boleta]</span>
+      </div>
+      <p class="boleta-apartada" data-b-apartada hidden></p>
+    </div>
+    <p class="boleta-pie">Emitida por [BOLETERA] · Un ingreso por persona · Presenta tu documento</p>
+  </article>
+</template>
+
+<style is:global>
+  /* Global porque la boleta se clona en el checkout y en el visor (Modal) */
+  .boleta {
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 14px 34px rgba(23, 18, 15, .14);
+  }
+
+  .boleta-arriba {
+    padding: 18px 18px 22px;
+    color: var(--on-dark);
+    background:
+      radial-gradient(circle at 85% 20%, rgba(232, 160, 79, .6) 0, transparent 40%),
+      radial-gradient(ellipse at 0% 100%, rgba(70, 30, 80, .7) 0, transparent 55%),
+      var(--hero);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .boleta-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .boleta .boleta-etiqueta {
+    font-size: .78rem;
+    padding: 3px 9px;
+  }
+
+  .boleta-oficial {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .8);
+  }
+
+  .boleta-titulo {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.35rem;
+    line-height: 1.02;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+  }
+
+  .boleta-linea {
+    font-size: .84rem;
+    color: rgba(255, 255, 255, .88);
+  }
+
+  .boleta-perforacion {
+    position: relative;
+    height: 0;
+    border-top: 2px dashed var(--line-input);
+    margin: 0 18px;
+  }
+
+  .boleta-perforacion::before,
+  .boleta-perforacion::after {
+    content: '';
+    position: absolute;
+    top: -13px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--muesca, var(--bg));
+  }
+
+  .boleta-perforacion::before {
+    left: -30px;
+  }
+
+  .boleta-perforacion::after {
+    right: -30px;
+  }
+
+  .boleta-abajo {
+    padding: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .boleta-datos {
+    flex: 1 1 180px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+    line-height: 1.25;
+  }
+
+  .boleta-datos .ancho {
+    grid-column: 1 / -1;
+  }
+
+  .boleta-datos dt {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .boleta-datos dd {
+    font-weight: 700;
+    font-size: .92rem;
+    overflow-wrap: anywhere;
+  }
+
+  .boleta-qr {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: .7rem;
+    color: var(--muted);
+  }
+
+  .boleta-qr[hidden] {
+    display: none;
+  }
+
+  .qr {
+    width: 124px;
+    height: 124px;
+    padding: 7px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xs);
+    display: grid;
+    grid-template-columns: repeat(17, minmax(0, 1fr));
+    grid-template-rows: repeat(17, minmax(0, 1fr));
+  }
+
+  .qr .lleno {
+    background: var(--ink);
+  }
+
+  .boleta-apartada {
+    flex: 1 1 100%;
+    background: var(--yellow);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .boleta-pie {
+    padding: 10px 18px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+    font-size: .74rem;
+    color: var(--muted);
+  }
+</style>

@@ -1,0 +1,92 @@
+---
+// N28 · Atajos "En esta página". H61: desvanecido en el borde cuando hay más atajos por ver.
+interface Props {
+  atajos: { href: string; texto: string }[];
+}
+
+const { atajos } = Astro.props;
+---
+
+<div class="atajos" data-atajos>
+  <nav aria-label="En esta página" class="fila" data-atajos-fila>
+    {atajos.map((a) => <a href={a.href}>{a.texto}</a>)}
+  </nav>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-atajos]').forEach((caja) => {
+    const fila = caja.querySelector<HTMLElement>('[data-atajos-fila]')!;
+    const revisar = () => {
+      caja.dataset.inicio = String(fila.scrollLeft > 4);
+      caja.dataset.fin = String(fila.scrollLeft + fila.clientWidth < fila.scrollWidth - 4);
+    };
+    fila.addEventListener('scroll', revisar, { passive: true });
+    new ResizeObserver(revisar).observe(fila);
+  });
+</script>
+
+<style>
+  .atajos {
+    position: relative;
+    margin: -22px 0 -18px;
+    background: var(--bg);
+  }
+
+  .fila {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 2px;
+    scrollbar-width: thin;
+  }
+
+  /* Pista de que hay más (H61) */
+  .atajos::before,
+  .atajos::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+  }
+
+  .atajos::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--bg), transparent);
+  }
+
+  .atajos::after {
+    right: 0;
+    background: linear-gradient(270deg, var(--bg), transparent);
+  }
+
+  .atajos[data-inicio='true']::before,
+  .atajos[data-fin='true']::after {
+    opacity: 1;
+  }
+
+  a {
+    flex-shrink: 0;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: .88rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 980px) {
+    .atajos {
+      position: sticky;
+      top: 69px;
+      z-index: 4;
+    }
+  }
+</style>

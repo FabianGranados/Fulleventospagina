@@ -1,0 +1,76 @@
+---
+// N32 · Tarjetas "Lo que debes saber" (íconos como componente, H58)
+import Icono from '../ui/Icono.astro';
+import type { Politica } from '../../data/evento';
+
+interface Props {
+  politicas: Politica[];
+}
+
+const { politicas } = Astro.props;
+---
+
+<section id="saber" class="seccion-evento" aria-labelledby="h-saber">
+  <h2 id="h-saber" class="titulo-seccion">Lo que debes saber</h2>
+  <ul class="rejilla">
+    {
+      politicas.map((p) => (
+        <li class="tarjeta">
+          <span class="icono" style={`background: ${p.color}`} aria-hidden="true">
+            <Icono nombre={p.icono} tamano={20} />
+          </span>
+          <span class="texto">
+            <b>{p.titulo}</b>
+            <span>{p.texto}</span>
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .rejilla {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .tarjeta {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .icono {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+  }
+
+  .texto {
+    min-width: 0;
+    line-height: 1.4;
+  }
+
+  .texto b {
+    display: block;
+    font-size: .95rem;
+  }
+
+  .texto span {
+    display: block;
+    font-size: .85rem;
+    color: var(--muted);
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+  }
+</style>

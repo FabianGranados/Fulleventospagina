@@ -1,0 +1,178 @@
+---
+// N26 · Ficha de datos clave. H61: sin fila suelta a 768 px (3 + 2) y sin partir "Show 9:30 p. m.".
+import Icono from '../ui/Icono.astro';
+import type { NombreIcono } from '../ui/Icono.astro';
+import type { ModeloEvento } from './modelo';
+
+interface Props {
+  m: ModeloEvento;
+}
+
+const { m } = Astro.props;
+const { evento: e, detalle: d } = m;
+
+interface Dato {
+  rotulo: string;
+  valor: string;
+  detalle?: string;
+  icono?: NombreIcono;
+  color?: string;
+  precio?: boolean;
+}
+
+const datos: Dato[] = [
+  { rotulo: 'Fecha', valor: m.fechaLarga, detalle: d ? `${m.anio} · ${d.fechaRelativa}` : m.anio },
+  ...(d ? [{ rotulo: 'Hora', valor: `Puertas ${d.puertas}`, detalle: `Show ${d.show}`, icono: 'reloj' as const, color: 'var(--peach)' }] : []),
+  { rotulo: 'Lugar', valor: m.lugarNombre, detalle: m.lugarDetalle, icono: 'pin', color: 'var(--pink)' },
+  ...(d ? [{ rotulo: 'Edad', valor: d.edad, detalle: d.edadDetalle, icono: 'documento' as const, color: 'var(--lilac)' }] : []),
+  {
+    rotulo: 'Precio',
+    valor: m.precioDesde,
+    detalle: m.gratis ? e.vende : '+ cargo por servicio',
+    icono: 'boleta',
+    color: 'var(--lime)',
+    precio: true,
+  },
+];
+---
+
+<section class="datos-clave" aria-label="Datos clave del evento" data-n={datos.length}>
+  {
+    datos.map((dato) => (
+      <div class="dato">
+        {dato.icono ? (
+          <span class="icono" style={`background: ${dato.color}`} aria-hidden="true">
+            <Icono nombre={dato.icono} tamano={22} />
+          </span>
+        ) : (
+          <span class="icono placa" aria-hidden="true">
+            <b>{m.dia}</b>
+            <span>{m.mes}</span>
+          </span>
+        )}
+        <div class="texto">
+          <span class="rotulo">{dato.rotulo}</span>
+          <b>{dato.valor}</b>
+          {dato.detalle && <span class="detalle">{dato.detalle}</span>}
+          {dato.precio && d && <a href="#localidades" class="enlace">Ver localidades</a>}
+        </div>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  /* Columnas (H61): sin fila suelta ni "Show 9:30 p. m." partido. 5 datos: 1 / 2 / 3 + 2 / 5; 3 datos: 1 / 3 */
+  .datos-clave {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  @media (min-width: 440px) and (max-width: 699px) {
+    .datos-clave[data-n='5'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* El precio ocupa la última fila completa para no quedar suelto */
+    .datos-clave[data-n='5'] > .dato:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 560px) {
+    .datos-clave[data-n='3'] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 700px) {
+    .datos-clave[data-n='5'] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1240px) {
+    .datos-clave[data-n='5'] {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  .dato {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    min-width: 0;
+  }
+
+  .icono {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+
+  .placa {
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .placa b {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.3rem;
+  }
+
+  .placa span {
+    margin-top: 2px;
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .texto {
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .rotulo {
+    display: block;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .texto b {
+    display: block;
+    font-size: .94rem;
+  }
+
+  .detalle {
+    display: block;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .enlace {
+    display: inline-block;
+    font-size: .8rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--ink);
+  }
+</style>
