@@ -1,0 +1,767 @@
+---
+// Agenda (4.6): cabecera con vista y fecha, filtros de ciudad y categoría (en la URL),
+// aviso de repost, línea de resultados, estado vacío, rejilla paginada y región viva (H49).
+import Icono from '../ui/Icono.astro';
+import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import TarjetaMarketplace from './TarjetaMarketplace.astro';
+import { ciudades } from '../../data/ciudades';
+import { eventos } from '../../data/eventos';
+import { socialAgenda, reposteadosIniciales, categoriasAgenda, fechasAgenda } from '../../data/agenda';
+import { planes, ciudadesTexto } from '../../lib/formato';
+
+// H47: 8 tarjetas y "Ver N planes más", como en la Bienvenida
+const PAGINA = 8;
+
+// Estado inicial (sin parámetros): "Este finde", todo el país, "Para ti"
+const finde = fechasAgenda.find((f) => f.id === 'finde')!;
+const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
+
+// Orden intercalado por ciudad, Bogotá primero (4.6 §7)
+const porCiudad = ciudades.map((c) => eventos.filter((e) => e.ciudad === c.id));
+const intercalados = [];
+for (let i = 0; porCiudad.some((g) => g[i]); i++) {
+  for (const grupo of porCiudad) if (grupo[i]) intercalados.push(grupo[i]);
+}
+
+const conteo = (ciudad: string) => enFinde.filter((e) => e.ciudad === ciudad).length;
+const ciudadesConPlanes = new Set(enFinde.map((e) => e.ciudad)).size;
+const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
+---
+
+<div class="agenda" data-agenda-app data-pagina={PAGINA}>
+  <div class="cabecera">
+    <div class="titulos">
+      <p class="antetitulo">Agenda para ti</p>
+      <h1 id="agenda-titulo" tabindex="-1" data-titulo>Este finde en Colombia</h1>
+      <p class="bajada">
+        Elegidos por tus gustos (salsa, rock, fútbol y planes gratis) en todo el país, de la costa al Amazonas,
+        empezando por Bogotá. Repostea los que te gusten para que tu gente los vea.
+      </p>
+    </div>
+    <div class="controles">
+      <nav aria-label="Vista" class="segmentado">
+        <a href="/agenda" aria-current="page" class="opcion-vista" data-vista-lista>
+          <Icono nombre="lista" tamano={16} grosor={2.2} />Lista
+        </a>
+        <a href="/mapa" class="opcion-vista" data-vista-mapa><Icono nombre="mapa" tamano={16} />Mapa</a>
+      </nav>
+      <!-- H59: grupo excluyente con radios nativos; H39: filtra de verdad -->
+      <fieldset class="segmentado fechas">
+        <legend class="solo-lectores">Fecha</legend>
+        {
+          fechasAgenda.map((f) => (
+            <label class="opcion-fecha">
+              <input type="radio" name="agenda-fecha" value={f.id} checked={f.id === 'finde'} data-fecha />
+              {f.texto}
+            </label>
+          ))
+        }
+      </fieldset>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <fieldset class="chips">
+      <legend class="solo-lectores">Filtrar por ciudad</legend>
+      <label class="chip con-conteo">
+        <input type="radio" name="agenda-ciudad" value="all" checked data-ciudad />
+        <Icono nombre="pin" tamano={16} />Toda Colombia{' '}<span class="conteo" data-conteo="all">{enFinde.length}<span class="solo-lectores">{enFinde.length === 1 ? ' plan' : ' planes'}</span></span>
+      </label>
+      {
+        ciudades.map((c) => (
+          <label class="chip con-conteo">
+            <input type="radio" name="agenda-ciudad" value={c.id} data-ciudad />
+            {c.nombre}{' '}<span class="conteo" data-conteo={c.id}>{conteo(c.id)}<span class="solo-lectores">{conteo(c.id) === 1 ? ' plan' : ' planes'}</span></span>
+          </label>
+        ))
+      }
+    </fieldset>
+
+    <fieldset class="chips">
+      <legend class="solo-lectores">Filtrar por categoría</legend>
+      {
+        categoriasAgenda.map((c) => (
+          <label class="chip">
+            <input type="radio" name="agenda-categoria" value={c.id} checked={c.id === 'all'} data-categoria />
+            {c.texto}
+          </label>
+        ))
+      }
+    </fieldset>
+  </div>
+
+  <!-- N17 · Aviso de repost, en el flujo de la página. Lo anuncia la región viva permanente (H49). -->
+  <div class="aviso" hidden data-aviso>
+    <Icono nombre="check" tamano={20} grosor={2.4} class="aviso-icono" />
+    <span class="aviso-texto" data-aviso-texto></span>
+    <a href="/inicio" class="aviso-enlace">Ver en mi feed</a>
+    <button type="button" class="aviso-cerrar" aria-label="Cerrar aviso" data-aviso-cerrar>
+      <Icono nombre="cerrar" tamano={16} grosor={2.4} />
+    </button>
+  </div>
+
+  <div class="resultados">
+    <p class="conteo-resultados" tabindex="-1" data-resultados>
+      <b>{planes(enFinde.length)}</b> en {ciudadesTexto(ciudadesConPlanes)} este finde
+    </p>
+    <div class="resultados-derecha">
+      <span class="ejemplo">Contenido de ejemplo</span>
+      <EnlaceSubrayado href="/mapa" class="ver-mapa">Ver todos los planes en el mapa</EnlaceSubrayado>
+    </div>
+  </div>
+
+  <!-- Región viva permanente y vacía (H49) -->
+  <p class="solo-lectores" role="status" data-anuncio></p>
+  <span id="agenda-proximamente" hidden>Próximamente</span>
+
+  <div class="vacio" hidden data-vacio>
+    <p data-vacio-mensaje></p>
+    <div class="vacio-botones">
+      <button type="button" class="boton-contorno" hidden data-ver-finde>Ver los planes de este finde</button>
+      <button type="button" class="boton-contorno" data-limpiar>Ver todos los planes del país</button>
+    </div>
+  </div>
+
+  <div class="rejilla" id="agenda-rejilla" data-rejilla>
+    {
+      intercalados.map((e) => {
+        const posicion = enFinde.includes(e) ? intercalados.filter((x) => enFinde.includes(x)).indexOf(e) : -1;
+        return (
+          <TarjetaMarketplace
+            evento={e}
+            social={socialAgenda[e.id]}
+            reposteado={reposteadosIniciales.includes(e.id)}
+            oculta={posicion < 0 || posicion >= PAGINA}
+          />
+        );
+      })
+    }
+  </div>
+
+  <div class="mas" hidden={siguientes <= 0} data-mas-contenedor>
+    <button type="button" class="boton-contorno grande" aria-controls="agenda-rejilla" data-mas>
+      {`Ver ${siguientes} ${siguientes === 1 ? 'plan más' : 'planes más'}`}
+    </button>
+  </div>
+</div>
+
+<script>
+  import { ciudades } from '../../data/ciudades';
+  import { fechasAgenda, destinosRepost, lineaRepost, categoriasAgenda } from '../../data/agenda';
+  import { planes, ciudadesTexto, slug } from '../../lib/formato';
+
+  const raiz = document.querySelector<HTMLElement>('[data-agenda-app]');
+
+  if (raiz) {
+    const PAGINA = Number(raiz.dataset.pagina);
+    const nombres: Record<string, string> = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
+    const idsCiudad = new Set(['all', ...ciudades.map((c) => c.id)]);
+    const idsCategoria = new Set(categoriasAgenda.map((c) => c.id));
+    const fechas = Object.fromEntries(fechasAgenda.map((f) => [f.id, f]));
+
+    const $ = <T extends HTMLElement = HTMLElement>(sel: string) => raiz.querySelector<T>(sel)!;
+    const $$ = <T extends HTMLElement = HTMLElement>(sel: string) => [...raiz.querySelectorAll<T>(sel)];
+
+    const rejilla = $('[data-rejilla]');
+    const tarjetas = $$('[data-tarjeta]');
+    const radiosCiudad = $$<HTMLInputElement>('input[data-ciudad]');
+    const radiosCategoria = $$<HTMLInputElement>('input[data-categoria]');
+    const radiosFecha = $$<HTMLInputElement>('input[data-fecha]');
+    const titulo = $('[data-titulo]');
+    const resultados = $('[data-resultados]');
+    const anuncio = $('[data-anuncio]');
+    const vacio = $('[data-vacio]');
+    const mensajeVacio = $('[data-vacio-mensaje]');
+    const botonFinde = $<HTMLButtonElement>('[data-ver-finde]');
+    const botonLimpiar = $<HTMLButtonElement>('[data-limpiar]');
+    const contenedorMas = $('[data-mas-contenedor]');
+    const botonMas = $<HTMLButtonElement>('[data-mas]');
+    const aviso = $('[data-aviso]');
+    const avisoTexto = $('[data-aviso-texto]');
+    const vistaLista = $<HTMLAnchorElement>('[data-vista-lista]');
+    const vistaMapa = $<HTMLAnchorElement>('[data-vista-mapa]');
+    const verMapa = $<HTMLAnchorElement>('.ver-mapa');
+
+    // Encabezado compartido (N1): selector de ciudad y buscador
+    const selector = document.querySelector<HTMLSelectElement>('select[data-selector-ciudad]');
+    const buscador = document.querySelector<HTMLFormElement>('[data-buscador-app]');
+    const campoBusqueda = buscador?.querySelector<HTMLInputElement>('input[name="q"]');
+
+    // Estado: filtros (en la URL) + guardados y reposts (en memoria: demo sin backend)
+    const estado = { ciudad: 'all', categoria: 'all', fecha: 'finde', q: '', mostrados: PAGINA };
+
+    const normalizar = (t: string) => slug(t).replace(/-/g, ' ');
+
+    const leerUrl = () => {
+      const p = new URLSearchParams(location.search);
+      const ciudad = p.get('ciudad') ?? 'all';
+      const categoria = p.get('categoria') ?? 'all';
+      const fecha = p.get('fecha') ?? 'finde';
+      estado.ciudad = idsCiudad.has(ciudad) ? ciudad : 'all';
+      estado.categoria = idsCategoria.has(categoria) ? categoria : 'all';
+      estado.fecha = fecha in fechas ? fecha : 'finde';
+      estado.q = (p.get('q') ?? '').trim();
+      estado.mostrados = PAGINA;
+    };
+
+    const consulta = () => {
+      const p = new URLSearchParams();
+      if (estado.q) p.set('q', estado.q);
+      if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
+      if (estado.categoria !== 'all') p.set('categoria', estado.categoria);
+      if (estado.fecha !== 'finde') p.set('fecha', estado.fecha);
+      const s = p.toString();
+      return s ? `?${s}` : '';
+    };
+
+    const enlaceMapa = () => {
+      const p = new URLSearchParams();
+      if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
+      if (estado.categoria !== 'all') p.set('categoria', estado.categoria);
+      const s = p.toString();
+      return s ? `/mapa?${s}` : '/mapa';
+    };
+
+    // Filtros sin la ciudad (para los conteos de los chips) y con la ciudad (para la rejilla)
+    const pasaSinCiudad = (t: HTMLElement) => {
+      const d = t.dataset;
+      const f = fechas[estado.fecha];
+      if (d.fecha! < f.desde || d.fecha! > f.hasta) return false;
+      const cat = estado.categoria;
+      if (cat === 'amigos' && d.amigos !== 'true') return false;
+      if (cat !== 'all' && cat !== 'amigos' && !d.etiquetas!.split(' ').includes(cat)) return false;
+      if (estado.q && !normalizar(estado.q).split(' ').every((p) => d.texto!.includes(p))) return false;
+      return true;
+    };
+
+    const ordenar = (lista: HTMLElement[]) => {
+      if (estado.ciudad !== 'all') return lista;
+      const grupos = ciudades.map((c) => lista.filter((t) => t.dataset.ciudad === c.id));
+      const salida: HTMLElement[] = [];
+      for (let i = 0; grupos.some((g) => g[i]); i++) for (const g of grupos) if (g[i]) salida.push(g[i]);
+      return salida;
+    };
+
+    const lugar = () => (estado.ciudad === 'all' ? 'Colombia' : nombres[estado.ciudad]);
+    const busqueda = () => (estado.q ? ` para «${estado.q}»` : '');
+
+    let visibles: HTMLElement[] = [];
+
+    const pintar = ({ anunciar = true, url = true } = {}) => {
+      const f = fechas[estado.fecha];
+      const base = tarjetas.filter(pasaSinCiudad);
+      const coinciden = base.filter((t) => estado.ciudad === 'all' || t.dataset.ciudad === estado.ciudad);
+      visibles = ordenar(coinciden);
+
+      tarjetas.forEach((t) => (t.hidden = true));
+      visibles.forEach((t, i) => {
+        rejilla.append(t);
+        t.hidden = i >= estado.mostrados;
+      });
+
+      // Controles
+      radiosCiudad.forEach((r) => (r.checked = r.value === estado.ciudad));
+      radiosCategoria.forEach((r) => (r.checked = r.value === estado.categoria));
+      radiosFecha.forEach((r) => (r.checked = r.value === estado.fecha));
+      if (selector) selector.value = estado.ciudad;
+      if (campoBusqueda && document.activeElement !== campoBusqueda) campoBusqueda.value = estado.q;
+
+      // Conteos de los chips de ciudad: siguen la categoría, la fecha y la búsqueda
+      radiosCiudad.forEach((r) => {
+        const n = r.value === 'all' ? base.length : base.filter((t) => t.dataset.ciudad === r.value).length;
+        const caja = raiz.querySelector(`[data-conteo="${r.value}"]`)!;
+        caja.firstChild!.textContent = String(n);
+        caja.querySelector('.solo-lectores')!.textContent = n === 1 ? ' plan' : ' planes';
+      });
+
+      // Título y línea de resultados (H39: dicen la fecha elegida)
+      titulo.textContent = `${f.titulo} en ${lugar()}`;
+      const nCiudades = new Set(visibles.map((t) => t.dataset.ciudad)).size;
+      const donde = estado.ciudad === 'all' ? `en ${ciudadesTexto(nCiudades)}` : `en ${nombres[estado.ciudad]}`;
+      resultados.innerHTML = '';
+      const negrita = document.createElement('b');
+      negrita.textContent = planes(visibles.length);
+      resultados.append(negrita, `${busqueda()} ${donde} ${f.periodo}`);
+
+      // Estado vacío (N67); con otra fecha, uno honesto que invita al finde (H39)
+      vacio.hidden = visibles.length > 0;
+      const conFiltro = estado.ciudad !== 'all' || estado.categoria !== 'all' || estado.q !== '';
+      if (estado.fecha === 'finde') {
+        mensajeVacio.textContent = `Por ahora no hay planes con este filtro en ${lugar()} este finde. Prueba otra ciudad o mira todo el país.`;
+        botonFinde.hidden = true;
+        botonLimpiar.hidden = false;
+      } else {
+        const periodo = f.titulo;
+        mensajeVacio.textContent = `${periodo} no hay planes con este filtro en ${lugar()}: mira el finde.`;
+        botonFinde.hidden = false;
+        botonLimpiar.hidden = !conFiltro;
+      }
+
+      // Paginación (H47)
+      const restantes = visibles.length - estado.mostrados;
+      contenedorMas.hidden = restantes <= 0;
+      if (restantes > 0) {
+        const n = Math.min(PAGINA, restantes);
+        botonMas.textContent = `Ver ${n} ${n === 1 ? 'plan más' : 'planes más'}`;
+      }
+
+      // Enlaces que conservan el contexto (H42)
+      vistaLista.href = `/agenda${consulta()}`;
+      vistaMapa.href = enlaceMapa();
+      verMapa.href = enlaceMapa();
+      if (url) history.replaceState(null, '', `${location.pathname}${consulta()}`);
+
+      if (anunciar) {
+        anuncio.textContent = visibles.length
+          ? `Mostrando ${planes(Math.min(visibles.length, estado.mostrados))}${busqueda()} ${donde} ${f.periodo}`
+          : mensajeVacio.textContent;
+      }
+    };
+
+    const cambiar = (cambios: Partial<typeof estado>) => {
+      Object.assign(estado, { mostrados: PAGINA }, cambios);
+      pintar();
+    };
+
+    radiosCiudad.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ ciudad: r.value })));
+    radiosCategoria.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ categoria: r.value })));
+    radiosFecha.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ fecha: r.value })));
+    selector?.addEventListener('change', () => cambiar({ ciudad: selector.value || 'all' }));
+
+    // El encabezado no recarga en esta página (data-agenda-app): aplicamos la búsqueda aquí
+    buscador?.addEventListener('submit', () => {
+      const datos = new FormData(buscador);
+      cambiar({ q: String(datos.get('q') ?? '').trim(), ciudad: String(datos.get('ciudad') ?? 'all') });
+      resultados.focus();
+    });
+
+    botonLimpiar.addEventListener('click', () => {
+      cambiar({ ciudad: 'all', categoria: 'all', q: '' });
+      titulo.focus();
+    });
+    botonFinde.addEventListener('click', () => {
+      cambiar({ fecha: 'finde' });
+      titulo.focus();
+    });
+
+    botonMas.addEventListener('click', () => {
+      const antes = estado.mostrados;
+      estado.mostrados += PAGINA;
+      pintar({ url: false });
+      // El foco pasa al primer plan nuevo
+      visibles[antes]?.querySelector<HTMLAnchorElement>('h2 a')?.focus();
+    });
+
+    // Guardar y repostear
+    const anunciarTexto = (t: string) => {
+      anuncio.textContent = '';
+      requestAnimationFrame(() => (anuncio.textContent = t));
+    };
+
+    const marcarRepost = (t: HTMLElement, reposteado: boolean) => {
+      const boton = t.querySelector<HTMLElement>('[data-repostear]')!;
+      boton.setAttribute('aria-pressed', String(reposteado));
+      t.querySelector('[data-repostear-texto]')!.textContent = reposteado ? 'Reposteado' : 'Repostear';
+      t.querySelector<HTMLElement>('[data-marca]')!.hidden = !reposteado;
+      t.querySelector('[data-linea]')!.textContent = lineaRepost(
+        { quien: t.dataset.quien!, reposts: Number(t.dataset.reposts), colores: ['c1', 'c1'], amigos: false },
+        reposteado,
+      );
+    };
+
+    raiz.addEventListener('click', (ev) => {
+      const objetivo = ev.target as HTMLElement;
+      const guardar = objetivo.closest<HTMLButtonElement>('[data-guardar]');
+      if (guardar) {
+        guardar.setAttribute('aria-pressed', String(guardar.getAttribute('aria-pressed') !== 'true'));
+        return;
+      }
+      const repostear = objetivo.closest<HTMLButtonElement>('[data-repostear]');
+      // "Reposteado" quita el repost sin abrir la ventana y cierra el aviso (6.2.4)
+      if (repostear && repostear.getAttribute('aria-pressed') === 'true') {
+        ev.stopPropagation();
+        const t = repostear.closest<HTMLElement>('[data-tarjeta]')!;
+        marcarRepost(t, false);
+        aviso.hidden = true;
+        anunciarTexto(`Quitaste el repost de «${t.dataset.titulo}».`);
+      }
+    });
+
+    document.addEventListener('agenda:repost', (ev) => {
+      const { id, destino } = (ev as CustomEvent<{ id: string; destino: string }>).detail;
+      const t = tarjetas.find((x) => x.dataset.id === id);
+      if (!t) return;
+      marcarRepost(t, true);
+      const donde = destinosRepost.find((d) => d.id === destino) ?? destinosRepost[0];
+      const texto = `Reposteaste «${t.dataset.titulo}» en ${donde.aviso}.`;
+      avisoTexto.textContent = texto;
+      aviso.hidden = false;
+      anunciarTexto(texto);
+    });
+
+    $('[data-aviso-cerrar]').addEventListener('click', () => {
+      aviso.hidden = true;
+      resultados.focus();
+    });
+
+    // Atrás y adelante del navegador
+    addEventListener('popstate', () => {
+      leerUrl();
+      pintar({ url: false });
+    });
+
+    leerUrl();
+    pintar({ anunciar: false, url: false });
+  }
+</script>
+
+<style>
+  .agenda {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .titulos {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+
+  .antetitulo {
+    margin-bottom: 6px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+  }
+
+  h1:focus {
+    outline: none;
+  }
+
+  .bajada {
+    margin-top: 6px;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .controles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  /* N19 · Control segmentado */
+  .segmentado {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 4px;
+    min-width: 0;
+  }
+
+  .fechas {
+    position: relative;
+  }
+
+  .opcion-vista,
+  .opcion-fecha {
+    height: 38px;
+    border-radius: var(--radius-pill);
+    display: inline-flex;
+    align-items: center;
+    font-size: .86rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .opcion-vista {
+    padding: 0 14px;
+    gap: 6px;
+  }
+
+  .opcion-vista[aria-current='page'],
+  .opcion-vista[aria-current='page']:hover {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .opcion-fecha {
+    position: relative;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+
+  .opcion-fecha:has(input:checked) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  /* Radios nativos ocultos: el foco se dibuja en la píldora */
+  .opcion-fecha input,
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  .opcion-fecha:has(input:focus-visible),
+  .chip:has(input:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* H8: a 320 px el selector de fecha cabe sin desbordar */
+  @media (max-width: 359px) {
+    .opcion-fecha {
+      padding: 0 10px;
+    }
+  }
+
+  /* N18 · Chips de filtro */
+  .filtros {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* El relleno deja ver el anillo de foco dentro de la fila con scroll (como la Bienvenida) */
+  .chips {
+    position: relative;
+    border: 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-block: 6px;
+    margin-block: -6px;
+    padding-inline: 6px;
+    margin-inline: -6px;
+    min-width: 0;
+  }
+
+  .chip {
+    position: relative;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .con-conteo {
+    padding: 0 7px 0 15px;
+  }
+
+  .chip:has(input:checked) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .conteo {
+    position: relative;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    display: inline-grid;
+    place-items: center;
+    font-size: .78rem;
+    font-weight: 700;
+    background: var(--surface-sunken);
+    color: var(--ink);
+  }
+
+  .chip:has(input:checked) .conteo {
+    background: var(--yellow);
+  }
+
+  /* H61: pista de que hay más chips. Desde 768 px pasan a dos líneas; por debajo se desplazan
+     de lado con un desvanecido en el borde (mismo criterio que la Bienvenida, decisión 2.14) */
+  @media (min-width: 768px) {
+    .chips {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .chips {
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      padding-right: 30px;
+      margin-right: 0;
+    }
+  }
+
+  /* N17 · Aviso */
+  .aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+  }
+
+  .aviso :global(.aviso-icono) {
+    flex-shrink: 0;
+    color: var(--yellow);
+  }
+
+  .aviso-texto {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+
+  .aviso-enlace,
+  .aviso-enlace:hover {
+    color: var(--yellow);
+    font-weight: 700;
+  }
+
+  .aviso-enlace:focus-visible,
+  .aviso-cerrar:focus-visible {
+    outline-color: var(--yellow);
+  }
+
+  .aviso-cerrar {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--on-dark);
+    display: grid;
+    place-items: center;
+  }
+
+  @media (min-width: 768px) {
+    .aviso-cerrar {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  /* Línea de resultados: 16 px reales hasta la rejilla */
+  .resultados {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: -6px;
+  }
+
+  .conteo-resultados {
+    font-size: .9rem;
+    color: var(--muted);
+  }
+
+  .conteo-resultados:focus {
+    outline: none;
+  }
+
+  .conteo-resultados :global(b) {
+    color: var(--ink);
+  }
+
+  .resultados-derecha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+  }
+
+  .ejemplo {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .resultados-derecha :global(.ver-mapa) {
+    font-size: .88rem;
+  }
+
+  /* N67 · Estado vacío */
+  .vacio {
+    text-align: center;
+    padding: 40px 16px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-card);
+  }
+
+  .vacio p {
+    margin-bottom: 14px;
+    color: var(--muted);
+  }
+
+  .vacio-botones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .boton-contorno {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0 20px;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .boton-contorno.grande {
+    height: 48px;
+    padding: 0 24px;
+    font-size: .92rem;
+  }
+
+  .rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+    gap: 22px;
+  }
+
+  .mas {
+    display: flex;
+    justify-content: center;
+    margin-top: 6px;
+  }
+</style>
