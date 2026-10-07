@@ -1,0 +1,46 @@
+---
+// N61 · Botón "Seguir" ↔ "Siguiendo" (tamaño del Perfil: 44 px, 0 22px, .92rem).
+// El nombre accesible empieza por el texto visible y nombra a la persona (detalle fino de 8.2.8, H59).
+interface Props {
+  nombre: string; // nombre corto de la persona: "Seguir a Laura"
+}
+
+const { nombre } = Astro.props;
+---
+
+<button type="button" class="seguir" aria-pressed="false" data-seguir>
+  <span data-texto>Seguir</span><span class="solo-lectores"> a {nombre}</span>
+</button>
+
+<script>
+  // En el demo el estado vive en la página; en producción se guarda en el servidor con sesión (H12).
+  document.querySelectorAll<HTMLButtonElement>('[data-seguir]').forEach((boton) => {
+    const texto = boton.querySelector<HTMLElement>('[data-texto]');
+    boton.addEventListener('click', () => {
+      const activo = boton.getAttribute('aria-pressed') !== 'true';
+      boton.setAttribute('aria-pressed', String(activo));
+      if (texto) texto.textContent = activo ? 'Siguiendo' : 'Seguir';
+    });
+  });
+</script>
+
+<style>
+  .seguir {
+    /* Ancho mínimo de "Siguiendo" para que alternar no mueva la fila (detalle fino de 8.2.8) */
+    min-width: 118px;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 22px;
+    border: 1px solid var(--line-strong);
+    background: var(--ink);
+    color: var(--on-dark);
+    font-size: .92rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .seguir[aria-pressed='true'] {
+    background: var(--surface);
+    color: var(--ink);
+  }
+</style>

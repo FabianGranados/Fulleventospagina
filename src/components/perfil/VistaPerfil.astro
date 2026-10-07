@@ -1,0 +1,154 @@
+---
+// Pantalla Perfil (handoff 4.10). La usan /yo (Mi perfil) y /perfil/:usuario (perfil de otra persona).
+// Si alguien abre su propio /perfil/:usuario, se muestra Mi perfil (propuesta de 8.2.8, H46).
+import Base from '../../layouts/Base.astro';
+import EncabezadoApp from '../layout/EncabezadoApp.astro';
+import Pie from '../layout/Pie.astro';
+import CabeceraPerfil from './CabeceraPerfil.astro';
+import Pestanas from './Pestanas.astro';
+import TarjetaPlan from './TarjetaPlan.astro';
+import MosaicoRecuerdo from './MosaicoRecuerdo.astro';
+import TarjetaResena from './TarjetaResena.astro';
+import { usuaria, type Persona } from '../../data/personas';
+import { eventos } from '../../data/eventos';
+import { perfil as buscarPerfil, type EstadoPlan } from '../../data/perfil';
+
+interface Props {
+  persona: Persona;
+}
+
+const { persona } = Astro.props;
+const propio = persona.id === usuaria.id;
+const perfil = buscarPerfil(persona.id);
+const nombreCorto = persona.nombre.split(' ')[0];
+
+// Segunda persona en Mi perfil, tercera en el ajeno (H37, tabla "Estado de asistencia" de la sección 7)
+const textoEstado: Record<EstadoPlan, [string, string]> = {
+  va: ['Vas', 'Va'],
+  interesa: ['Te interesa', 'Le interesa'],
+  parche: ['En parche', 'En parche'],
+};
+
+const planes = (perfil?.planes ?? []).flatMap((p) => {
+  const evento = eventos.find((e) => e.id === p.evento);
+  return evento ? [{ evento, estado: textoEstado[p.estado][propio ? 0 : 1] }] : [];
+});
+
+const pestanas = [
+  { id: 'planes', texto: 'Próximos planes' },
+  { id: 'recuerdos', texto: 'Recuerdos' },
+  { id: 'resenas', texto: 'Reseñas' },
+];
+
+const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulleventos`;
+---
+
+<Base titulo={titulo} tamanoBase={15}>
+  <EncabezadoApp variante="detalle-perfil" />
+  <main id="contenido" class="contenedor perfil">
+    <CabeceraPerfil persona={persona} perfil={perfil} propio={propio} />
+
+    {
+      propio && (
+        // Accesos de Mi perfil que pide H46. Sus pantallas aún no están diseñadas (N70).
+        <nav class="cuenta" aria-label="Tu cuenta">
+          <a href="/mis-boletas">Mis boletas</a>
+          <a href="/guardados">Guardados</a>
+          <a href="/ajustes">Ajustes y privacidad</a>
+        </nav>
+      )
+    }
+
+    {
+      perfil ? (
+        <>
+          <Pestanas etiqueta="Contenido del perfil" pestanas={pestanas} />
+
+          <div role="tabpanel" id="panel-planes" aria-labelledby="pestana-planes" tabindex="0">
+            <h2 class="solo-lectores">Próximos planes</h2>
+            <div class="rejilla-planes">
+              {planes.map((p) => <TarjetaPlan evento={p.evento} estado={p.estado} />)}
+            </div>
+          </div>
+
+          <div role="tabpanel" id="panel-recuerdos" aria-labelledby="pestana-recuerdos" tabindex="0" hidden>
+            <h2 class="solo-lectores">Recuerdos</h2>
+            <div class="rejilla-recuerdos">
+              {perfil.recuerdos.map((r) => <MosaicoRecuerdo recuerdo={r} />)}
+            </div>
+          </div>
+
+          <div role="tabpanel" id="panel-resenas" aria-labelledby="pestana-resenas" tabindex="0" hidden>
+            <h2 class="solo-lectores">Reseñas</h2>
+            <div class="resenas">
+              {perfil.resenas.map((v) => <TarjetaResena resena={v} />)}
+            </div>
+          </div>
+        </>
+      ) : (
+        // Estado vacío neutro (texto propuesto en 4.10 y H30): no revela si hay planes ocultos
+        <p class="vacio">{nombreCorto} todavía no tiene planes a la vista</p>
+      )
+    }
+  </main>
+  <Pie />
+</Base>
+
+<style>
+  .perfil {
+    padding-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .cuenta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cuenta a {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 20px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    font-size: .92rem;
+    font-weight: 700;
+  }
+
+  [role='tabpanel']:focus-visible {
+    outline-offset: 4px;
+  }
+
+  .rejilla-planes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 20px;
+  }
+
+  .rejilla-recuerdos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .resenas {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 760px;
+  }
+
+  .vacio {
+    text-align: center;
+    padding: 40px 16px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-card);
+    color: var(--muted);
+  }
+</style>

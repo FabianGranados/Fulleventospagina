@@ -1,0 +1,13 @@
+---
+// Perfil de otra persona (H46): cada persona tiene su ruta. Datos de src/data/personas.ts (H62).
+import type { GetStaticPaths } from 'astro';
+import VistaPerfil from '../../components/perfil/VistaPerfil.astro';
+import { personas } from '../../data/personas';
+
+export const getStaticPaths = (() =>
+  personas.map((persona) => ({ params: { usuario: persona.id }, props: { persona } }))) satisfies GetStaticPaths;
+
+const { persona } = Astro.props;
+---
+
+<VistaPerfil persona={persona} />

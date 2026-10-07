@@ -1,0 +1,118 @@
+---
+// N64 · Tarjeta de plan con estado (variante "perfil" de la tarjeta de evento): sin guardar,
+// amigos ni compra. El título es un h3 con enlace al evento real (H36, H59).
+import type { Evento } from '../../data/eventos';
+import { nombreCiudad } from '../../data/ciudades';
+import { placaFecha, rutaEvento } from '../../lib/formato';
+
+interface Props {
+  evento: Evento;
+  estado: string;
+}
+
+const { evento: e, estado } = Astro.props;
+const { dia, mes } = placaFecha(e.fecha);
+const fechaLarga = new Date(`${e.fecha}T12:00:00-05:00`).toLocaleDateString('es-CO', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'America/Bogota',
+});
+---
+
+<article class="plan">
+  <!-- Foto de marcador, decorativa. La fecha y el estado van como hermanos, no dentro de la imagen (8.2.8) -->
+  <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}></div>
+  <time class="fecha" datetime={e.fecha}>
+    <span aria-hidden="true"><b>{dia}</b><span>{mes}</span></span>
+    <span class="solo-lectores">{fechaLarga}</span>
+  </time>
+  <span class="estado">{estado}</span>
+  <div class="cuerpo">
+    <span class="categoria">{e.categoria}</span>
+    <h3><a href={rutaEvento(e.ciudad, e.titulo)}>{e.titulo}</a></h3>
+    <span class="lugar">{e.lugar} · {nombreCiudad(e.ciudad)}</span>
+  </div>
+</article>
+
+<style>
+  .plan {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .imagen {
+    aspect-ratio: 4 / 3;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 55%), var(--bg2);
+  }
+
+  /* Placa de fecha grande (canónica de la sección 7, igual que TarjetaEvento) */
+  .fecha {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    text-align: center;
+    line-height: 1;
+    min-width: 46px;
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 900;
+  }
+
+  .fecha span span {
+    font-size: .66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .estado {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .cuerpo {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .categoria {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .lugar {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+</style>
