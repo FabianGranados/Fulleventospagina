@@ -1,0 +1,119 @@
+---
+// Cabecera de la página del mapa (antetítulo, h1, resumen) + selector de fecha (N19, variante Fecha).
+// La fecha es de respuesta única: radios nativos con fieldset/legend (H59) que sí filtran (H39)
+// y pasan a otra línea si no caben (H8).
+import Etiqueta from '../ui/Etiqueta.astro';
+import { fechasMapa } from '../../data/mapa';
+import { eventos } from '../../data/eventos';
+import { planes, ciudadesTexto } from '../../lib/formato';
+
+const activas = new Set(eventos.map((e) => e.ciudad)).size;
+const finde = fechasMapa.find((f) => f.id === 'finde')!;
+const intro = `${planes(eventos.length)} en ${ciudadesTexto(activas)}, ${finde.rango}. Toca un punto del mapa para ver qué hay en cada ciudad.`;
+---
+
+<div class="cabecera">
+  <div class="texto">
+    <p class="antetitulo">Mapa de eventos <Etiqueta tamano="sm">Nuevo · Todo el país</Etiqueta></p>
+    <h1>Todo lo que pasa en Colombia <span data-frase>{finde.frase}</span></h1>
+    <p class="intro" data-intro>{intro}</p>
+  </div>
+  <fieldset class="fecha" data-fecha>
+    <legend class="solo-lectores">Fecha</legend>
+    {
+      fechasMapa.map((f) => (
+        <label class="opcion">
+          <input type="radio" name="fecha" value={f.id} checked={f.id === 'finde'} class="solo-lectores" />
+          {f.texto}
+        </label>
+      ))
+    }
+  </fieldset>
+</div>
+
+<style>
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .texto {
+    flex: 1 1 520px;
+    min-width: 0;
+  }
+
+  .antetitulo {
+    margin: 0 0 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .antetitulo :global(.etiqueta) {
+    letter-spacing: .04em;
+  }
+
+  h1 {
+    max-width: 21ch;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+  }
+
+  .intro {
+    margin: 8px 0 0;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .fecha {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 4px;
+  }
+
+  .opcion {
+    position: relative;
+    height: 38px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    font-size: .86rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .opcion:has(input:checked) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .opcion:has(input:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 359px) {
+    .opcion {
+      padding: 0 12px;
+    }
+  }
+</style>

@@ -1,0 +1,125 @@
+---
+// N23 · Ranking "Ciudades con más planes" (variante ranking de N18: 44 px, texto 700, contador siempre amarillo).
+// El script de la página reordena y oculta los chips según los filtros.
+import { ciudadesMapa } from '../../data/mapa';
+import { conteoCiudad } from '../../data/eventos';
+
+// Mayor a menor; los empates conservan el orden de las ciudades (orden estable)
+const ranking = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).sort((a, b) => conteoCiudad(b.id) - conteoCiudad(a.id));
+---
+
+<section class="ranking" aria-labelledby="mapa-ciudades" data-ranking>
+  <div class="cabecera">
+    <h2 id="mapa-ciudades">Ciudades con más planes</h2>
+    <span class="pista">Toca una ciudad para verla en el mapa</span>
+  </div>
+  <div class="fila" role="group" aria-label="Ciudades" data-ranking-fila>
+    {
+      ranking.map((c) => (
+        <button type="button" class="chip" aria-pressed="false" data-ranking-ciudad={c.id}>
+          {c.nombre}{' '}
+          <span class="conteo">
+            <span data-ranking-conteo>{conteoCiudad(c.id)}</span>
+            <span class="solo-lectores" data-ranking-unidad>{conteoCiudad(c.id) === 1 ? ' plan' : ' planes'}</span>
+          </span>
+        </button>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .ranking {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 14px;
+  }
+
+  .ranking[hidden] {
+    display: none;
+  }
+
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px 16px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .pista {
+    font-size: .86rem;
+    color: var(--muted);
+  }
+
+  /* position: relative contiene el texto oculto de los contadores (8.1 #4). El relleno deja ver el
+     anillo de foco dentro de la fila con scroll; el margen negativo conserva el espaciado */
+  .fila {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-block: 6px;
+    margin-top: -6px;
+    scroll-padding-inline: 8px 40px;
+  }
+
+  .chip {
+    flex-shrink: 0;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 7px 0 16px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chip[aria-pressed='true'] {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .conteo {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    background: var(--yellow);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    font-size: .8rem;
+  }
+
+  /* Ninguna ciudad queda escondida sin pista (H61): dos líneas desde 768 px; en celular,
+     desplazamiento de lado con un desvanecido en el borde (mismo patrón que la Bienvenida) */
+  @media (min-width: 768px) {
+    .fila {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .fila {
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      padding-right: 24px;
+    }
+  }
+</style>
