@@ -118,7 +118,8 @@ export const historias: Historia[] = [
   { iniciales: 'CR', nombre: 'Caro', ciudad: 'cali', color: 'c3', vista: false },
   { iniciales: 'SB', nombre: 'Sebas', ciudad: 'santamarta', color: 'c6', vista: true },
   { iniciales: 'MJ', nombre: 'Majo', ciudad: 'pereira', color: 'c4', vista: true },
-  { iniciales: 'DR', nombre: 'Dani', ciudad: 'leticia', color: 'c2', vista: true },
+  // Un solo nombre por persona (H62): el "Dani" (DR) del prototipo es Daniel Torres (DT) de personas.ts
+  { iniciales: 'DT', nombre: 'Daniel', ciudad: 'leticia', color: 'c6', vista: true },
 ];
 
 // "Tu semana": los planes con "Voy" o boleta de la usuaria (asistencia.ts), por fecha. El detalle sale

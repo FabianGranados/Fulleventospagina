@@ -277,10 +277,12 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       // Título y línea de resultados (H39: dicen la fecha elegida)
       titulo.textContent = `${f.titulo} en ${lugar()}`;
       const nCiudades = new Set(visibles.map((t) => t.dataset.ciudad)).size;
-      const donde = estado.ciudad === 'all' ? `en ${ciudadesTexto(nCiudades)}` : `en ${nombres[estado.ciudad]}`;
+      // Sin resultados no se cuentan "0 planes en 0 ciudades" (B4): "Sin planes … en Colombia", como el Mapa
+      const donde =
+        estado.ciudad !== 'all' ? `en ${nombres[estado.ciudad]}` : visibles.length ? `en ${ciudadesTexto(nCiudades)}` : `en ${lugar()}`;
       resultados.innerHTML = '';
       const negrita = document.createElement('b');
-      negrita.textContent = planes(visibles.length);
+      negrita.textContent = visibles.length ? planes(visibles.length) : 'Sin planes';
       resultados.append(negrita, `${busqueda()} ${donde} ${f.periodo}`);
 
       // Estado vacío (N67); con otra fecha, uno honesto que invita al finde (H39)

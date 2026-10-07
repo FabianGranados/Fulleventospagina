@@ -159,7 +159,8 @@ export const iniciar = () => {
   // ---------- Navegación entre conversaciones (la conversación viaja en la dirección, H42) ----------
 
   const tituloPagina = (c: Conversacion, vista: 'lista' | 'chat') =>
-    vista === 'chat' && c.slug ? `Fulleventos · Mensajes · ${E.nombreConv(c)}` : 'Fulleventos · Mensajes';
+    // Mismo formato que el resto del sitio: "{Título} · Fulleventos" (B4)
+    vista === 'chat' && c.slug ? `${E.nombreConv(c)} · Mensajes · Fulleventos` : 'Mensajes · Fulleventos';
 
   const guardarHistoria = (modo: 'push' | 'replace', vista: 'lista' | 'chat', desdeLista = false) => {
     const c = conversacion();
