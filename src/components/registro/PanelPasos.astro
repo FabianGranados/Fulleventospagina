@@ -1,0 +1,131 @@
+---
+// N59 · Panel lateral de progreso del registro: etiqueta "Paso N de 3", titular y lista de pasos.
+// El script de la página actualiza la etiqueta y los estados (data-estado) al cambiar de paso.
+import Etiqueta from '../ui/Etiqueta.astro';
+import Titular from '../ui/Titular.astro';
+import Icono from '../ui/Icono.astro';
+import { pasos } from '../../data/registro';
+---
+
+{/* Es un div y no un <aside>: un complementario dentro de <main> no es de primer nivel (axe) */}
+<div class="panel">
+  <Etiqueta tamano="md" class="etiqueta-paso">Paso <span data-numero-paso>1</span> de {pasos.length}</Etiqueta>
+  <Titular
+    class="titular-registro"
+    tamano="clamp(2rem, 4vw, 3.2rem)"
+    lineas={[{ texto: 'Tu próximo' }, { texto: 'plan empieza', sangria: '.8em' }, { texto: 'aquí' }]}
+  />
+  <ol class="pasos">
+    {
+      pasos.map((etiqueta, i) => (
+        <li data-paso-lista={i + 1} data-estado={i === 0 ? 'actual' : 'pendiente'} aria-current={i === 0 ? 'step' : undefined}>
+          <span class="punto" aria-hidden="true">
+            <span class="numero">{i + 1}</span>
+            <Icono nombre="palomita" tamano={14} grosor={3} class="hecho" />
+          </span>
+          <span class="solo-lectores estado-hecho">Completado: </span>
+          {etiqueta}
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  .panel {
+    flex: 1 1 340px;
+    min-height: 420px;
+    border-radius: var(--radius-2xl);
+    padding: clamp(28px, 4vw, 48px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 28px;
+    color: var(--on-dark);
+    /* Variante de Registro del fondo .hero (3 manchas; handoff 4.4, sección 2) */
+    background:
+      radial-gradient(circle at 74% 30%, rgba(214, 140, 70, .55) 0, transparent 26%),
+      radial-gradient(circle at 80% 85%, rgba(190, 70, 80, .45) 0, transparent 30%),
+      radial-gradient(ellipse at 8% 40%, rgba(70, 30, 80, .55) 0, transparent 45%),
+      var(--hero);
+  }
+
+  .panel :global(.etiqueta-paso) {
+    align-self: flex-start;
+    font-size: .9rem;
+  }
+
+  .pasos {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .punto {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .85rem;
+    color: var(--ink);
+  }
+
+  /* Pendiente: número en blanco al 65 % con borde claro (H52; antes era tinta sobre transparente, 1,03:1) */
+  [data-estado='pendiente'] {
+    color: rgba(255, 255, 255, .65);
+  }
+
+  [data-estado='pendiente'] .punto {
+    color: rgba(255, 255, 255, .65);
+    border: 1px solid rgba(255, 255, 255, .65);
+  }
+
+  [data-estado='actual'] .punto {
+    background: var(--yellow);
+  }
+
+  /* Hecho: palomita SVG en lugar del carácter ✓ (detalle fino 23) */
+  [data-estado='hecho'] .punto {
+    background: var(--surface);
+  }
+
+  .punto :global(.hecho),
+  [data-estado='hecho'] .numero,
+  li:not([data-estado='hecho']) .estado-hecho {
+    display: none;
+  }
+
+  [data-estado='hecho'] .punto :global(.hecho) {
+    display: block;
+  }
+
+  /* En celular el bloque decorativo se reduce a una franja con "Paso N de 3" (H45) */
+  @media (max-width: 767px) {
+    .panel {
+      min-height: 0;
+      padding: 24px 28px;
+      /* Mismo radio que el héroe de Bienvenida en celular (decisión 2.13) */
+      border-radius: 22px;
+    }
+
+    .panel :global(.titular-registro),
+    .pasos {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+</style>

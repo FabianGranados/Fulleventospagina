@@ -1,0 +1,465 @@
+---
+// N59 · Tarjeta del formulario de registro: barra de progreso y los 3 pasos ("Tu cuenta", "Tus gustos",
+// "Tu gente"). Los pasos se ocultan con `hidden` en vez de desmontarse, así lo escrito se conserva al
+// volver (H45). La lógica de pasos, validación y anuncios está en el script de src/pages/registro.astro.
+import Campo from './Campo.astro';
+import FilaPersona from './FilaPersona.astro';
+import Icono from '../ui/Icono.astro';
+import { ciudades } from '../../data/ciudades';
+import { gustos, MINIMO_GUSTOS, sugerencias } from '../../data/registro';
+
+// Sin permiso de contactos (todavía no diseñado) no se sugiere a nadie "porque está en tus contactos" (H28)
+const gente = sugerencias.filter((s) => !s.requiereContactos);
+---
+
+<section aria-label="Formulario de registro" class="tarjeta">
+  <div
+    class="riel"
+    role="progressbar"
+    aria-label="Progreso del registro"
+    aria-valuemin="1"
+    aria-valuemax="3"
+    aria-valuenow="1"
+    aria-valuetext="Paso 1 de 3"
+    data-progreso
+  >
+    <span class="relleno" style="width: 33%"></span>
+  </div>
+
+  {/* Paso 1 · Tu cuenta */}
+  <form class="paso" data-paso="1" novalidate aria-labelledby="paso-1-titulo">
+    <div>
+      <h2 id="paso-1-titulo" tabindex="-1">Crea tu cuenta</h2>
+      <p class="bajada">Gratis. Solo tarda un minuto.</p>
+    </div>
+
+    {/* Resumen de errores al intentar continuar (H23) */}
+    <div class="resumen" role="alert" tabindex="-1" data-resumen hidden>
+      <p class="resumen-titulo"><Icono nombre="informacion" tamano={18} />Completa tus datos para continuar.</p>
+      <ul data-lista-errores></ul>
+    </div>
+
+    {/* Aviso legal antes de los dos botones, y autorización de datos aparte de los términos (H28, H12) */}
+    <div class="legal">
+      <p>
+        Al continuar aceptas los <button type="button" class="enlace-doc" data-abrir-modal="doc-terminos">[Términos]</button>.
+      </p>
+      <div class="casilla">
+        <input type="checkbox" id="autorizacion-datos" name="autorizacion-datos" required />
+        <label for="autorizacion-datos">Autorizo el tratamiento de mis datos</label>
+        <button type="button" class="enlace-doc" data-abrir-modal="doc-datos">Leer política</button>
+      </div>
+      <p id="autorizacion-datos-error" class="error" hidden>
+        <Icono nombre="informacion" tamano={16} /><span data-texto-error></span>
+      </p>
+    </div>
+
+    {/* Simulado: no abre OAuth (H12). Google entrega nombre y correo; ciudad, fecha y autorización se piden igual */}
+    <button type="button" class="boton contorno" data-google>
+      <Icono nombre="google" grosor={2.2} />Continuar con Google
+    </button>
+
+    <div class="separador"><span></span>o con tus datos<span></span></div>
+
+    <Campo id="nombre" etiqueta="Nombre" obligatorio placeholder="Cómo te llamas" autocomplete="name" />
+    <Campo
+      id="contacto"
+      etiqueta="Celular o correo"
+      obligatorio
+      placeholder="300 123 4567 o tu@correo.com"
+      autocomplete="username"
+    />
+    <Campo id="nacimiento" etiqueta="Fecha de nacimiento" obligatorio tipo="date" autocomplete="bday" />
+    <Campo
+      id="ciudad"
+      etiqueta="Ciudad"
+      obligatorio
+      tipo="select"
+      autocomplete="address-level2"
+      opcionVacia="Elige tu ciudad"
+      opciones={ciudades.map((c) => ({ valor: c.id, texto: c.nombre }))}
+    />
+    <Campo id="barrio" etiqueta="Barrio o localidad" placeholder="Ej. Chapinero" />
+
+    <button type="submit" class="boton primario">Continuar</button>
+  </form>
+
+  {/* Paso 2 · Tus gustos */}
+  <div class="paso" data-paso="2" hidden>
+    <div>
+      <h2 id="paso-2-titulo" tabindex="-1">¿Qué planes te gustan?</h2>
+      <p class="bajada" id="gustos-ayuda">Elige al menos {MINIMO_GUSTOS}. Así armamos tu agenda.</p>
+    </div>
+    <div role="group" aria-label="Gustos" class="gustos">
+      {
+        gustos.map((g) => (
+          <button type="button" class="chip" aria-pressed="false" data-gusto={g.id}>
+            {g.etiqueta}
+          </button>
+        ))
+      }
+    </div>
+    <p id="gustos-error" class="error" hidden>
+      <Icono nombre="informacion" tamano={16} /><span data-texto-error></span>
+    </p>
+    <div class="acciones">
+      <button type="button" class="atras" data-atras>Atrás</button>
+      <span class="contador" aria-live="polite" data-contador>0 elegidos</span>
+      <button
+        type="button"
+        class="boton primario corto"
+        aria-disabled="true"
+        aria-describedby="gustos-ayuda"
+        data-continuar-gustos
+      >
+        Continuar
+      </button>
+    </div>
+  </div>
+
+  {/* Paso 3 · Tu gente */}
+  <div class="paso paso-gente" data-paso="3" hidden>
+    <div>
+      <h2 id="paso-3-titulo" tabindex="-1">Encuentra a tu gente</h2>
+      <p class="bajada">Sigue a amigos y a personas con tus gustos para ver a qué van.</p>
+    </div>
+    {/* Sin conectar: necesita la pantalla de permiso de contactos, que no está diseñada (H38, H28) */}
+    <button type="button" class="contactos" aria-disabled="true">
+      <Icono nombre="celular" />Buscar amigos en mis contactos
+      <span class="insignia">Próximamente</span>
+    </button>
+    <div class="gente">
+      {gente.map((s) => <FilaPersona sugerencia={s} />)}
+    </div>
+    <div class="acciones">
+      <button type="button" class="atras" data-atras>Atrás</button>
+      <a href="/inicio" class="boton primario corto con-icono">
+        Ir a mi feed <Icono nombre="flecha" tamano={16} grosor={2.4} />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tarjeta {
+    flex: 1.3 1 420px;
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-2xl);
+    padding: clamp(24px, 4vw, 48px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .riel {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+  }
+
+  .relleno {
+    display: block;
+    height: 100%;
+    background: var(--brand);
+    border-radius: 3px;
+  }
+
+  .paso {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .paso[hidden] {
+    display: none;
+  }
+
+  .paso-gente {
+    gap: 14px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.9rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  /* El foco llega al título por programa al cambiar de paso (H7); no necesita anillo */
+  h2:focus {
+    outline: none;
+  }
+
+  .bajada {
+    margin-top: 6px;
+    color: var(--muted);
+  }
+
+  /* Botones de 52 px (N69) */
+  .boton {
+    height: 52px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .contorno {
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .95rem;
+  }
+
+  .primario,
+  .primario:hover {
+    border: 0;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-size: 1rem;
+  }
+
+  .corto {
+    padding: 0 28px;
+  }
+
+  .con-icono {
+    gap: 8px;
+  }
+
+  /* Deshabilitado canónico (sección 3 y N69; H7, H52): sigue enfocable con aria-disabled */
+  .primario[aria-disabled='true'] {
+    background: var(--line);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .separador {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: .85rem;
+  }
+
+  .separador span {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* Resumen de errores (H23) */
+  .resumen {
+    border: 2px solid var(--brand);
+    border-radius: var(--radius-field);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .resumen[hidden] {
+    display: none;
+  }
+
+  .resumen:focus {
+    outline: none;
+  }
+
+  .resumen:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .resumen-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--brand);
+  }
+
+  .resumen-titulo :global(svg) {
+    flex-shrink: 0;
+  }
+
+  .resumen ul {
+    padding-left: 26px;
+    font-size: .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Objetivo de al menos 24 px por enlace (WCAG 2.5.8) */
+  .resumen :global(a),
+  .resumen :global(a:hover) {
+    display: inline-block;
+    min-height: 24px;
+    padding-block: 2px;
+    line-height: 1.4;
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Aviso legal (.78rem como el texto del prototipo) y casilla nativa (N43) */
+  .legal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .casilla {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: .86rem;
+    color: var(--ink);
+  }
+
+  .casilla input {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+
+  .casilla input[aria-invalid='true'] {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  .casilla label {
+    cursor: pointer;
+  }
+
+  .enlace-doc {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font-size: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .enlace-doc:hover {
+    color: var(--brand);
+  }
+
+  .error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: .84rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--brand);
+  }
+
+  .error[hidden] {
+    display: none;
+  }
+
+  .error :global(svg) {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Paso 2: chips de gustos, variante grande (N60) */
+  .gustos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .chip {
+    height: 46px;
+    border-radius: var(--radius-pill);
+    padding: 0 18px;
+    font-size: .95rem;
+    font-weight: 500;
+    border: 1px solid var(--line-input);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .acciones {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* "Atrás": 13,33 px como en las capturas (detalle fino 5) */
+  .atras {
+    height: 48px;
+    border: 0;
+    background: transparent;
+    padding: 0 8px;
+    font-size: .8333rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .contador {
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  /* Paso 3 */
+  .contactos {
+    min-height: 48px;
+    padding: 6px 12px;
+    flex-wrap: wrap;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--disabled-fill);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: .8333rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: not-allowed;
+  }
+
+  .insignia {
+    background: var(--yellow);
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+    padding: 1px 7px;
+    font-size: .68rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  /* Objetivos táctiles de 44 px en celular */
+  @media (max-width: 767px) {
+    .casilla .enlace-doc {
+      min-height: 44px;
+    }
+  }
+</style>

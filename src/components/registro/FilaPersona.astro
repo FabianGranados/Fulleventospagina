@@ -1,0 +1,104 @@
+---
+// N61 · Fila de persona con "Seguir", variante de Registro (avatar de 44 px sin enlace, borde inferior).
+// "Seguir" (tinta) ↔ "Siguiendo" (contorno) con aria-pressed; el script de la página alterna el estado.
+import Avatar from '../ui/Avatar.astro';
+import type { Sugerencia } from '../../data/registro';
+
+interface Props {
+  sugerencia: Sugerencia;
+}
+
+const { sugerencia: s } = Astro.props;
+---
+
+<div class="fila">
+  <span class="avatar-fila" aria-hidden="true">
+    {
+      s.organizador ? (
+        <span class="organizador">{s.iniciales}</span>
+      ) : (
+        <Avatar color={s.color ?? 'c1'} tamano={44} iniciales={s.iniciales} />
+      )
+    }
+  </span>
+  <div class="texto">
+    <b>{s.nombre}</b>
+    <span class="motivo">{s.motivo}</span>
+  </div>
+  <button type="button" class="seguir" aria-pressed="false" data-seguir={s.id}>
+    <span data-texto-seguir>Seguir</span><span class="solo-lectores"> a {s.nombre}</span>
+  </button>
+</div>
+
+<style>
+  .fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .avatar-fila {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .avatar-fila :global(.avatar) {
+    font-size: .8rem;
+  }
+
+  /* Organizador: tinta con letras amarillas en Archivo 900 y radio de 14 px (sección 3; H52) */
+  .organizador {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    background: var(--ink);
+    color: var(--yellow);
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: .8rem;
+  }
+
+  .texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  b {
+    font-size: .95rem;
+  }
+
+  .motivo {
+    display: block;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .seguir {
+    flex-shrink: 0;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .84rem;
+    font-weight: 700;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .seguir[aria-pressed='true'] {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  /* Objetivo táctil de 44 px en celular */
+  @media (max-width: 767px) {
+    .seguir {
+      height: 44px;
+    }
+  }
+</style>

@@ -1,0 +1,234 @@
+---
+// Registro en 3 pasos (handoff 4.4, 5.2.2, 6.2.2 y 8.2.2, con las correcciones obligatorias de la auditoría).
+// No hay backend: la cuenta no se crea de verdad. Google y la verificación del celular son simulados (H12).
+import Base from '../layouts/Base.astro';
+import Pie from '../components/layout/Pie.astro';
+import Modal from '../components/ui/Modal.astro';
+import EncabezadoRegistro from '../components/registro/EncabezadoRegistro.astro';
+import PanelPasos from '../components/registro/PanelPasos.astro';
+import TarjetaRegistro from '../components/registro/TarjetaRegistro.astro';
+---
+
+<Base titulo="Fulleventos · Crear cuenta">
+  <EncabezadoRegistro />
+  <main id="contenido" class="contenedor registro">
+    <PanelPasos />
+    <TarjetaRegistro />
+    {/* Región viva permanente para anunciar el cambio de paso (H49) */}
+    <p class="solo-lectores" role="status" data-anuncio></p>
+  </main>
+
+  {/* Los documentos se abren en un panel sin perder lo ya llenado (H28). Su texto depende de P8. */}
+  <Modal id="doc-terminos" titulo="[Términos]">
+    <p class="documento">[TEXTO DE LOS TÉRMINOS]</p>
+  </Modal>
+  <Modal id="doc-datos" titulo="[Política de tratamiento de datos]">
+    <p class="documento">[TEXTO DE LA POLÍTICA DE TRATAMIENTO DE DATOS]</p>
+  </Modal>
+
+  <Pie />
+</Base>
+
+<style>
+  .registro {
+    padding-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .documento {
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import { pasos, MINIMO_GUSTOS } from '../data/registro';
+
+  type Regla = () => string;
+
+  const $ = <T extends Element>(sel: string, raiz: ParentNode = document) => raiz.querySelector<T>(sel)!;
+  const $$ = <T extends Element>(sel: string, raiz: ParentNode = document) => [...raiz.querySelectorAll<T>(sel)];
+
+  const bloques = $$<HTMLElement>('[data-paso]');
+  const anuncio = $<HTMLElement>('[data-anuncio]');
+  const progreso = $<HTMLElement>('[data-progreso]');
+  const numeroPaso = $<HTMLElement>('[data-numero-paso]');
+  const itemsPasos = $$<HTMLLIElement>('[data-paso-lista]');
+  const total = pasos.length;
+
+  let paso = 1;
+
+  // ---------- Cambio de paso: foco al título y anuncio (H7, H49) ----------
+  const irAPaso = (n: number) => {
+    paso = n;
+    bloques.forEach((b) => (b.hidden = Number(b.dataset.paso) !== n));
+    numeroPaso.textContent = String(n);
+    const pct = Math.round((n / total) * 100);
+    $<HTMLElement>('.relleno', progreso).style.width = `${pct}%`;
+    progreso.setAttribute('aria-valuenow', String(n));
+    progreso.setAttribute('aria-valuetext', `Paso ${n} de ${total}`);
+    itemsPasos.forEach((li) => {
+      const m = Number(li.dataset.pasoLista);
+      li.dataset.estado = m < n ? 'hecho' : m === n ? 'actual' : 'pendiente';
+      if (m === n) li.setAttribute('aria-current', 'step');
+      else li.removeAttribute('aria-current');
+    });
+    const titulo = $<HTMLElement>(`#paso-${n}-titulo`);
+    titulo.focus({ preventScroll: true });
+    const tarjeta = titulo.closest('section')!;
+    if (tarjeta.getBoundingClientRect().top < 0) tarjeta.scrollIntoView({ block: 'start' });
+    anuncio.textContent = `Paso ${n} de ${total}: ${pasos[n - 1]}`;
+  };
+
+  $$<HTMLButtonElement>('[data-atras]').forEach((b) => b.addEventListener('click', () => irAPaso(paso - 1)));
+
+  // ---------- Paso 1: validación con errores por campo y resumen (H23, H45, H10, H28) ----------
+  const form = $<HTMLFormElement>('form[data-paso="1"]');
+  const resumen = $<HTMLElement>('[data-resumen]');
+  const listaErrores = $<HTMLUListElement>('[data-lista-errores]');
+  const valor = (id: string) => $<HTMLInputElement>(`#${id}`).value.trim();
+
+  const validarContacto: Regla = () => {
+    const v = valor('contacto');
+    if (!v) return 'Escribe tu celular o tu correo.';
+    if (v.includes('@') || /[a-z]/i.test(v)) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? '' : 'Revisa el correo: debe verse como tu@correo.com.';
+    }
+    const digitos = v.replace(/[\s().-]/g, '').replace(/^\+?57(?=3\d{9}$)/, '');
+    return /^3\d{9}$/.test(digitos) ? '' : 'El celular debe tener 10 dígitos y empezar por 3.';
+  };
+
+  // La edad mínima depende de la política de edad (P7): aquí solo se pide una fecha válida (H10)
+  const validarNacimiento: Regla = () => {
+    const v = valor('nacimiento');
+    if (!v) return 'Escribe tu fecha de nacimiento.';
+    const fecha = new Date(`${v}T12:00:00`);
+    if (Number.isNaN(fecha.getTime()) || fecha.getFullYear() < 1900) return 'Revisa tu fecha de nacimiento.';
+    if (fecha > new Date()) return 'La fecha de nacimiento no puede ser en el futuro.';
+    return '';
+  };
+
+  const reglas: Record<string, Regla> = {
+    'autorizacion-datos': () =>
+      $<HTMLInputElement>('#autorizacion-datos').checked ? '' : 'Marca la autorización de datos para continuar.',
+    nombre: () => (valor('nombre') ? '' : 'Escribe tu nombre.'),
+    contacto: validarContacto,
+    nacimiento: validarNacimiento,
+    ciudad: () => (valor('ciudad') ? '' : 'Elige tu ciudad.'),
+  };
+
+  // Con Google (simulado) no hace falta escribir nombre ni correo
+  const camposGoogle = ['autorizacion-datos', 'nacimiento', 'ciudad'];
+  const camposTodos = Object.keys(reglas);
+  let validados: string[] = [];
+
+  const mostrarError = (id: string, mensaje: string) => {
+    const control = $<HTMLInputElement>(`#${id}`);
+    const caja = $<HTMLElement>(`#${id}-error`);
+    $<HTMLElement>('[data-texto-error]', caja).textContent = mensaje;
+    caja.hidden = !mensaje;
+    if (mensaje) {
+      control.setAttribute('aria-invalid', 'true');
+      control.setAttribute('aria-describedby', `${id}-error`);
+    } else {
+      control.removeAttribute('aria-invalid');
+      control.removeAttribute('aria-describedby');
+    }
+  };
+
+  const validar = (ids: string[]) => {
+    const errores = ids.map((id) => ({ id, mensaje: reglas[id]() }));
+    errores.forEach(({ id, mensaje }) => mostrarError(id, mensaje));
+    const conError = errores.filter((e) => e.mensaje);
+    listaErrores.replaceChildren(
+      ...conError.map(({ id, mensaje }) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `#${id}`;
+        a.textContent = mensaje;
+        li.append(a);
+        return li;
+      }),
+    );
+    resumen.hidden = conError.length === 0;
+    return conError.length === 0;
+  };
+
+  const intentar = (ids: string[]) => {
+    validados = ids;
+    if (validar(ids)) {
+      irAPaso(2);
+    } else {
+      resumen.focus();
+    }
+  };
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    intentar(camposTodos);
+  });
+  $<HTMLButtonElement>('[data-google]').addEventListener('click', () => intentar(camposGoogle));
+
+  // Después del primer intento, los errores se actualizan mientras la persona corrige
+  form.addEventListener('input', (ev) => {
+    const id = (ev.target as HTMLElement).id;
+    if (validados.includes(id)) validar(validados);
+  });
+  form.addEventListener('change', (ev) => {
+    const id = (ev.target as HTMLElement).id;
+    if (validados.includes(id)) validar(validados);
+  });
+
+  // Los enlaces del resumen llevan el foco al campo
+  listaErrores.addEventListener('click', (ev) => {
+    const a = (ev.target as HTMLElement).closest('a');
+    if (!a) return;
+    ev.preventDefault();
+    $<HTMLElement>(a.getAttribute('href')!).focus();
+  });
+
+  // ---------- Paso 2: gustos (mínimo 3, plural correcto, aria-disabled) ----------
+  const chips = $$<HTMLButtonElement>('[data-gusto]');
+  const contador = $<HTMLElement>('[data-contador]');
+  const continuarGustos = $<HTMLButtonElement>('[data-continuar-gustos]');
+  const errorGustos = $<HTMLElement>('#gustos-error');
+  const elegidos = () => chips.filter((c) => c.getAttribute('aria-pressed') === 'true').length;
+
+  const actualizarGustos = () => {
+    const n = elegidos();
+    contador.textContent = `${n} ${n === 1 ? 'elegido' : 'elegidos'}`;
+    const puede = n >= MINIMO_GUSTOS;
+    continuarGustos.setAttribute('aria-disabled', String(!puede));
+    if (puede) errorGustos.hidden = true;
+  };
+
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      chip.setAttribute('aria-pressed', String(chip.getAttribute('aria-pressed') !== 'true'));
+      actualizarGustos();
+    }),
+  );
+
+  continuarGustos.addEventListener('click', () => {
+    const faltan = MINIMO_GUSTOS - elegidos();
+    if (faltan > 0) {
+      $<HTMLElement>('[data-texto-error]', errorGustos).textContent =
+        `Elige al menos ${MINIMO_GUSTOS} gustos para continuar.`;
+      errorGustos.hidden = false;
+      anuncio.textContent = `Elige al menos ${MINIMO_GUSTOS} gustos para continuar.`;
+      return;
+    }
+    irAPaso(3);
+  });
+
+  // ---------- Paso 3: seguir y dejar de seguir ----------
+  $$<HTMLButtonElement>('[data-seguir]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const sigue = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(sigue));
+      $<HTMLElement>('[data-texto-seguir]', b).textContent = sigue ? 'Siguiendo' : 'Seguir';
+    }),
+  );
+</script>
