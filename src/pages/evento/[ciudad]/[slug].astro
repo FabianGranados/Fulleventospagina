@@ -140,6 +140,9 @@ const datosCompra = {
   <div class:list={['pagina-evento', { 'con-barra': vende }]}>
     <EncabezadoApp variante="detalle" />
     <main id="contenido" class="contenedor principal">
+      <!-- Los datos del evento todavía tienen marcadores [ASÍ] del prototipo (P8): se rotulan como ejemplo,
+           con la misma nota de la Bienvenida y la Agenda (M6) -->
+      <p class="ejemplo">Contenido de ejemplo</p>
       <HeroeEvento m={m} />
       <DatosClave m={m} />
 
@@ -248,6 +251,13 @@ const datosCompra = {
     display: flex;
     flex-direction: column;
     gap: 24px;
+  }
+
+  .ejemplo {
+    font-size: .78rem;
+    color: var(--muted);
+    text-align: right;
+    margin-bottom: -16px;
   }
 
   .columnas {
