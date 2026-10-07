@@ -205,6 +205,7 @@ Aplican a toda la implementación.
 | P9 | **Insignia de organizador verificado** | Qué se verifica y cómo | Definir el criterio (auditoría H48). | Fundador |
 | P10 | **Foto real del héroe de Bienvenida** | Foto propia con derechos de uso / foto de banco con licencia | Elegir una foto de un evento en Colombia con derechos de uso y definir la capa oscura que garantice el contraste del texto blanco (detalle fino 18 de Bienvenida). Mientras tanto se usa el fondo degradado (decisión 2.13). | Fundador + diseño |
 | P11 | **Datos de la prueba social del héroe** | Qué cuenta como "tener plan" (marcar "Voy", comprar boleta, estar en un parche) y de dónde salen las cifras | Definir la fuente real de "[N] personas" y "[N] ciudades" este finde. El componente ya está listo y se muestra en cuanto reciba datos (decisión 2.13). | Fundador + tecnología |
+| P12 | **Descripción para buscadores y vista previa al compartir** | Texto propuesto en `src/layouts/Base.astro` / otro | Aprobar o cambiar la descripción propuesta (decisión 2.15). | Fundador |
 
 ### 2.13 Decisiones tomadas al implementar la Bienvenida (7 de octubre de 2026)
 
@@ -251,3 +252,16 @@ Ajustes de implementación que se derivan de la auditoría, sin texto nuevo inve
 - **H1.** El paso 3 de "Cómo funciona" pierde el absoluto "sin salir de Fulleventos": "Crea un grupo para ir juntos o únete a uno abierto, y compra tus boletas."
 - **H61.** "Cómo funciona" pasa directo de 1 a 3 columnas (desde 720 px) y no deja una tarjeta sola. Los chips pasan a dos líneas desde 768 px; por debajo se desplazan de lado con un desvanecido en el borde.
 - **H59.** Los nombres accesibles de los chips de ciudad empiezan por el texto visible: "Bogotá 6 planes".
+
+### 2.15 Construir el resto de pantallas de corrido (7 de octubre de 2026)
+
+El cliente pidió terminar las pantallas que faltan sin detenerse entre una y otra ("todo de corrido") y aprobó las recomendaciones que estaban abiertas:
+
+- **"Buscar" (H38, H41).** Mientras no exista la pantalla de resultados, en la Bienvenida buscar lleva a "Este finde en Colombia" con la ciudad elegida. En las pantallas con sesión lleva a `/agenda` con la ciudad.
+- **Prueba automática (H8).** `npm test` compila el sitio y, con `@playwright/test` y axe-core, revisa cada página generada: sin scroll horizontal a 320, 390, 768 y 1280 px, y sin violaciones de WCAG 2.2 AA a 390 y 1280 px.
+- **Descripción para buscadores (H34).** Se propone "Descubre planes en toda Colombia, mira a qué van tus amigos y arma parche: rumba, conciertos, fútbol, teatro y planes gratis este finde." Está armada con frases del producto y queda pendiente de aprobación (P12). Se agregan las etiquetas Open Graph básicas.
+- **Margen lateral.** `clamp(16px, 4vw, 24px)` en todo el producto (H41), también en celular.
+- **Encabezado con sesión en celular (H40).** Igual que el de visitante: deja de ser fijo por debajo de 768 px. La barra inferior de 5 pestañas queda pendiente de diseño (N70).
+- **Texto del buscador con sesión (H41).** "Busca planes, gente o lugares", el texto unificado que recomienda la sección 7.
+- **"Volver al feed" pasa a "Volver" (H41).** Regresa a la pantalla de origen cuando se llegó desde Fulleventos; si no, va a Inicio.
+- **Sin diseño todavía, se dejan visibles pero sin destino propio:** "Crear evento" lleva a `/crear-evento` (formulario de organizadores, H14 y H38) y "Notificaciones" no abre nada (H54).

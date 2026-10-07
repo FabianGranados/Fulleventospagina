@@ -35,6 +35,19 @@ Decidido por el cliente el 7 de octubre de 2026.
 - **Nombres de tokens:** los de la sección 3 del handoff. `--brand` = `#C23A24` (acción) y `--brand-logo` = `#D9452F` (solo el logo). La sección 7 usa otros nombres (`--brand` para el logo y `--action`); manda la sección 3.
 - **Pruebas:** `axe-core` (dependencia de desarrollo) con Playwright, que ya está en el entorno. Hay que medir a 390, 768 y 1280 px y comprobar que no hay scroll horizontal a 320 px.
 - **Comandos:** `npm run dev`, `npm run build` (sale en `dist/`) y `npm run preview`.
+- **Prueba automática:** `npm test` compila y corre `tests/pantallas.spec.ts`, que descubre solo todas las páginas de `dist/client` y revisa que no haya scroll horizontal a 320, 390, 768 y 1280 px y que axe no encuentre violaciones a 390 y 1280 px. Toda pantalla nueva debe pasarla.
+
+## Piezas compartidas (no duplicar)
+
+- `layouts/Base.astro`: `titulo`, `descripcion` y `tamanoBase` (16 en pantallas públicas, 15 en las de sesión).
+- `components/layout/EncabezadoVisitante.astro` (N2) y `EncabezadoApp.astro` (N1, variantes `completo`, `detalle` y `detalle-perfil`, con `activa` y `noLeidos`), más `Pie.astro`.
+- `components/ui/`:
+  - `Icono` (agregar íconos ahí, con el trazo exacto del prototipo);
+  - `Avatar`, `PilaAvatares`, `Etiqueta`, `Titular`, `Boton`, `EnlaceSubrayado` y `EncabezadoSeccion`;
+  - `Modal` (N68, con `<dialog>`; se abre con `data-abrir-modal="id"`).
+- `components/eventos/TarjetaEvento.astro` (N15, variante pública).
+- Datos semilla en `src/data/`: `ciudades`, `eventos` (con `conteoCiudad`), `noticias` y `personas` (la usuaria del demo es Camila Vargas). Formatos en `src/lib/formato.ts`: `cifra`, `pesos`, `planes`, `placaFecha`, `slug` y `rutaEvento`.
+- Rutas: `/`, `/registro`, `/inicio`, `/agenda`, `/mapa`, `/evento/:ciudad/:slug`, `/mensajes`, `/perfil/:usuario` y `/yo`.
 
 ## Reglas que no se negocian
 

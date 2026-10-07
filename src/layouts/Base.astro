@@ -2,11 +2,18 @@
 import '../styles/tokens.css';
 import '../styles/base.css';
 
+// Descripción propuesta, pendiente de aprobación del cliente (decisión 2.15)
+const DESCRIPCION =
+  'Descubre planes en toda Colombia, mira a qué van tus amigos y arma parche: rumba, conciertos, fútbol, teatro y planes gratis este finde.';
+
 interface Props {
   titulo: string;
+  descripcion?: string;
+  // 16 px en las pantallas públicas; 15 px en las pantallas con sesión (sección 3)
+  tamanoBase?: 15 | 16;
 }
 
-const { titulo } = Astro.props;
+const { titulo, descripcion = DESCRIPCION, tamanoBase = 16 } = Astro.props;
 ---
 
 <!doctype html>
@@ -15,6 +22,13 @@ const { titulo } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{titulo}</title>
+    <meta name="description" content={descripcion} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:site_name" content="Fulleventos" />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descripcion} />
+    <meta name="theme-color" content="#FBF7F3" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -22,7 +36,7 @@ const { titulo } = Astro.props;
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body style={tamanoBase === 15 ? 'font-size: 15px' : undefined}>
     <a class="salto" href="#contenido">Saltar al contenido</a>
     <slot />
   </body>

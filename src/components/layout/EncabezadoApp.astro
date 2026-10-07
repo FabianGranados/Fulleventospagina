@@ -1,0 +1,343 @@
+---
+// N1 · Encabezado con sesión: un solo componente con variantes (H41).
+// completo: Inicio, Agenda, Mapa, Mensajes · detalle: Evento · detalle-perfil: Perfil
+import Icono from '../ui/Icono.astro';
+import { ciudades } from '../../data/ciudades';
+import { usuaria } from '../../data/personas';
+
+type Pagina = 'inicio' | 'agenda' | 'mapa' | 'mensajes';
+
+interface Props {
+  variante?: 'completo' | 'detalle' | 'detalle-perfil';
+  activa?: Pagina;
+  noLeidos?: number;
+}
+
+const { variante = 'completo', activa, noLeidos = 3 } = Astro.props;
+
+const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 'mensajes'; nombre: string }[] = [
+  { id: 'inicio', href: '/inicio', icono: 'inicio', nombre: 'Inicio' },
+  { id: 'agenda', href: '/agenda', icono: 'agenda', nombre: 'Agenda de eventos' },
+  { id: 'mapa', href: '/mapa', icono: 'mapa', nombre: 'Mapa de eventos' },
+  {
+    id: 'mensajes',
+    href: '/mensajes',
+    icono: 'mensajes',
+    nombre: noLeidos ? `Mensajes, ${noLeidos} ${noLeidos === 1 ? 'chat sin leer' : 'chats sin leer'}` : 'Mensajes',
+  },
+];
+---
+
+<header class:list={['encabezado', variante]} data-encabezado>
+  <div class="fila">
+    {
+      variante !== 'completo' && (
+        <a href="/inicio" class="volver" data-volver>
+          <Icono nombre="volver" tamano={18} />
+          Volver
+        </a>
+      )
+    }
+
+    <a href="/inicio" class="logo">fulleventos</a>
+
+    {
+      variante === 'completo' && (
+        <form class="buscador" role="search" action="/agenda" method="get" data-buscador-app>
+          <Icono nombre="lupa" tamano={18} class="lupa" />
+          <input type="search" name="q" placeholder="Busca planes, gente o lugares" aria-label="Buscar" />
+          <label class="ciudad">
+            <Icono nombre="pin" tamano={16} />
+            <span class="solo-lectores">Ciudad</span>
+            <select name="ciudad" data-selector-ciudad>
+              <option value="all">Toda Colombia</option>
+              {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
+            </select>
+          </label>
+        </form>
+      )
+    }
+
+    {
+      variante === 'detalle-perfil' ? (
+        <div class="derecha">
+          <a href="/mapa" class="pildora"><Icono nombre="mapa" />Mapa</a>
+          <a href="/mensajes" class="circulo" aria-label={iconos[3].nombre}>
+            <Icono nombre="mensajes" tamano={20} />
+            {noLeidos > 0 && <span class="insignia" aria-hidden="true">{noLeidos}</span>}
+          </a>
+        </div>
+      ) : (
+        <nav aria-label="Principal" class="iconos">
+          {iconos.map((i) => (
+            <a href={i.href} class="icono" aria-label={i.nombre} aria-current={activa === i.id ? 'page' : undefined}>
+              <Icono nombre={i.icono} tamano={20} />
+              {i.id === 'mensajes' && noLeidos > 0 && <span class="insignia" aria-hidden="true">{noLeidos}</span>}
+            </a>
+          ))}
+          <button type="button" class="icono" aria-label="Notificaciones">
+            <Icono nombre="campana" tamano={20} />
+          </button>
+          {variante === 'completo' && <a href="/crear-evento" class="crear">Crear evento</a>}
+          <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`}>{usuaria.iniciales}</a>
+        </nav>
+      )
+    }
+  </div>
+</header>
+
+<script>
+  // "Volver" regresa a la pantalla de origen cuando se llegó desde Fulleventos (N1).
+  document.querySelector<HTMLAnchorElement>('[data-volver]')?.addEventListener('click', (ev) => {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+      ev.preventDefault();
+      history.back();
+    }
+  });
+
+  // Mientras no exista la pantalla de resultados (H41), buscar abre la agenda con la ciudad elegida.
+  document.querySelector<HTMLFormElement>('[data-buscador-app]')?.addEventListener('submit', (ev) => {
+    if (document.querySelector('[data-agenda-app]')) ev.preventDefault();
+  });
+
+  const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
+  if (encabezado) {
+    const ajustar = () => {
+      const fijo = getComputedStyle(encabezado).position === 'sticky';
+      document.documentElement.style.scrollPaddingTop = `${fijo ? encabezado.offsetHeight + 12 : 12}px`;
+    };
+    new ResizeObserver(ajustar).observe(encabezado);
+  }
+</script>
+
+<style>
+  .encabezado {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .detalle-perfil {
+    position: static;
+  }
+
+  .fila {
+    box-sizing: content-box;
+    max-width: var(--ancho-max);
+    margin-inline: auto;
+    padding: 12px var(--margen-lateral);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+  }
+
+  .logo,
+  .logo:hover {
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: -0.03em;
+    color: var(--brand-logo);
+  }
+
+  .detalle .logo,
+  .detalle-perfil .logo {
+    margin-inline: auto;
+  }
+
+  .volver {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    font-weight: 700;
+    font-size: .92rem;
+  }
+
+  .buscador {
+    flex: 1 1 260px;
+    max-width: 500px;
+    min-width: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 0 6px 0 16px;
+  }
+
+  .buscador:focus-within {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 1px var(--brand);
+  }
+
+  .buscador :global(.lupa) {
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font-size: .95rem;
+    color: var(--ink);
+  }
+
+  input:focus-visible {
+    outline: none;
+  }
+
+  input::placeholder {
+    color: var(--placeholder);
+  }
+
+  .ciudad {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-left: 10px;
+    border-left: 1px solid var(--line);
+    font-size: .9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  select {
+    height: 36px;
+    max-width: 8.6em;
+    border: 0;
+    background: transparent;
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .iconos {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .icono {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .icono:hover {
+    color: var(--brand);
+  }
+
+  .icono[aria-current='page'],
+  .icono[aria-current='page']:hover {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .insignia {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-size: .66rem;
+    font-weight: 700;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    padding: 0 4px;
+  }
+
+  .icono[aria-current='page'] .insignia {
+    top: 4px;
+    right: 4px;
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+
+  .crear,
+  .crear:hover {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 18px;
+    margin-left: 6px;
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    color: var(--on-dark);
+    font-weight: 700;
+    font-size: .9rem;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: var(--aqua);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .78rem;
+  }
+
+  .derecha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pildora {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .88rem;
+    font-weight: 700;
+  }
+
+  .circulo {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .circulo .insignia {
+    top: -3px;
+    right: -3px;
+  }
+
+  /* En celular el encabezado deja de ser fijo (H40, decisiones 2.14 y 2.15) */
+  @media (max-width: 767px) {
+    .encabezado {
+      position: static;
+    }
+  }
+</style>

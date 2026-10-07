@@ -34,6 +34,17 @@ import { ciudades } from '../../data/ciudades';
 </header>
 
 <script>
+  // Mientras no exista la pantalla de resultados (H41), buscar lleva a la agenda con la
+  // ciudad elegida (decisión 2.15). El selector ya filtra la agenda al cambiar.
+  const buscador = document.querySelector<HTMLFormElement>('.buscador');
+  buscador?.addEventListener('submit', (ev) => {
+    const agenda = document.querySelector<HTMLElement>('#agenda');
+    if (!agenda) return;
+    ev.preventDefault();
+    agenda.scrollIntoView();
+    document.querySelector<HTMLElement>('#agenda-titulo')?.focus();
+  });
+
   // El foco y los saltos de ancla no deben quedar debajo del encabezado fijo (H16).
   const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
   if (encabezado) {
