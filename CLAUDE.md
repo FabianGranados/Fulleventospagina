@@ -1,0 +1,86 @@
+# Fulleventos
+
+Red social de eventos para toda Colombia: descubrir planes (agenda y mapa), ver a qué va tu gente, armar "parches" (grupos para ir juntos a un evento), chatear y comprar la boleta dentro de la página.
+
+## Estado del repositorio
+
+Todavía **no hay código de producción**. Lo que existe es diseño y documentación:
+
+| Ruta | Qué es |
+|---|---|
+| `docs/handoff/README.md` | **Fuente de verdad para implementar.** Índice del handoff: objetivo, decisiones, sistema visual, estructura de las 8 pantallas, responsive, estados, componentes y detalles finos. |
+| `docs/auditoria-2026-10-07.md` | Auditoría del prototipo (hallazgos H1–H62) con plan de acción. |
+| `docs/handoff-inventario-estilos.md` | Inventario automático de colores, tamaños, radios, sombras y breakpoints. |
+| `diseno/prototipo/*.dc.html` | Prototipo de las 8 pantallas (formato Design Components). Es especificación, **no código para copiar**. |
+| `diseno/capturas/*.jpg` | Capturas reales de cada pantalla a 390, 768 y 1280 px, más flujos (compra, chat, mapa, repost). |
+| `diseno/referencia/preview-demo.html` | Código base original del cliente. La sección 7 del handoff dice qué se reutiliza. |
+| `.claude/agents/auditor-web.md` | Agente auditor de código y aplicaciones web. |
+
+## Antes de implementar algo
+
+1. Lee `docs/handoff/README.md` y luego las secciones 1, 2 y 3.
+2. Para cada pantalla, lee su sección 4 (estructura y textos), 5 (responsive), 6 (estados) y 8 (detalles finos y **correcciones obligatorias de la auditoría**). La sección 7 indica qué componentes reutilizar y cuáles crear.
+3. **Orden de autoridad** si algo no coincide: handoff > correcciones obligatorias de la auditoría > prototipo y capturas. Cuando el prototipo y la auditoría se contradicen, se implementa lo que pide la auditoría.
+4. **No hay stack definido.** Antes de crear la estructura del proyecto, propón el stack al usuario y confírmalo. Toma como base los requisitos de plataforma de la auditoría (H53 y "Requisitos para producción"), y ten en cuenta que las páginas de evento deben ser indexables y compartibles (render en servidor, Open Graph, schema.org/Event; H34).
+
+## Reglas que no se negocian
+
+- **Textos:** los del handoff son literales; se copian tal cual. Los marcadores `[ASÍ]` (NIT, pasarela, boletera, nombre de la orquesta…) nunca se publican con corchetes: se pide el dato real al usuario.
+- **Idioma y formato:** español de Colombia con tuteo. Precios con `toLocaleString('es-CO')` → "$45.000" o "Gratis". Horas como "8:00 p. m.". Siempre "Toda Colombia" (no "Todo Colombia").
+- **Color:**
+  - `#D9452F` solo para el logo.
+  - Botones e insignias con texto blanco: `#C23A24`, por contraste.
+  - Tokens y valores exactos en la sección 3 del handoff.
+- **Accesibilidad WCAG 2.2 AA:**
+  - etiqueta `viewport` en todas las páginas;
+  - foco visible en todo lo interactivo;
+  - modales con foco atrapado, cierre con Escape y retorno del foco;
+  - `aria-pressed` en los botones que alternan;
+  - formularios reales con `<label>` y errores anunciados;
+  - respetar `prefers-reduced-motion`.
+- **Sin emoji** en la interfaz: los íconos son SVG de trazo.
+- **No inventar contenido** ni cifras presentadas como reales.
+- **No mostrar marcas reales de boleteras** (TuBoleta, Ticketmaster, Fever) como vendedoras sin un acuerdo (H1).
+- **Pagos:**
+  - los datos de tarjeta solo se escriben en los campos tokenizados de la pasarela; nunca pasan por servidores propios;
+  - la boleta se emite solo cuando el webhook de la pasarela confirma el pago;
+  - los cupos y precios se calculan en el servidor;
+  - en el pago dividido, cada amigo paga su parte directo a la pasarela: Fulleventos nunca guarda la plata del parche.
+- **Chat:** no se abre al público sin reportar, bloquear y moderación (H9, H13).
+
+## Decisiones pendientes
+
+No implementes estas partes sin confirmarlas con el usuario. El detalle está en `docs/handoff/02-decisiones.md`, sección 2.12.
+
+- **P1. Modo de compra por evento:** gratis / boletera externa / venta propia.
+- **P2. Operador de boletería** (MinCultura, PULEP).
+- **P3. Pasarela de pagos.**
+- **P4. Cargo por servicio.**
+- **P5. Proveedor del mapa.**
+- **P6. Si el chat sale en el MVP.**
+- **P7. Política de edad.**
+- **P8. Datos legales reales.**
+- **P9. Criterio de "organizador verificado".**
+
+La recomendación de la auditoría es lanzar primero un MVP de descubrimiento (cuentas, agenda, mapa y compra por redirección a la boletera) y dejar la venta propia y el pago dividido para una fase posterior.
+
+## Sobre el prototipo `.dc.html`
+
+Es la especificación visual y de comportamiento, no una base de código:
+- los estilos están en línea, pero en producción se convierten en tokens y componentes;
+- el estado vive en cada pantalla y se pierde al navegar;
+- los pagos, reservas, QR, chat y notificaciones son simulados;
+- algunos detalles existen solo por limitaciones del lienzo de diseño (por ejemplo, evitar `<form>`, o los `span.sc-interp`) y no se copian;
+- el prototipo navegable está en https://claude.ai/artifact/1G7P2YCrnkBpgtdai9aWSQ (privado del dueño).
+
+## Al terminar una pantalla o flujo
+
+- Compárala contra sus capturas en `diseno/capturas/` a 390, 768 y 1280 px.
+- Revisa la sección 8 del handoff ("Detalles finos").
+- Pide una revisión al agente `auditor-web`.
+
+## Convenciones del repositorio
+
+- Rama de trabajo: `main`.
+- Mensajes de commit en español, describiendo el porqué del cambio.
+- Comunícate con el usuario en español.
