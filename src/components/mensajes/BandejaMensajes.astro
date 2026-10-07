@@ -1,0 +1,1823 @@
+---
+// 4.9 · Mensajes: lista de conversaciones (N47), conversación abierta (N48–N55) y panel de información (N56).
+// Demo local sin backend ni tiempo real (decisión pendiente P6; H9, H13, H29, H30): el estado vive en el navegador.
+// Las partes que cambian se pintan con plantillas.ts en el servidor y en el navegador (una sola fuente de marcado).
+import EncabezadoApp from '../layout/EncabezadoApp.astro';
+import Icono from '../ui/Icono.astro';
+import ModalNuevoChat from './ModalNuevoChat.astro';
+import { EVENTOS_CHAT } from '../../data/mensajes';
+import { conversacionesSinLeer, estadoInicial, eventoDe, nombreConv, placeholderDe, textoResumen, todas } from './estado';
+import { barraHTML, etiquetaInfo, hiloHTML, infoHTML, listaHTML, planHTML } from './plantillas';
+import { icono } from './iconos';
+
+interface Props {
+  // Conversación abierta al cargar
+  abierta: string;
+  // /mensajes muestra la lista en celular; /mensajes/:conversacion, la conversación (H42)
+  vista: 'lista' | 'chat';
+}
+
+const { abierta, vista } = Astro.props;
+const e = estadoInicial(abierta, vista, vista === 'chat');
+const c = todas(e)[abierta];
+const nombre = nombreConv(c);
+const sinLeer = conversacionesSinLeer(e);
+const filtros = [
+  { id: 'todos', texto: 'Todos' },
+  { id: 'parches', texto: 'Parches' },
+  { id: 'personas', texto: 'Personas' },
+  { id: 'noleidos', texto: 'No leídos' },
+];
+const bandeja = EVENTOS_CHAT.map((id) => eventoDe(id));
+---
+
+<div class="app-mensajes" data-mensajes data-abierta={abierta} data-vista={vista} data-pane={vista}>
+  <EncabezadoApp variante="completo" activa="mensajes" noLeidos={sinLeer} />
+
+  <main id="contenido" class="principal">
+    <div class="marco">
+      <section class="lista" aria-label="Tus conversaciones" data-lista>
+        <div class="cabeza-lista">
+          <div class="fila-titulo">
+            <h1 tabindex="-1" data-h1>Mensajes</h1>
+            <span class="resumen" data-resumen>{textoResumen(sinLeer)}</span>
+          </div>
+          <div class="botones-nuevo">
+            <button type="button" class="nuevo contorno" data-abrir-modal="nuevo-chat" data-modo="persona">
+              <Fragment set:html={icono('mensajeMas', 16)} />Nuevo chat
+            </button>
+            <button type="button" class="nuevo oscuro" data-abrir-modal="nuevo-chat" data-modo="parche">
+              <Fragment set:html={icono('personaMas', 16)} />Nuevo parche
+            </button>
+          </div>
+          <label class="buscar-chats">
+            <Icono nombre="lupa" tamano={16} class="lupa-chats" />
+            <span class="solo-lectores">Buscar en tus chats</span>
+            <input type="search" placeholder="Busca chats, parches o eventos" autocomplete="off" data-buscar />
+          </label>
+          <fieldset class="filtros" data-filtros>
+            <legend class="solo-lectores">Filtrar chats</legend>
+            {
+              filtros.map((f) => (
+                <label class="filtro">
+                  <input type="radio" class="solo-lectores" name="filtro" value={f.id} checked={f.id === 'todos'} />
+                  <span>{f.texto}</span>
+                </label>
+              ))
+            }
+          </fieldset>
+        </div>
+        <div class="desplazable">
+          <div data-filas set:html={listaHTML(e)} />
+        </div>
+      </section>
+
+      <section class="conversacion" aria-label={`Conversación con ${nombre}`} data-conv>
+        <!-- En celular la lista se oculta: esta vista lleva su propio título de nivel 1 (detalle fino 65) -->
+        <h1 class="solo-lectores titulo-conv">Mensajes</h1>
+        <div class="barra" data-barra set:html={barraHTML(e, true)} />
+        <div data-plan set:html={planHTML(e)} />
+        <div class="historial" role="log" aria-label={`Mensajes de ${nombre}`} data-historial>
+          <div class="hilo" data-hilo set:html={hiloHTML(e)} />
+        </div>
+        <form class="compositor" data-compositor>
+          <div class="bandeja" id="bandeja-compartir" role="group" aria-label="Elige un evento para compartir" data-bandeja hidden>
+            <span class="bandeja-rotulo">Compartir:</span>
+            {
+              bandeja.map((ev) => (
+                <button type="button" class="bandeja-evento" data-accion="compartir" data-evento={ev.id}>
+                  <span class="bolita" aria-hidden="true" style={`background: radial-gradient(circle at 70% 30%, ${ev.bg1} 0, transparent 58%), ${ev.bg2}`} />
+                  {ev.corto}
+                </button>
+              ))
+            }
+          </div>
+          <div class="fila-escritura">
+            <!-- H43: en celular los 3 botones de adjuntar se agrupan en un solo botón "+" -->
+            <button type="button" class="icono-compositor mas" aria-label="Adjuntar" aria-expanded="false" aria-controls="adjuntos" data-accion="adjuntos">
+              <Fragment set:html={icono('mas', 20)} />
+            </button>
+            <div class="adjuntos" id="adjuntos" data-adjuntos>
+              <button type="button" class="icono-compositor" aria-label="Compartir evento" aria-expanded="false" aria-controls="bandeja-compartir" data-accion="bandeja">
+                <Fragment set:html={icono('calendarioMas', 20)} />
+              </button>
+              <button type="button" class="icono-compositor" aria-label="Crear encuesta" data-accion="encuesta">
+                <Fragment set:html={icono('encuesta', 20, 2.2)} />
+              </button>
+              <button type="button" class="icono-compositor" aria-label="Enviar foto" data-accion="foto">
+                <Fragment set:html={icono('foto', 20)} />
+              </button>
+            </div>
+            <label class="campo-mensaje">
+              <span class="solo-lectores">Escribe un mensaje</span>
+              <input type="text" name="mensaje" autocomplete="off" placeholder={placeholderDe(c)} data-borrador />
+            </label>
+            <button type="submit" class="enviar" aria-disabled="true" data-enviar>
+              <span class="enviar-texto">Enviar</span>
+              <Fragment set:html={icono('enviar', 16, 2.2)} />
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Columna complementaria desde 1180 px; por debajo, ventana con role="dialog" (H7) -->
+      <div class="info" role="complementary" aria-label={etiquetaInfo(c)} data-info data-ancho="on" data-angosto="off" set:html={infoHTML(e)} />
+    </div>
+  </main>
+
+  <p class="solo-lectores" role="status" data-anuncio></p>
+  <ModalNuevoChat />
+</div>
+
+<script>
+  import { iniciar } from './controlador';
+  iniciar();
+</script>
+
+<style>
+  /* ---------- Estructura: tres columnas que caben en la ventana desde 900 px (5.2.7) ---------- */
+  .app-mensajes {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .principal {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: var(--ancho-max);
+    margin: 0 auto;
+    padding: 16px var(--margen-lateral);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .marco {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+
+  .app-mensajes :global(.c1) { background: var(--peach); }
+  .app-mensajes :global(.c2) { background: var(--lilac); }
+  .app-mensajes :global(.c3) { background: var(--pink); }
+  .app-mensajes :global(.c4) { background: var(--lime); }
+  .app-mensajes :global(.c5) { background: var(--yellow); }
+  .app-mensajes :global(.c6) { background: var(--aqua); }
+
+  /* Avatares: cuadrado = parche u organizador (Archivo 900); círculo = persona (detalle fino 52) */
+  .app-mensajes :global(.av) {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .app-mensajes :global(.av.circulo) { border-radius: 50%; }
+  .app-mensajes :global(.av.cuadrado) { border-radius: 14px; }
+  .app-mensajes :global(.av.display) { font-family: var(--display); font-weight: 900; }
+  .app-mensajes :global(.av.organizador) { background: var(--ink); color: var(--yellow); }
+  .app-mensajes :global(.av-32) { width: 32px; height: 32px; font-size: .66rem; }
+  .app-mensajes :global(.av-34) { width: 34px; height: 34px; font-size: .7rem; }
+  .app-mensajes :global(.av-44) { width: 44px; height: 44px; font-size: .82rem; }
+  .app-mensajes :global(.av-48) { width: 48px; height: 48px; font-size: .86rem; }
+  .app-mensajes :global(.av-72) { width: 72px; height: 72px; font-size: 1.25rem; }
+  .app-mensajes :global(.av-72.cuadrado) { border-radius: var(--radius-lg); }
+  .app-mensajes :global(a.av:hover) { color: var(--ink); }
+
+  .app-mensajes :global(.verificado) { flex-shrink: 0; }
+
+  .app-mensajes :global(.antetitulo) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .app-mensajes :global(.boton-contorno) {
+    height: 40px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0 16px;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  /* ---------- N47 · Lista de conversaciones ---------- */
+  .lista {
+    width: 331px;
+    flex-shrink: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+  }
+
+  .cabeza-lista {
+    padding: 18px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .fila-titulo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.75rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .resumen {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .botones-nuevo {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nuevo {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    font-weight: 700;
+    font-size: .84rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 0 10px;
+  }
+
+  .nuevo :global(svg) { flex-shrink: 0; }
+
+  .contorno {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .oscuro {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  /* Campos en píldora con foco visible en el contenedor (H51) */
+  .buscar-chats,
+  .campo-mensaje {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+  }
+
+  .buscar-chats {
+    height: 42px;
+    padding: 0 14px;
+  }
+
+  .buscar-chats:focus-within,
+  .campo-mensaje:focus-within {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .buscar-chats :global(.lupa-chats) {
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .buscar-chats input,
+  .campo-mensaje input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .buscar-chats input {
+    font-size: .9rem;
+  }
+
+  .buscar-chats input:focus-visible,
+  .campo-mensaje input:focus-visible {
+    outline: none;
+  }
+
+  .buscar-chats input::placeholder,
+  .campo-mensaje input::placeholder {
+    color: var(--placeholder);
+  }
+
+  /* N19 · Control segmentado de filtros con radios nativos (H59) */
+  .filtros {
+    margin: 0;
+    min-width: 0;
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    scrollbar-width: none;
+  }
+
+  .filtro {
+    position: relative;
+    flex: 1 0 auto;
+    display: flex;
+  }
+
+  .filtro span {
+    flex: 1;
+    height: 36px;
+    border-radius: var(--radius-pill);
+    padding: 0 6px;
+    display: grid;
+    place-items: center;
+    font-size: .8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .filtro input:checked + span {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  /* El anillo va por dentro: el contenedor recorta lo que sale por el scroll lateral */
+  .filtro input:focus-visible + span {
+    outline: 3px solid var(--brand);
+    outline-offset: -3px;
+  }
+
+  .filtro input:checked:focus-visible + span {
+    outline-color: var(--yellow);
+  }
+
+  /* position: relative contiene los textos ocultos de las filas (8.1 #4) */
+  .desplazable {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .desplazable :global(.filas) {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .desplazable :global(.fila) {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    color: var(--ink);
+    font-size: .9rem;
+  }
+
+  .desplazable :global(.fila:hover) { color: var(--ink); }
+
+  .desplazable :global(.fila[aria-current='true']) {
+    background: var(--bg);
+    border-color: var(--line);
+  }
+
+  .desplazable :global(.fila-texto) {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.3;
+  }
+
+  .desplazable :global(.fila-l1),
+  .desplazable :global(.fila-l2) {
+    display: flex;
+    align-items: center;
+  }
+
+  .desplazable :global(.fila-l1) { gap: 5px; }
+  .desplazable :global(.fila-l2) { gap: 8px; }
+
+  .desplazable :global(.fila-nombre) {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .92rem;
+  }
+
+  .desplazable :global(.fila-silenciada) {
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .desplazable :global(.fila-hora) {
+    margin-left: auto;
+    padding-left: 6px;
+    flex-shrink: 0;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .desplazable :global(.fila-previa) {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .desplazable :global(.con-nuevos .fila-hora) {
+    color: var(--brand);
+    font-weight: 700;
+  }
+
+  .desplazable :global(.con-nuevos .fila-previa) {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .desplazable :global(.contador) {
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-size: .7rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .desplazable :global(.pildora-evento),
+  .desplazable :global(.pildora-org) {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    border-radius: var(--radius-pill);
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .desplazable :global(.pildora-evento) {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 2px 9px 2px 7px;
+  }
+
+  .desplazable :global(.pildora-evento svg) { color: var(--brand); }
+
+  .desplazable :global(.pildora-org) {
+    background: var(--yellow);
+    padding: 2px 9px;
+  }
+
+  .desplazable :global(.lista-vacia) {
+    padding: 32px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .desplazable :global(.lista-vacia p) {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  /* ---------- Conversación ---------- */
+  .conversacion {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  .titulo-conv {
+    display: none;
+  }
+
+  /* N48 · Barra superior */
+  .barra {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 66px;
+    padding: 10px 12px 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .barra :global(.volver-lista) {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-left: -6px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .barra :global(.barra-nombre) {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .barra :global(.barra-fila) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .barra :global(.barra-titulo) {
+    min-width: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .barra :global(.barra-sub) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .barra :global(.barra-sub-texto) {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .barra :global(.en-linea) {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--lime);
+    box-shadow: 0 0 0 1.5px var(--ink);
+  }
+
+  .barra :global(.barra-acciones) {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .barra :global(.icono-barra) {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .barra :global(a.icono-barra:hover) { color: var(--brand); }
+
+  .barra :global(.icono-barra[aria-pressed='true']) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  /* N51 · Plan fijado */
+  .conversacion :global(.plan-envoltura) {
+    flex-shrink: 0;
+    padding: 12px 14px 0;
+  }
+
+  .conversacion :global(.plan) {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 14px;
+  }
+
+  .conversacion :global(.plan-foto) {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+  }
+
+  .conversacion :global(.placa) {
+    background: var(--surface);
+    text-align: center;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .conversacion :global(.placa b) {
+    display: block;
+    font-family: var(--display);
+    font-weight: 900;
+  }
+
+  .conversacion :global(.placa span) {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .conversacion :global(.placa-plan) {
+    border-radius: 9px;
+    padding: 4px 7px 3px;
+    min-width: 34px;
+  }
+
+  .conversacion :global(.placa-plan b) { font-size: 1.05rem; }
+  .conversacion :global(.placa-plan span) { font-size: .6rem; }
+
+  .conversacion :global(.plan-texto) {
+    flex: 1 1 220px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.3;
+  }
+
+  .conversacion :global(.plan-titulo) {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .conversacion :global(.plan-meta) {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .conversacion :global(.plan-progreso) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+  }
+
+  .conversacion :global(.barra-boletas) {
+    flex: 0 1 120px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+  }
+
+  .conversacion :global(.barra-relleno) {
+    height: 100%;
+    background: var(--brand);
+    border-radius: 3px;
+    transition: width 300ms ease;
+  }
+
+  .conversacion :global(.plan-conteo) { font-size: .78rem; }
+
+  .conversacion :global(.comprar) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .conversacion :global(.boton-comprar),
+  .conversacion :global(.boton-comprar:hover) {
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+    font-size: .88rem;
+    white-space: nowrap;
+  }
+
+  .conversacion :global(.comprar-precio) {
+    font-size: .72rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .conversacion :global(.ya-tienes) {
+    flex-shrink: 0;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 14px 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--lime);
+    font-weight: 700;
+    font-size: .84rem;
+    white-space: nowrap;
+  }
+
+  .conversacion :global(.ya-tienes-circulo) {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--on-dark);
+    display: grid;
+    place-items: center;
+  }
+
+  /* N49 · Historial: column-reverse abre en el último mensaje (H43) */
+  .historial {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 6px 18px 16px;
+  }
+
+  .conversacion :global(.hilo) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .conversacion :global(.sep-fecha),
+  .conversacion :global(.sep-nuevos) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+  }
+
+  .conversacion :global(.sep-fecha) {
+    margin: 16px 0 4px;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .conversacion :global(.sep-fecha span) {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .conversacion :global(.sep-nuevos) {
+    margin: 14px 0 0;
+    font-size: .72rem;
+    color: var(--brand);
+  }
+
+  .conversacion :global(.sep-nuevos span) {
+    flex: 1;
+    height: 1.5px;
+    background: var(--brand);
+    opacity: .5;
+  }
+
+  .conversacion :global(.sistema) {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0 2px;
+  }
+
+  .conversacion :global(.sistema-pildora) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 5px 14px 5px 5px;
+    font-size: .8rem;
+    line-height: 1.3;
+  }
+
+  .conversacion :global(.sistema-icono) {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .conversacion :global(.i-boleta) { background: var(--lime); }
+  .conversacion :global(.i-pago) { background: var(--aqua); }
+  .conversacion :global(.i-grupo) { background: var(--yellow); }
+
+  .conversacion :global(.sistema-texto) { min-width: 0; }
+  .conversacion :global(.sistema-hora) { color: var(--muted); }
+
+  .conversacion :global(.msg) {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .conversacion :global(.msg.sigue) { margin-top: 3px; }
+  .conversacion :global(.msg.propio) { justify-content: flex-end; }
+  .conversacion :global(.msg.ajeno) { justify-content: flex-start; }
+
+  .conversacion :global(.av-hueco) {
+    width: 32px;
+    flex-shrink: 0;
+  }
+
+  .conversacion :global(.msg-col) {
+    max-width: min(78%, 440px);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .conversacion :global(.propio .msg-col) { align-items: flex-end; }
+  .conversacion :global(.ajeno .msg-col) { align-items: flex-start; }
+
+  .conversacion :global(.msg-nombre) {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--muted);
+    padding: 0 4px;
+  }
+
+  .conversacion :global(.burbuja) {
+    padding: 9px 14px;
+    font-size: .94rem;
+    line-height: 1.42;
+    overflow-wrap: anywhere;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .conversacion :global(.burbuja.pico) { border-radius: 4px 18px 18px 18px; }
+
+  .conversacion :global(.burbuja.propia) {
+    background: var(--ink);
+    color: var(--on-dark);
+    border-color: var(--ink);
+    border-radius: 18px 18px 4px 18px;
+  }
+
+  .conversacion :global(.msg-hora) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .7rem;
+    color: var(--muted);
+    padding: 0 4px;
+  }
+
+  /* N53 · Tarjeta de evento compartido */
+  .conversacion :global(.evento-compartido) {
+    width: 292px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    color: var(--ink);
+  }
+
+  .conversacion :global(.evento-foto) {
+    position: relative;
+    height: 104px;
+  }
+
+  .conversacion :global(.placa-tarjeta) {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    min-width: 42px;
+  }
+
+  .conversacion :global(.placa-tarjeta b) { font-size: 1.15rem; }
+  .conversacion :global(.placa-tarjeta span) { font-size: .62rem; }
+
+  .conversacion :global(.evento-cuerpo) {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.3;
+  }
+
+  .conversacion :global(.evento-categoria) {
+    font-size: .66rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .conversacion :global(.evento-titulo) {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.02rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .conversacion :global(.evento-meta) {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .conversacion :global(.evento-precio) {
+    font-size: .82rem;
+    font-weight: 700;
+    margin-top: 3px;
+  }
+
+  .conversacion :global(.evento-cargo) {
+    font-size: .74rem;
+    color: var(--muted);
+  }
+
+  .conversacion :global(.evento-acciones) {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .conversacion :global(.repostear) {
+    flex: 1;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .conversacion :global(.repostear.marcada) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .conversacion :global(.ver-evento) {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+  }
+
+  /* N52 · Encuesta con radios nativos (H59) */
+  .conversacion :global(.encuesta) {
+    width: 300px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--ink);
+  }
+
+  .conversacion :global(.antetitulo-encuesta) { font-size: .66rem; }
+
+  .conversacion :global(.encuesta-opciones) {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .conversacion :global(.encuesta-pregunta) {
+    padding: 0;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .conversacion :global(.opcion-encuesta) {
+    position: relative;
+    overflow: hidden;
+    min-height: 44px;
+    border-radius: var(--radius-field);
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .88rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .conversacion :global(.opcion-encuesta.elegida) { border-color: var(--ink); }
+
+  .conversacion :global(.opcion-encuesta:has(input:focus-visible)) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .conversacion :global(.opcion-relleno) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--surface-sunken);
+    transition: width 300ms ease;
+  }
+
+  .conversacion :global(.elegida .opcion-relleno) { background: var(--yellow); }
+
+  .conversacion :global(.opcion-punto) {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    color: var(--on-dark);
+  }
+
+  .conversacion :global(.opcion-punto svg) { visibility: hidden; }
+  .conversacion :global(.elegida .opcion-punto) { background: var(--ink); }
+  .conversacion :global(.elegida .opcion-punto svg) { visibility: visible; }
+
+  .conversacion :global(.opcion-texto) {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+  }
+
+  .conversacion :global(.opcion-votos) {
+    position: relative;
+    font-weight: 700;
+    font-size: .84rem;
+  }
+
+  .conversacion :global(.encuesta-pie) {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  /* N54 · Foto */
+  .conversacion :global(.foto) {
+    width: 262px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  .conversacion :global(.foto-imagen) {
+    position: relative;
+    aspect-ratio: 4 / 3;
+  }
+
+  .conversacion :global(.foto-rotulo) {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    max-width: calc(100% - 16px);
+    background: rgba(23, 18, 15, .66);
+    border-radius: var(--radius-pill);
+    padding: 2px 9px;
+    font-size: .68rem;
+    color: var(--on-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .conversacion :global(.foto-pie) {
+    padding: 9px 12px;
+    font-size: .9rem;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  /* N50 · Reacciones */
+  .conversacion :global(.reacciones) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .conversacion :global(.reaccion) {
+    height: 36px;
+    border-radius: var(--radius-pill);
+    padding: 0 11px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  .conversacion :global(.reaccion.marcada) {
+    background: var(--yellow);
+    border-color: var(--ink);
+  }
+
+  .conversacion :global(.r-encanta svg),
+  .conversacion :global(.r-prendido svg) {
+    color: var(--brand);
+  }
+
+  .conversacion :global(.conv-vacia) {
+    margin: 20px auto 0;
+    max-width: 34ch;
+    text-align: center;
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  /* N55 · Compositor y bandeja "Compartir" */
+  .compositor {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* El relleno deja ver el anillo de foco dentro de la fila con scroll lateral */
+  .bandeja {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 5px;
+    margin: -5px -5px -3px;
+  }
+
+  .bandeja-rotulo {
+    flex-shrink: 0;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .bandeja-evento {
+    flex-shrink: 0;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    padding: 0 14px 0 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .8rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .bolita {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+  }
+
+  .fila-escritura {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .adjuntos {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .icono-compositor {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .icono-compositor[aria-expanded='true'] {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .mas {
+    display: none;
+  }
+
+  .campo-mensaje {
+    flex: 1 1 120px;
+    min-width: 0;
+    height: 44px;
+  }
+
+  .campo-mensaje input {
+    height: 100%;
+    padding: 0 16px;
+    font-size: .95rem;
+    border-radius: inherit;
+  }
+
+  .enviar {
+    position: relative;
+    height: 44px;
+    min-width: 44px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 0 18px;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+    font-size: .9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Vacío: aspecto deshabilitado con aria-disabled; el botón sigue al alcance del teclado (H7) */
+  .enviar[aria-disabled='true'] {
+    background: var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+
+  /* ---------- N56 · Panel de información ---------- */
+  .info {
+    position: relative;
+    width: 297px;
+    flex-shrink: 0;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--surface);
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .info :global(.info-cabeza) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 10px 0 18px;
+  }
+
+  .info :global(.info-rotulo) {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .info :global(.cerrar-info) {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .info :global(.info-identidad) {
+    padding: 4px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .info :global(.info-nombre) {
+    margin-top: 4px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .info :global(.info-sub) {
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .info :global(.ver-perfil) {
+    margin-top: 6px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .info :global(.info-bloque) {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .info :global(.info-evento),
+  .info :global(.info-comun) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .info :global(.info-antetitulo) {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .info :global(.info-evento-enlace) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .info :global(.mini-foto) { flex-shrink: 0; }
+  .info :global(.mini-52) { width: 52px; height: 52px; border-radius: var(--radius-sm); }
+  .info :global(.mini-46) { width: 46px; height: 46px; border-radius: var(--radius-field); }
+
+  .info :global(.mini-texto) {
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .info :global(.mini-texto b) {
+    display: block;
+    font-size: .92rem;
+  }
+
+  .info :global(.mini-texto span) {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .info :global(.mini-chico b) { font-size: .88rem; }
+  .info :global(.mini-chico span) { font-size: .76rem; }
+
+  .info :global(.info-fila-titulo) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .info :global(.info-h3) {
+    font-size: .95rem;
+    font-weight: 700;
+  }
+
+  .info :global(.info-conteo) {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .info :global(.miembros) {
+    list-style: none;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .info :global(.miembro) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+
+  .info :global(.miembro-texto) {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+    font-size: .88rem;
+  }
+
+  .info :global(.miembro-nombre) {
+    display: block;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .info :global(.miembro-rol) {
+    display: block;
+    font-size: .74rem;
+    color: var(--muted);
+  }
+
+  .info :global(.tiene-boleta) {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .info :global(.tiene-circulo) {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--lime);
+    display: grid;
+    place-items: center;
+  }
+
+  .info :global(.sin-boleta) {
+    flex-shrink: 0;
+    font-size: .74rem;
+    color: var(--muted);
+  }
+
+  .info :global(.boton-dividir) {
+    width: 100%;
+    min-height: 44px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: .88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 14px;
+  }
+
+  .info :global(.boton-dividir.marcada) {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .info :global(.nota-dividir) {
+    margin-top: 8px;
+    font-size: .8rem;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .info :global(.info-ajustes) {
+    padding: 10px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Interruptor con role="switch"; pista apagada con contraste 4,27:1 (H52) */
+  .info :global(.interruptor) {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    color: var(--ink);
+    font-size: .9rem;
+    font-weight: 500;
+  }
+
+  .info :global(.interruptor svg) { flex-shrink: 0; }
+  .info :global(.interruptor-texto) { flex: 1; }
+
+  .info :global(.pista) {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background: #857870;
+  }
+
+  .info :global(.interruptor[aria-checked='true'] .pista) { background: var(--ink); }
+
+  .info :global(.perilla) {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(23, 18, 15, .3);
+    transition: left 160ms ease;
+  }
+
+  .info :global(.interruptor[aria-checked='true'] .perilla) { left: 21px; }
+
+  .info :global(.salir) {
+    align-self: flex-start;
+    min-height: 44px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--brand);
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .info :global(.confirmar-salida) {
+    margin-top: 4px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .info :global(.confirmar-salida p) {
+    font-size: .86rem;
+    line-height: 1.4;
+  }
+
+  .info :global(.confirmar-botones) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .info :global(.chico) {
+    height: 40px;
+    padding: 0 14px;
+    font-size: .84rem;
+  }
+
+  .info :global(.boton-rojo) {
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+  }
+
+  /* ---------- Responsive (5.2.7) ---------- */
+  @media (min-width: 900px) {
+    .app-mensajes {
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .marco {
+      min-height: 520px;
+    }
+
+    .barra :global(.volver-lista) {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1180px) {
+    .info[data-ancho='off'] {
+      display: none;
+    }
+  }
+
+  /* 900–1179 px: el panel es una ventana lateral sobre la conversación (H7) */
+  @media (max-width: 1179px) {
+    .lista {
+      width: 301px;
+    }
+
+    .info[data-angosto='off'] {
+      display: none;
+    }
+
+    .info {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 6;
+      width: min(321px, 100%);
+      box-shadow: -16px 0 40px rgba(23, 18, 15, .16);
+    }
+  }
+
+  @media (max-width: 899px) {
+    .principal {
+      padding: 12px var(--margen-lateral) 16px;
+    }
+
+    .marco {
+      border-radius: var(--radius-lg);
+    }
+
+    /* H8: sin min-width: 0 la lista tomaba el ancho de su contenido (691 px) y desbordaba la página */
+    .lista {
+      width: auto;
+      flex: 1 1 auto;
+      min-width: 0;
+      border-right: 0;
+    }
+
+    .app-mensajes[data-pane='lista'] .conversacion,
+    .app-mensajes[data-pane='lista'] .info,
+    .app-mensajes[data-pane='chat'] .lista {
+      display: none;
+    }
+
+    /* H43: la conversación ocupa toda la pantalla, sin el encabezado de la app, y el historial tiene su
+       propio scroll anclado en el último mensaje */
+    .app-mensajes[data-pane='chat'] {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .app-mensajes[data-pane='chat'] :global(.encabezado) {
+      display: none;
+    }
+
+    .app-mensajes[data-pane='chat'] .principal {
+      padding: 0;
+    }
+
+    .app-mensajes[data-pane='chat'] .marco {
+      border: 0;
+      border-radius: 0;
+    }
+
+    .app-mensajes[data-pane='chat'] .titulo-conv {
+      display: block;
+    }
+
+    .historial {
+      padding: 8px 12px 16px;
+    }
+
+    .info {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      width: auto;
+      box-shadow: none;
+      border-left: 0;
+    }
+
+    .enviar {
+      padding: 0;
+      width: 44px;
+    }
+
+    .enviar-texto {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .mas {
+      display: grid;
+    }
+
+    .adjuntos {
+      display: none;
+    }
+
+    /* Al abrir "+", los 3 botones van en su propia fila, encima del campo */
+    .compositor[data-adjuntos-abiertos] .adjuntos {
+      display: flex;
+      order: -1;
+      flex-basis: 100%;
+    }
+  }
+</style>

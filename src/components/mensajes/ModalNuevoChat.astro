@@ -1,0 +1,358 @@
+---
+// N57 · Ventana "Nuevo parche" / "Nuevo chat" sobre la ventana compartida (N68, <dialog>): foco dentro,
+// fondo inerte, Escape y regreso del foco al botón que la abrió (H7). El comportamiento está en BandejaMensajes.
+// Opciones de una sola respuesta como radios nativos y la elección de amigos del parche como casillas (H59).
+import Modal from '../ui/Modal.astro';
+import { AMIGOS, EVENTOS_CHAT, ciudadDe } from '../../data/mensajes';
+import { colorDe, eventoDe, fechaCorta, inicialesDe, nombreDe } from './estado';
+import { icono } from './iconos';
+
+const amigos = AMIGOS.map((id) => ({ id, nombre: nombreDe(id), iniciales: inicialesDe(id), color: colorDe(id), ciudad: ciudadDe[id] }));
+const opcionesEvento = EVENTOS_CHAT.map((id) => {
+  const ev = eventoDe(id);
+  return { id, texto: `${ev.titulo} · ${fechaCorta(ev)} · ${ev.ciudad}` };
+});
+---
+
+<div class="envoltura-modal">
+  <Modal id="nuevo-chat" titulo="Nuevo parche" ancho={540}>
+    <form class="formulario" data-form-nuevo novalidate>
+      <fieldset class="segmentado tipo">
+        <legend class="solo-lectores">Tipo de chat</legend>
+        <label class="segmento"><input type="radio" class="solo-lectores" name="tipo" value="parche" checked /><span>Parche (grupo)</span></label>
+        <label class="segmento"><input type="radio" class="solo-lectores" name="tipo" value="persona" /><span>Con una persona</span></label>
+      </fieldset>
+
+      <div class="solo-parche" data-solo-parche>
+        <label class="campo-modal">
+          Nombre del parche
+          <span class="caja-campo"><input type="text" name="nombre" maxlength="40" placeholder="Ej.: Previa del viernes" autocomplete="off" /></span>
+        </label>
+        <label class="campo-modal">
+          <span>Evento del plan <span class="opcional">(opcional)</span></span>
+          <select name="evento">
+            <option value="">Sin evento por ahora</option>
+            {opcionesEvento.map((o) => <option value={o.id}>{o.texto}</option>)}
+          </select>
+        </label>
+        <p class="aviso-evento" data-aviso-evento hidden>El evento queda fijado arriba del chat y todos ven quién ya tiene boleta.</p>
+      </div>
+
+      <fieldset class="amigos" data-amigos-parche>
+        <legend>¿A quién invitas?</legend>
+        <div class="rejilla-amigos">
+          {
+            amigos.map((a) => (
+              <label class="amigo">
+                <input type="checkbox" class="solo-lectores" name="amigos" value={a.id} />
+                <span class:list={['av-amigo', a.color]} aria-hidden="true">{a.iniciales}</span>
+                <span class="amigo-texto"><b>{a.nombre}</b><span>{a.ciudad}</span></span>
+                <span class="marca cuadrada" aria-hidden="true" set:html={icono('palomita', 12, 3.6)} />
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="amigos" data-amigos-persona hidden>
+        <legend>¿Con quién quieres hablar?</legend>
+        <div class="rejilla-amigos">
+          {
+            amigos.map((a) => (
+              <label class="amigo">
+                <input type="radio" class="solo-lectores" name="persona" value={a.id} />
+                <span class:list={['av-amigo', a.color]} aria-hidden="true">{a.iniciales}</span>
+                <span class="amigo-texto"><b>{a.nombre}</b><span>{a.ciudad}</span></span>
+                <span class="marca redonda" aria-hidden="true" set:html={icono('palomita', 12, 3.6)} />
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <div class="pie">
+        <span class="ayuda" id="nuevo-chat-ayuda" aria-live="polite" data-ayuda>Ponle nombre y elige al menos a un amigo.</span>
+        <button type="button" class="cancelar" data-cerrar-modal>Cancelar</button>
+        <button type="submit" class="principal" aria-disabled="true" aria-describedby="nuevo-chat-ayuda" data-principal>Crear parche</button>
+      </div>
+    </form>
+  </Modal>
+</div>
+
+<style>
+  /* El título de esta ventana usa Archivo 900 (N57) */
+  .envoltura-modal :global(.titulo) {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  /* N19 · Control segmentado "Tipo de chat" */
+  .segmentado {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 4px;
+  }
+
+  .segmento {
+    position: relative;
+    flex: 1;
+    display: flex;
+  }
+
+  .segmento span {
+    flex: 1;
+    height: 38px;
+    border-radius: var(--radius-pill);
+    display: grid;
+    place-items: center;
+    font-size: .86rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    padding: 0 6px;
+  }
+
+  .segmento input:checked + span {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .segmento input:focus-visible + span {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .solo-parche {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .campo-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: .88rem;
+    font-weight: 700;
+  }
+
+  .opcional {
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  /* Foco visible del campo con :focus-within (H51) */
+  .caja-campo {
+    display: flex;
+    height: 46px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+  }
+
+  .caja-campo:focus-within {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .caja-campo input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    padding: 0 14px;
+    font-size: .95rem;
+    font-weight: 400;
+    color: var(--ink);
+    border-radius: inherit;
+  }
+
+  .caja-campo input:focus-visible {
+    outline: none;
+  }
+
+  input::placeholder {
+    color: var(--placeholder);
+  }
+
+  select {
+    height: 46px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    font-size: .9rem;
+    font-weight: 400;
+    background: var(--bg);
+    color: var(--ink);
+    max-width: 100%;
+  }
+
+  .aviso-evento {
+    margin-top: -6px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-size: .88rem;
+    font-weight: 700;
+  }
+
+  .rejilla-amigos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+
+  .amigo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 6px 12px 6px 6px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .amigo:has(input:checked) {
+    border-color: var(--ink);
+    background: var(--bg);
+  }
+
+  .amigo:has(input:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .av-amigo {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .72rem;
+  }
+
+  .c1 { background: var(--peach); }
+  .c2 { background: var(--lilac); }
+  .c3 { background: var(--pink); }
+  .c4 { background: var(--lime); }
+  .c5 { background: var(--yellow); }
+  .c6 { background: var(--aqua); }
+
+  .amigo-texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .amigo-texto b {
+    display: block;
+    font-size: .88rem;
+  }
+
+  .amigo-texto span {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .marca {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 2px solid var(--ink);
+    background: var(--surface);
+    color: var(--on-dark);
+    display: grid;
+    place-items: center;
+  }
+
+  .cuadrada {
+    border-radius: 6px;
+  }
+
+  .redonda {
+    border-radius: 50%;
+  }
+
+  .marca :global(svg) {
+    visibility: hidden;
+  }
+
+  .amigo:has(input:checked) .marca {
+    background: var(--ink);
+  }
+
+  .amigo:has(input:checked) .marca :global(svg) {
+    visibility: visible;
+  }
+
+  .pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .ayuda {
+    flex: 1 1 180px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  /* Tamaño explícito de los dos botones, igual que "Enviar" (4.9, sección 17) */
+  .cancelar {
+    height: 46px;
+    border: 0;
+    background: transparent;
+    padding: 0 14px;
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+  }
+
+  .principal {
+    height: 46px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 0 22px;
+    font-weight: 700;
+    font-size: .9rem;
+    background: var(--brand);
+    color: var(--on-dark);
+  }
+
+  /* No listo: aspecto deshabilitado legible con aria-disabled, sin quitarle el foco (H7) */
+  .principal[aria-disabled='true'] {
+    background: var(--line);
+    color: var(--muted);
+    cursor: default;
+  }
+</style>

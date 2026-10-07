@@ -1,0 +1,11 @@
+---
+// 4.9 · Mensajes: bandeja de conversaciones. En celular muestra la lista; en escritorio abre
+// "Salseros de jueves" como el prototipo. Solo con sesión: el acceso de visitantes depende de "Entrar" (H12, H33).
+import Base from '../layouts/Base.astro';
+import BandejaMensajes from '../components/mensajes/BandejaMensajes.astro';
+import { CONVERSACION_INICIAL } from '../data/mensajes';
+---
+
+<Base titulo="Fulleventos · Mensajes" tamanoBase={15}>
+  <BandejaMensajes abierta={CONVERSACION_INICIAL} vista="lista" />
+</Base>

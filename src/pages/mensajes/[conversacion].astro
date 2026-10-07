@@ -1,0 +1,18 @@
+---
+// 4.9 · Mensajes con una conversación abierta: /mensajes/:conversacion (H42). Así "Escribir al organizador",
+// "Tus parches" y "Mensaje" del perfil abren la conversación correcta y "Volver" funciona en celular.
+import Base from '../../layouts/Base.astro';
+import BandejaMensajes from '../../components/mensajes/BandejaMensajes.astro';
+import { conversaciones } from '../../data/mensajes';
+import { nombreConv } from '../../components/mensajes/estado';
+
+export function getStaticPaths() {
+  return conversaciones.map((c) => ({ params: { conversacion: c.slug }, props: { id: c.id, nombre: nombreConv(c) } }));
+}
+
+const { id, nombre } = Astro.props;
+---
+
+<Base titulo={`Fulleventos · Mensajes · ${nombre}`} tamanoBase={15}>
+  <BandejaMensajes abierta={id} vista="chat" />
+</Base>
