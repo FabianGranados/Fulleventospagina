@@ -1,0 +1,129 @@
+---
+// N9 · Compositor "Publicar un plan". Formulario real (detalle fino global 5).
+// "Armar parche" abre la ventana "Nuevo parche" de Mensajes (H38). Etiquetar evento, Foto, Reseña
+// y el envío no están diseñados (H38): avisan "Próximamente" sin inventar su flujo.
+import Icono from '../ui/Icono.astro';
+import Avatar from '../ui/Avatar.astro';
+import { usuaria } from '../../data/personas';
+
+const nombrePila = usuaria.nombre.split(' ')[0];
+---
+
+<form class="compositor" aria-label="Publicar un plan" data-compositor>
+  <div class="arriba">
+    <Avatar color={usuaria.color} tamano={42} iniciales={usuaria.iniciales} class="avatar-compositor" />
+    <label class="campo">
+      <span class="solo-lectores">Publica tu plan</span>
+      <input
+        id="compositor-campo"
+        type="text"
+        name="texto"
+        autocomplete="off"
+        placeholder={`¿Qué plan tienes, ${nombrePila}? Etiqueta un evento con @`}
+      />
+    </label>
+  </div>
+  <div class="acciones">
+    <button type="button" class="secundario" data-proximamente="etiquetar eventos en tus publicaciones">
+      <Icono nombre="agenda" tamano={16} />Etiquetar evento
+    </button>
+    <a href="/mensajes?nuevo=parche" class="secundario">
+      <Icono nombre="armarParche" tamano={16} />Armar parche
+    </a>
+    <button type="button" class="secundario" data-proximamente="subir fotos">
+      <Icono nombre="foto" tamano={16} />Foto
+    </button>
+    <button type="button" class="secundario" data-proximamente="escribir reseñas">
+      <Icono nombre="estrella" tamano={16} />Reseña
+    </button>
+    <button type="submit" class="publicar">Publicar</button>
+  </div>
+</form>
+
+<style>
+  .compositor {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .arriba {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .arriba :global(.avatar-compositor) {
+    font-size: .8rem;
+  }
+
+  .campo {
+    flex: 1;
+    min-width: 0;
+  }
+
+  input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    background: var(--bg);
+    font-size: .95rem;
+    color: var(--ink);
+    text-overflow: ellipsis;
+  }
+
+  input::placeholder {
+    color: var(--placeholder);
+  }
+
+  .acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .secundario {
+    height: 36px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: var(--radius-pill);
+    padding: 0 14px;
+    font-size: .84rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink);
+  }
+
+  .secundario :global(svg) {
+    flex-shrink: 0;
+  }
+
+  .publicar {
+    margin-left: auto;
+    height: 36px;
+    border: 0;
+    background: var(--brand);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 0 18px;
+    font-size: .86rem;
+    font-weight: 700;
+  }
+
+  /* Objetivos táctiles de 44 px en celular (WCAG 2.5.8 y regla 4 del proyecto) */
+  @media (max-width: 767px) {
+    .secundario,
+    .publicar {
+      height: 44px;
+    }
+  }
+</style>

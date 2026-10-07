@@ -1,0 +1,510 @@
+---
+// Inicio (feed social), handoff 4.5. Pantalla con sesión: en el demo la usuaria es Camila Vargas.
+// Sin backend: los alternadores y filtros son estado del navegador y se pierden al salir (prototipo).
+import Base from '../layouts/Base.astro';
+import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import Icono from '../components/ui/Icono.astro';
+import CuentaLateral from '../components/inicio/CuentaLateral.astro';
+import Historias from '../components/inicio/Historias.astro';
+import Compositor from '../components/inicio/Compositor.astro';
+import Publicacion from '../components/inicio/Publicacion.astro';
+import Descubre from '../components/inicio/Descubre.astro';
+import { pestanas, publicaciones } from '../data/inicio';
+import { ciudades } from '../data/ciudades';
+
+const noLeidos = 3;
+const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
+---
+
+<Base titulo="Fulleventos · Inicio" tamanoBase={15}>
+  <EncabezadoApp variante="completo" activa="inicio" noLeidos={noLeidos} />
+
+  <main id="contenido" class="contenedor inicio" tabindex="-1" data-nombres-ciudad={JSON.stringify(nombres)}>
+    <!-- H15: en el código el feed va primero; en escritorio la rejilla lo pone en el centro -->
+    <section class="feed" aria-labelledby="feed-titulo">
+      <h1 id="feed-titulo" class="solo-lectores">Tu feed</h1>
+
+      <Historias />
+      <Compositor />
+      <div class="aviso-lugar" data-aviso-compositor></div>
+
+      <fieldset class="pestanas">
+        <legend class="solo-lectores">Filtrar feed</legend>
+        {
+          pestanas.map((p, i) => (
+            <label class="pestana">
+              <input type="radio" name="pestana" value={p.id} checked={i === 0} data-pestana />
+              <span>{p.texto}</span>
+            </label>
+          ))
+        }
+      </fieldset>
+
+      <div class="franja" data-franja hidden>
+        <p class="franja-texto">
+          <Icono nombre="pin" tamano={16} class="pin-franja" />
+          <span>Planes de tu gente en <b data-ciudad-nombre></b></span>
+        </p>
+        <span class="franja-botones">
+          <a href="/mapa" class="en-mapa" data-enlace-mapa><Icono nombre="mapa" tamano={15} />Ver en el mapa</a>
+          <button type="button" class="toda" data-limpiar-ciudad>Ver toda Colombia</button>
+        </span>
+      </div>
+
+      <div class="vacio" data-vacio hidden>
+        <p data-vacio-texto></p>
+        <div class="vacio-botones">
+          <button type="button" class="toda grande" data-limpiar-ciudad>Ver toda Colombia</button>
+          <a href="/mapa" class="mapa-rojo" data-enlace-mapa-vacio></a>
+        </div>
+      </div>
+
+      <p class="solo-lectores" role="status" data-anuncio></p>
+
+      <div class="publicaciones">
+        {publicaciones.map((p) => <Publicacion publicacion={p} />)}
+      </div>
+    </section>
+
+    <CuentaLateral noLeidos={noLeidos} />
+    <Descubre />
+  </main>
+
+  <template data-plantilla-aviso>
+    <div class="aviso">
+      <span class="aviso-texto"></span>
+      <button type="button" class="aviso-cerrar" aria-label="Cerrar aviso"><Icono nombre="cerrar" tamano={16} grosor={2.4} /></button>
+    </div>
+  </template>
+</Base>
+
+<script>
+  type Estado = { pestana: string; ciudad: string };
+  const nombres: Record<string, string> = JSON.parse(document.querySelector<HTMLElement>('[data-nombres-ciudad]')!.dataset.nombresCiudad!);
+  const nombre = (id: string) => (id === 'all' ? 'Colombia' : nombres[id] ?? id);
+
+  const radios = [...document.querySelectorAll<HTMLInputElement>('[data-pestana]')];
+  const selector = document.querySelector<HTMLSelectElement>('[data-selector-ciudad]');
+  const posts = [...document.querySelectorAll<HTMLElement>('[data-publicacion]')];
+  const franja = document.querySelector<HTMLElement>('[data-franja]')!;
+  const vacio = document.querySelector<HTMLElement>('[data-vacio]')!;
+  const anuncio = document.querySelector<HTMLElement>('[data-anuncio]')!;
+
+  // Estado inicial desde la URL (/inicio?pestana=parches&ciudad=medellin, H42)
+  const params = new URLSearchParams(location.search);
+  const estado: Estado = {
+    pestana: radios.some((r) => r.value === params.get('pestana')) ? params.get('pestana')! : 'amigos',
+    ciudad: params.get('ciudad') && nombres[params.get('ciudad')!] ? params.get('ciudad')! : 'all',
+  };
+
+  const aplicar = (anunciar: boolean) => {
+    radios.forEach((r) => (r.checked = r.value === estado.pestana));
+    if (selector) selector.value = estado.ciudad;
+
+    let visibles = 0;
+    posts.forEach((p) => {
+      const ve =
+        (p.dataset.pestanas ?? '').split(' ').includes(estado.pestana) &&
+        (estado.ciudad === 'all' || p.dataset.ciudad === estado.ciudad);
+      p.hidden = !ve;
+      if (ve) visibles++;
+    });
+
+    const ciudad = nombre(estado.ciudad);
+    // La franja y el estado vacío son excluyentes (detalle fino 17)
+    franja.hidden = estado.ciudad === 'all' || visibles === 0;
+    vacio.hidden = visibles > 0;
+    franja.querySelector('[data-ciudad-nombre]')!.textContent = ciudad;
+    const mapa = estado.ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${estado.ciudad}`;
+    franja.querySelector<HTMLAnchorElement>('[data-enlace-mapa]')!.href = mapa;
+    vacio.querySelector('[data-vacio-texto]')!.textContent =
+      `Todavía nadie de tu gente ha publicado planes en ${ciudad} en esta pestaña. ` +
+      'Mira lo que hay allá en el mapa o vuelve a toda Colombia.';
+    const enlaceVacio = vacio.querySelector<HTMLAnchorElement>('[data-enlace-mapa-vacio]')!;
+    enlaceVacio.href = mapa;
+    enlaceVacio.textContent = `Ver ${ciudad} en el mapa`;
+
+    // URL compartible sin recargar (H42)
+    const url = new URL(location.href);
+    estado.pestana === 'amigos' ? url.searchParams.delete('pestana') : url.searchParams.set('pestana', estado.pestana);
+    estado.ciudad === 'all' ? url.searchParams.delete('ciudad') : url.searchParams.set('ciudad', estado.ciudad);
+    history.replaceState(null, '', url);
+
+    // Región viva permanente (detalle fino 42, H49)
+    if (anunciar) {
+      const donde = estado.ciudad === 'all' ? 'toda Colombia' : ciudad;
+      anuncio.textContent = visibles
+        ? `Mostrando ${visibles} ${visibles === 1 ? 'plan' : 'planes'} de tu gente en ${donde}`
+        : `Sin planes en ${donde} en esta pestaña`;
+    }
+  };
+
+  radios.forEach((r) =>
+    r.addEventListener('change', () => {
+      estado.pestana = r.value;
+      aplicar(true);
+    }),
+  );
+
+  selector?.addEventListener('change', () => {
+    estado.ciudad = selector.value || 'all';
+    aplicar(true);
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-limpiar-ciudad]').forEach((b) =>
+    b.addEventListener('click', () => {
+      // La pestaña se conserva al limpiar la ciudad (detalle fino 16)
+      estado.ciudad = 'all';
+      aplicar(true);
+      selector?.focus();
+    }),
+  );
+
+  aplicar(false);
+
+  // Alternadores: cambian el texto y aria-pressed; el estilo sale de [aria-pressed]
+  const textos: Record<string, [string, string]> = {
+    voy: ['Voy', 'Vas'],
+    unirme: ['Unirme al parche', 'Estás en el parche'],
+    seguir: ['Seguir', 'Siguiendo'],
+  };
+  const cifra = (n: number) => n.toLocaleString('es-CO');
+
+  document.addEventListener('click', (ev) => {
+    const boton = (ev.target as HTMLElement).closest<HTMLButtonElement>('[data-alternar]');
+    if (!boton) return;
+    const activo = boton.getAttribute('aria-pressed') !== 'true';
+    boton.setAttribute('aria-pressed', String(activo));
+    const tipo = boton.dataset.alternar!;
+    const texto = boton.querySelector('[data-texto]');
+    if (textos[tipo] && texto) texto.textContent = textos[tipo][activo ? 1 : 0];
+    const base = Number(boton.dataset.base ?? 0);
+
+    if (tipo === 'voy') {
+      document.querySelector(`[data-conteo-van="${boton.dataset.id}"]`)!.textContent = cifra(base + (activo ? 1 : 0));
+    } else if (tipo === 'gusta') {
+      const n = base + (activo ? 1 : 0);
+      if (texto) texto.textContent = cifra(n);
+      boton.setAttribute('aria-label', `Me gusta, ${cifra(n)}`);
+    } else if (tipo === 'unirme') {
+      // Un solo dato para el post y la columna "Tus parches" (H37, H25)
+      const id = boton.dataset.parche!;
+      const max = Number(boton.dataset.max);
+      const usados = base + (activo ? 1 : 0);
+      const cupos = `${usados} de ${max} cupos`;
+      document.querySelectorAll(`[data-cupos="${id}"], [data-estado-parche="${id}"]`).forEach((el) => (el.textContent = cupos));
+      document.querySelectorAll<HTMLElement>(`[data-barra="${id}"]`).forEach((el) => (el.style.width = `${Math.round((usados / max) * 100)}%`));
+    }
+  });
+
+  // "Tu plan" abre el campo para publicar (H36)
+  const campo = document.querySelector<HTMLInputElement>('#compositor-campo');
+  document.querySelector('[data-abrir-compositor]')?.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    campo?.focus();
+  });
+
+  // "Próximamente" para lo que no tiene pantalla diseñada (H38): aviso en el flujo, junto al botón
+  const plantilla = document.querySelector<HTMLTemplateElement>('[data-plantilla-aviso]')!;
+  const avisar = (lugar: Element, mensaje: string, origen: HTMLElement) => {
+    document.querySelectorAll('.aviso').forEach((a) => a.remove());
+    const aviso = plantilla.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    aviso.querySelector('.aviso-texto')!.textContent = mensaje;
+    aviso.querySelector('.aviso-cerrar')!.addEventListener('click', () => {
+      aviso.remove();
+      origen.focus();
+    });
+    lugar.append(aviso);
+    anuncio.textContent = mensaje;
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-proximamente]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const lugar = b.closest('[data-publicacion]')?.querySelector('[data-aviso-lugar]') ?? document.querySelector('[data-aviso-compositor]')!;
+      avisar(lugar, `Próximamente podrás ${b.dataset.proximamente}.`, b);
+    }),
+  );
+
+  document.querySelector<HTMLFormElement>('[data-compositor]')?.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const boton = (ev.currentTarget as HTMLFormElement).querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    avisar(document.querySelector('[data-aviso-compositor]')!, 'Próximamente podrás publicar planes.', boton);
+  });
+
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    const aviso = document.querySelector('.aviso');
+    if (aviso) aviso.querySelector<HTMLButtonElement>('.aviso-cerrar')!.click();
+  });
+</script>
+
+<style>
+  /* Tres columnas desde 1120 px (H15); el contenido nunca queda a media anchura */
+  .inicio {
+    padding-top: 24px;
+    padding-bottom: 64px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'feed' 'cuenta' 'descubre';
+    align-items: start;
+    gap: 24px;
+  }
+
+  .inicio:focus {
+    outline: none;
+  }
+
+  .feed {
+    grid-area: feed;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .inicio > :global(.cuenta) {
+    grid-area: cuenta;
+  }
+
+  .inicio > :global(.descubre) {
+    grid-area: descubre;
+  }
+
+  /* En celular y tableta las columnas laterales van después del feed, en rejilla a todo el ancho */
+  .inicio > :global(.cuenta),
+  .inicio > :global(.descubre) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    align-items: start;
+  }
+
+  .inicio > :global(.descubre .legal) {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 812px) {
+    .inicio {
+      grid-template-columns: 220px minmax(0, 1fr);
+      grid-template-areas: 'cuenta feed' 'descubre descubre';
+    }
+
+    .inicio > :global(.cuenta) {
+      display: flex;
+      align-items: stretch;
+    }
+  }
+
+  @media (min-width: 1120px) {
+    .inicio {
+      grid-template-columns: 220px minmax(0, 1fr) 280px;
+      grid-template-areas: 'cuenta feed descubre';
+    }
+
+    .inicio > :global(.descubre) {
+      display: flex;
+      align-items: stretch;
+    }
+  }
+
+  /* Pestañas del feed: grupo de radios con aspecto de chip (H59) */
+  .pestanas {
+    border: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pestana {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .pestana input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .pestana span {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .88rem;
+    font-weight: 500;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .pestana input:checked + span {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .pestana input:focus-visible + span {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* Franja de ciudad (N11) */
+  .franja {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 10px 10px 10px 16px;
+  }
+
+  .franja-texto {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .9rem;
+  }
+
+  .franja-texto :global(.pin-franja) {
+    flex-shrink: 0;
+    color: var(--brand);
+  }
+
+  .franja-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .en-mapa {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .toda {
+    height: 38px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0 14px;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  /* Estado vacío (N67, variante feed) */
+  .vacio {
+    text-align: center;
+    padding: 36px 16px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .vacio p {
+    color: var(--muted);
+    max-width: 46ch;
+  }
+
+  .vacio-botones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .toda.grande {
+    height: 44px;
+    padding: 0 20px;
+    font-size: .9rem;
+  }
+
+  .mapa-rojo,
+  .mapa-rojo:hover {
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 20px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .publicaciones {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .publicaciones > :global([hidden]) {
+    display: none;
+  }
+
+  /* Aviso "Próximamente" con el estilo del aviso N17, en el flujo y junto al botón que lo abrió */
+  .aviso-lugar:empty {
+    display: none;
+  }
+
+  .inicio :global(.aviso) {
+    display: flex;
+    align-items: center;
+    gap: 10px 16px;
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-md);
+    padding: 10px 10px 10px 18px;
+    font-size: .9rem;
+  }
+
+  .inicio :global(.aviso-texto) {
+    flex: 1 1 auto;
+  }
+
+  .inicio :global(.aviso-cerrar) {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--on-dark);
+    display: grid;
+    place-items: center;
+  }
+
+  .inicio :global(.aviso-cerrar:focus-visible) {
+    outline-color: var(--yellow);
+  }
+
+  @media (max-width: 767px) {
+    .pestana span,
+    .en-mapa,
+    .toda {
+      height: 44px;
+    }
+
+    .inicio :global(.aviso-cerrar) {
+      width: 44px;
+      height: 44px;
+    }
+  }
+</style>

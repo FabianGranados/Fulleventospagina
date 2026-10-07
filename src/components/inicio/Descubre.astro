@@ -1,0 +1,342 @@
+---
+// N14 · Columna "Descubre": Tu semana, Mapa de eventos (N21), Gente con tus gustos (N61),
+// Tendencias en Colombia y el texto legal del prototipo.
+import Etiqueta from '../ui/Etiqueta.astro';
+import Avatar from '../ui/Avatar.astro';
+import MiniMapaInicio from './MiniMapaInicio.astro';
+import { tuSemana, genteGustos, tendencias, horaEvento } from '../../data/inicio';
+import { eventos } from '../../data/eventos';
+import { ciudades, nombreCiudad } from '../../data/ciudades';
+import { persona } from '../../data/personas';
+import { cifra, planes, ciudadesTexto, placaFecha, rutaEvento } from '../../lib/formato';
+import { conteoCiudad } from '../../data/eventos';
+
+const semana = tuSemana.map((s) => {
+  const e = eventos.find((ev) => ev.id === s.evento)!;
+  const dia = new Date(`${e.fecha}T12:00:00-05:00`)
+    .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'America/Bogota' })
+    .replace('.', '');
+  return {
+    titulo: e.titulo,
+    href: rutaEvento(e.ciudad, e.titulo),
+    numero: placaFecha(e.fecha).dia,
+    dia,
+    detalle: `${horaEvento[e.id].replace(/ /g, ' ')} · ${s.detalle}`,
+  };
+});
+const confirmados = semana.length === 1 ? '1 plan confirmado' : `${semana.length} planes confirmados`;
+const activas = ciudades.filter((c) => conteoCiudad(c.id) > 0).length;
+const gente = genteGustos.map((g) => ({ ...g, p: persona(g.persona)! }));
+---
+
+<aside class="descubre" aria-label="Descubre">
+  <section class="tarjeta semana superficie-oscura" aria-labelledby="semana-titulo">
+    <Etiqueta tamano="sm" class="etiqueta-semana">Tu semana</Etiqueta>
+    <h2 id="semana-titulo">{confirmados}</h2>
+    <ul>
+      {
+        semana.map((s) => (
+          <li>
+            <a href={s.href}>
+              <span class="fecha" aria-hidden="true">
+                <b>{s.numero}</b>
+                <span>{s.dia}</span>
+              </span>
+              <span class="plan">
+                <span class="solo-lectores">{s.dia} {s.numero}: </span>
+                {s.titulo}
+                <span class="detalle">{s.detalle}</span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="tarjeta blanca mapa" aria-labelledby="mapa-titulo">
+    <div class="cabecera-mapa">
+      <h2 id="mapa-titulo">Mapa de eventos</h2>
+      <span class="nuevo">Nuevo</span>
+    </div>
+    <p class="resumen"><b>{planes(eventos.length)}</b> este finde en {ciudadesTexto(activas)}, de la costa al Amazonas.</p>
+    <MiniMapaInicio />
+  </section>
+
+  <section class="tarjeta blanca gente" aria-labelledby="gente-titulo">
+    <h2 id="gente-titulo">Gente con tus gustos</h2>
+    <ul>
+      {
+        gente.map((g) => (
+          <li>
+            <a href={`/perfil/${g.p.id}`} class="avatar-enlace" tabindex="-1" aria-hidden="true">
+              <Avatar color={g.p.color} tamano={40} iniciales={g.p.iniciales} class="avatar-gente" />
+            </a>
+            <span class="persona">
+              <a href={`/perfil/${g.p.id}`}>{g.p.nombre}</a>
+              <span>{g.motivo}</span>
+            </span>
+            <button type="button" class="seguir" aria-pressed="false" data-alternar="seguir">
+              <span data-texto>Seguir</span><span class="solo-lectores"> a {g.p.nombre}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="tarjeta blanca tendencias" aria-labelledby="tendencias-titulo">
+    <h2 id="tendencias-titulo">Tendencias en Colombia</h2>
+    <ul>
+      {
+        tendencias.map((t) => (
+          <li>
+            <a href={t.ciudad ? `/agenda?ciudad=${t.ciudad}` : '/agenda'}>
+              <span class="meta">
+                <b>{t.ciudad ? nombreCiudad(t.ciudad) : 'Toda Colombia'}</b> · {t.tema} · {cifra(t.planes)} planes
+              </span>
+              <b class="etiqueta">{t.etiqueta}</b>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <p class="legal">
+    Compra segura dentro de Fulleventos. Las boletas las emite la boletera oficial del evento o el organizador. ·
+    Contenido de ejemplo
+  </p>
+</aside>
+
+<style>
+  .descubre {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  ul {
+    list-style: none;
+  }
+
+  .tarjeta {
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .blanca {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 18px;
+  }
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  /* Tu semana */
+  .semana {
+    background: var(--ink);
+    color: var(--on-dark);
+    padding: 20px;
+    gap: 10px;
+  }
+
+  .semana :global(.etiqueta-semana) {
+    align-self: flex-start;
+    font-size: .8rem;
+    padding: 3px 9px;
+    line-height: 1.5;
+  }
+
+  .semana h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .semana ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .semana a,
+  .semana a:hover {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: var(--on-dark);
+    border-radius: var(--radius-xs);
+  }
+
+  .fecha {
+    width: 44px;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.2rem;
+  }
+
+  .fecha span {
+    font-size: .68rem;
+    text-transform: uppercase;
+    color: var(--on-dark-muted);
+  }
+
+  .plan {
+    font-size: .88rem;
+    line-height: 1.3;
+    min-width: 0;
+  }
+
+  .detalle {
+    display: block;
+    color: var(--on-dark-muted);
+    font-size: .78rem;
+  }
+
+  /* Mapa de eventos */
+  .mapa {
+    gap: 12px;
+  }
+
+  .cabecera-mapa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .nuevo {
+    background: var(--yellow);
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+    padding: 2px 9px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .resumen {
+    font-size: .86rem;
+    color: var(--muted);
+  }
+
+  .resumen b {
+    color: var(--ink);
+  }
+
+  /* Gente con tus gustos */
+  .gente {
+    gap: 4px;
+  }
+
+  .gente h2 {
+    margin-bottom: 6px;
+  }
+
+  .gente li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .avatar-enlace {
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+
+  .gente :global(.avatar-gente) {
+    font-size: .78rem;
+  }
+
+  .persona {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .persona a {
+    font-weight: 700;
+    font-size: .9rem;
+  }
+
+  .persona span {
+    display: block;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .seguir {
+    flex-shrink: 0;
+    height: 36px;
+    border-radius: var(--radius-pill);
+    padding: 0 14px;
+    font-size: .8rem;
+    font-weight: 700;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .seguir[aria-pressed='true'] {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  /* Tendencias */
+  .tendencias {
+    gap: 4px;
+  }
+
+  .tendencias h2 {
+    margin-bottom: 4px;
+  }
+
+  .tendencias a {
+    display: block;
+    line-height: 1.3;
+    padding: 4px 0;
+    border-radius: 6px;
+  }
+
+  .meta {
+    display: block;
+    font-size: .74rem;
+    color: var(--muted);
+  }
+
+  .meta b {
+    color: var(--ink);
+  }
+
+  .tendencias a:hover .meta b {
+    color: var(--ink);
+  }
+
+  .legal {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 767px) {
+    .seguir {
+      height: 44px;
+    }
+  }
+</style>
