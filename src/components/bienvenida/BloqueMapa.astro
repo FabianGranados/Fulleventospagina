@@ -1,0 +1,138 @@
+---
+import Etiqueta from '../ui/Etiqueta.astro';
+import Icono from '../ui/Icono.astro';
+import MiniMapaColombia from './MiniMapaColombia.astro';
+import { ciudades } from '../../data/ciudades';
+import { eventos } from '../../data/eventos';
+import { planes, ciudadesTexto } from '../../lib/formato';
+
+const activas = ciudades.filter((c) => eventos.some((e) => e.ciudad === c.id)).length;
+---
+
+<section id="mapa" class="seccion" aria-labelledby="mapa-titulo">
+  <div class="bloque superficie-oscura">
+    <div class="texto">
+      <Etiqueta tamano="md" class="etiqueta-bloque">Nuevo · Mapa de eventos</Etiqueta>
+      <h2 id="mapa-titulo">Todo el país en un mapa</h2>
+      <p class="bajada">
+        De la costa al Amazonas: mira qué planes hay este finde en cada ciudad y a dónde va tu gente,
+        estés donde estés.
+      </p>
+      <ul>
+        <li><span class="baldosa amarillo"><Icono nombre="pin" /></span>Toca una ciudad y ve todos sus planes</li>
+        <li><span class="baldosa rosado"><Icono nombre="filtro" /></span>Filtra por rumba, conciertos, deporte o planes gratis</li>
+        <li><span class="baldosa aguamarina"><Icono nombre="personas" /></span>Mira a qué van tus amigos, en tu ciudad o de viaje</li>
+      </ul>
+      <div class="accion">
+        <a href="/mapa" class="abrir"><Icono nombre="mapa" />Abrir el mapa de eventos</a>
+        <span class="resumen"><b>{planes(eventos.length)}</b> este finde en <b>{ciudadesTexto(activas)}</b></span>
+      </div>
+    </div>
+    <MiniMapaColombia />
+  </div>
+</section>
+
+<style>
+  .seccion {
+    padding-top: 72px;
+  }
+
+  .bloque {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-2xl);
+    color: var(--on-dark);
+    padding: clamp(28px, 5vw, 56px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 36px 48px;
+    background:
+      radial-gradient(circle at 78% 18%, rgba(246, 220, 106, .16) 0, transparent 32%),
+      radial-gradient(circle at 70% 88%, rgba(238, 147, 188, .18) 0, transparent 38%),
+      radial-gradient(ellipse at 6% 30%, rgba(70, 30, 80, .5) 0, transparent 45%),
+      var(--hero);
+  }
+
+  .texto {
+    flex: 1 1 340px;
+    min-width: 0;
+  }
+
+  .texto :global(.etiqueta-bloque) {
+    margin-bottom: 14px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.8rem, 3.6vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    text-transform: uppercase;
+  }
+
+  .bajada {
+    margin-top: 14px;
+    max-width: 46ch;
+    color: var(--on-dark-muted);
+  }
+
+  ul {
+    list-style: none;
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: .95rem;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .baldosa {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .08);
+    display: grid;
+    place-items: center;
+  }
+
+  .amarillo { color: var(--yellow); }
+  .rosado { color: var(--pink); }
+  .aguamarina { color: var(--aqua); }
+
+  .accion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 20px;
+    margin-top: 28px;
+  }
+
+  .abrir,
+  .abrir:hover {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+    padding: 15px 26px;
+    font-weight: 700;
+  }
+
+  .resumen {
+    font-size: .88rem;
+    color: var(--on-dark-muted);
+  }
+
+  .resumen b {
+    color: var(--on-dark);
+  }
+</style>

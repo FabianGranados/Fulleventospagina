@@ -1,12 +1,27 @@
 ---
 import Base from '../layouts/Base.astro';
+import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
+import Pie from '../components/layout/Pie.astro';
 import Hero from '../components/bienvenida/Hero.astro';
+import AgendaFinde from '../components/bienvenida/AgendaFinde.astro';
+import ComoFunciona from '../components/bienvenida/ComoFunciona.astro';
+import BloqueMapa from '../components/bienvenida/BloqueMapa.astro';
+import Unete from '../components/bienvenida/Unete.astro';
+import Noticias from '../components/bienvenida/Noticias.astro';
 ---
 
 <Base titulo="Fulleventos Colombia">
+  <EncabezadoVisitante />
+  <!-- Orden de la auditoría H44 (decisión 2.13): los planes a la venta justo después del héroe -->
   <main id="contenido" class="contenedor principal">
     <Hero />
+    <AgendaFinde />
+    <ComoFunciona />
+    <BloqueMapa />
+    <Unete />
+    <Noticias />
   </main>
+  <Pie />
 </Base>
 
 <style>

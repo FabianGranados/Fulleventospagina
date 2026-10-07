@@ -1,0 +1,403 @@
+---
+import Icono from '../ui/Icono.astro';
+import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import TarjetaEvento from '../eventos/TarjetaEvento.astro';
+import { ciudades } from '../../data/ciudades';
+import { eventos } from '../../data/eventos';
+
+const LIMITE = 8;
+
+const categorias = [
+  { id: 'all', texto: 'Todo' },
+  { id: 'rumba', texto: 'Rumba' },
+  { id: 'conciertos', texto: 'Conciertos' },
+  { id: 'amigos', texto: 'Con parches abiertos' },
+  { id: 'gratis', texto: 'Gratis este finde' },
+  { id: 'comida', texto: 'Comida' },
+  { id: 'deporte', texto: 'Deporte' },
+  { id: 'teatro', texto: 'Arte y teatro' },
+];
+
+const conteo = (id: string) => eventos.filter((e) => e.ciudad === id).length;
+
+// Orden intercalado por ciudad: el 1.º de cada ciudad, luego el 2.º… (4.3, 6.5)
+const porCiudad = ciudades.map((c) => eventos.filter((e) => e.ciudad === c.id));
+const intercalados = [];
+for (let i = 0; porCiudad.some((g) => g[i]); i++) {
+  for (const grupo of porCiudad) if (grupo[i]) intercalados.push(grupo[i]);
+}
+const ocultos = eventos.length - LIMITE;
+---
+
+<section id="agenda" class="agenda" aria-labelledby="agenda-titulo" data-agenda>
+  <div class="cabecera">
+    <div>
+      <p class="antetitulo">Agenda</p>
+      <h2 id="agenda-titulo" tabindex="-1">Este finde en Colombia</h2>
+    </div>
+    <div class="enlaces">
+      <span class="ejemplo">Contenido de ejemplo</span>
+      <a href="/mapa" class="ver-mapa" data-ver-mapa><Icono nombre="mapa" tamano={16} />Ver en el mapa</a>
+      <EnlaceSubrayado href="/agenda" class="ver-todo">Ver toda la agenda</EnlaceSubrayado>
+    </div>
+  </div>
+
+  <div class="chips" role="group" aria-label="Filtrar por ciudad">
+    <button type="button" class="chip" data-ciudad="all" aria-pressed="true">
+      <Icono nombre="pin" tamano={16} />Toda Colombia{' '}<span class="conteo">{eventos.length}<span class="solo-lectores">{eventos.length === 1 ? ' plan' : ' planes'}</span></span>
+    </button>
+    {
+      ciudades.map((c) => (
+        <button type="button" class="chip" data-ciudad={c.id} aria-pressed="false">
+          {c.nombre}{' '}<span class="conteo">{conteo(c.id)}<span class="solo-lectores">{conteo(c.id) === 1 ? ' plan' : ' planes'}</span></span>
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="chips categorias" role="group" aria-label="Filtrar por categoría">
+    {
+      categorias.map((c) => (
+        <button type="button" class="chip" data-categoria={c.id} aria-pressed={c.id === 'all' ? 'true' : 'false'}>
+          {c.texto}
+        </button>
+      ))
+    }
+  </div>
+
+  <p class="solo-lectores" role="status" data-anuncio></p>
+
+  <div class="vacio" data-vacio hidden>
+    <p data-vacio-mensaje></p>
+    <button type="button" class="boton-contorno" data-limpiar>Ver todos los planes del país</button>
+  </div>
+
+  <div class="rejilla" id="agenda-rejilla" data-rejilla>
+    {
+      intercalados.map((e, i) => (
+        <div class="celda" data-celda data-orden={eventos.indexOf(e)} hidden={i >= LIMITE}>
+          <TarjetaEvento evento={e} />
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="mas" data-mas-contenedor>
+    <button type="button" class="boton-contorno grande" aria-expanded="false" aria-controls="agenda-rejilla" data-mas>
+      {`Ver ${ocultos} planes más`}
+    </button>
+  </div>
+</section>
+
+<script>
+  import { ciudades } from '../../data/ciudades';
+
+  const LIMITE = 8;
+  const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
+  const raiz = document.querySelector<HTMLElement>('[data-agenda]');
+
+  if (raiz) {
+    const rejilla = raiz.querySelector<HTMLElement>('[data-rejilla]')!;
+    const celdas = [...rejilla.querySelectorAll<HTMLElement>('[data-celda]')].sort(
+      (a, b) => Number(a.dataset.orden) - Number(b.dataset.orden),
+    );
+    const chipsCiudad = [...raiz.querySelectorAll<HTMLButtonElement>('[data-ciudad]')].filter((b) => b.classList.contains('chip'));
+    const chipsCategoria = [...raiz.querySelectorAll<HTMLButtonElement>('[data-categoria]')];
+    const selector = document.querySelector<HTMLSelectElement>('[data-selector-ciudad]');
+    const vacio = raiz.querySelector<HTMLElement>('[data-vacio]')!;
+    const mensajeVacio = raiz.querySelector<HTMLElement>('[data-vacio-mensaje]')!;
+    const botonMas = raiz.querySelector<HTMLButtonElement>('[data-mas]')!;
+    const contenedorMas = raiz.querySelector<HTMLElement>('[data-mas-contenedor]')!;
+    const anuncio = raiz.querySelector<HTMLElement>('[data-anuncio]')!;
+    const verMapa = raiz.querySelector<HTMLAnchorElement>('[data-ver-mapa]')!;
+    const titulo = raiz.querySelector<HTMLElement>('#agenda-titulo')!;
+
+    const estado = { ciudad: 'all', categoria: 'all', todo: false };
+    const planes = (n: number) => `${n} ${n === 1 ? 'plan' : 'planes'}`;
+
+    const coincide = (c: HTMLElement) => {
+      const tarjeta = c.querySelector<HTMLElement>('[data-tarjeta]')!;
+      const enCiudad = estado.ciudad === 'all' || tarjeta.dataset.ciudad === estado.ciudad;
+      const cat = estado.categoria;
+      const enCategoria =
+        cat === 'all' ||
+        (cat === 'amigos' ? Number(tarjeta.dataset.parches) > 0 : tarjeta.dataset.etiquetas!.split(' ').includes(cat));
+      return enCiudad && enCategoria;
+    };
+
+    const ordenar = (lista: HTMLElement[]) => {
+      if (estado.ciudad !== 'all') return lista;
+      const grupos = ciudades.map((c) => lista.filter((x) => x.querySelector<HTMLElement>('[data-tarjeta]')!.dataset.ciudad === c.id));
+      const salida: HTMLElement[] = [];
+      for (let i = 0; grupos.some((g) => g[i]); i++) for (const g of grupos) if (g[i]) salida.push(g[i]);
+      return salida;
+    };
+
+    const mensajeVacioTexto = () => {
+      const ciudad = nombres[estado.ciudad];
+      if (estado.ciudad !== 'all' && estado.categoria !== 'all') return `No hay planes de esta categoría en ${ciudad} este finde.`;
+      if (estado.ciudad !== 'all') return `No hay planes en ${ciudad} este finde.`;
+      return 'No hay planes en esta categoría este finde.';
+    };
+
+    const pintar = (anunciar = true) => {
+      const visibles = ordenar(celdas.filter(coincide));
+      celdas.forEach((c) => (c.hidden = true));
+      visibles.forEach((c, i) => {
+        rejilla.append(c);
+        c.hidden = !estado.todo && i >= LIMITE;
+      });
+
+      const ocultos = visibles.length - LIMITE;
+      vacio.hidden = visibles.length > 0;
+      mensajeVacio.textContent = mensajeVacioTexto();
+      contenedorMas.hidden = ocultos <= 0;
+      botonMas.setAttribute('aria-expanded', String(estado.todo));
+      botonMas.textContent = estado.todo ? 'Ver menos planes' : ocultos === 1 ? 'Ver 1 plan más' : `Ver ${ocultos} planes más`;
+
+      chipsCiudad.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ciudad === estado.ciudad)));
+      chipsCategoria.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
+      if (selector) selector.value = estado.ciudad;
+      verMapa.href = estado.ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${estado.ciudad}`;
+
+      if (anunciar) {
+        anuncio.textContent = visibles.length
+          ? `Mostrando ${planes(estado.todo ? visibles.length : Math.min(visibles.length, LIMITE))}` +
+            (estado.ciudad !== 'all' ? ` en ${nombres[estado.ciudad]}` : '')
+          : mensajeVacioTexto();
+      }
+    };
+
+    chipsCiudad.forEach((b) =>
+      b.addEventListener('click', () => {
+        estado.ciudad = b.dataset.ciudad!;
+        estado.todo = false;
+        pintar();
+      }),
+    );
+    chipsCategoria.forEach((b) =>
+      b.addEventListener('click', () => {
+        estado.categoria = b.dataset.categoria!;
+        estado.todo = false;
+        pintar();
+      }),
+    );
+    selector?.addEventListener('change', () => {
+      estado.ciudad = selector.value || 'all';
+      estado.todo = false;
+      pintar();
+    });
+    botonMas.addEventListener('click', () => {
+      estado.todo = !estado.todo;
+      pintar();
+      if (!estado.todo) botonMas.scrollIntoView({ block: 'nearest' });
+    });
+    raiz.querySelector('[data-limpiar]')!.addEventListener('click', () => {
+      Object.assign(estado, { ciudad: 'all', categoria: 'all', todo: false });
+      pintar();
+      titulo.focus();
+    });
+
+    raiz.addEventListener('click', (ev) => {
+      const guardar = (ev.target as HTMLElement).closest<HTMLButtonElement>('.guardar');
+      if (guardar) guardar.setAttribute('aria-pressed', String(guardar.getAttribute('aria-pressed') !== 'true'));
+    });
+
+    pintar(false);
+  }
+</script>
+
+<style>
+  .agenda {
+    padding-top: 72px;
+  }
+
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .antetitulo {
+    margin: 0 0 6px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  h2:focus {
+    outline: none;
+  }
+
+  .enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+  }
+
+  .ejemplo {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .ver-mapa {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .enlaces :global(.ver-todo) {
+    font-size: .9rem;
+  }
+
+  /* position: relative contiene el texto oculto de los contadores (8.1 #4) */
+  .chips {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .categorias {
+    margin-bottom: 22px;
+  }
+
+  .chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .chip:has(.conteo) {
+    padding: 0 7px 0 15px;
+  }
+
+  .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .conteo {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    display: inline-grid;
+    place-items: center;
+    font-size: .78rem;
+    font-weight: 700;
+    background: var(--surface-sunken);
+    color: var(--ink);
+  }
+
+  .chip[aria-pressed='true'] .conteo {
+    background: var(--yellow);
+  }
+
+  /* Pista de que hay más chips (H61): en tableta y escritorio pasan a dos líneas;
+     en celular se desplazan de lado con un desvanecido en el borde */
+  @media (min-width: 768px) {
+    .chips {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .chips {
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      padding-right: 24px;
+    }
+  }
+
+  .vacio {
+    text-align: center;
+    padding: 40px 16px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-card);
+  }
+
+  .vacio p {
+    margin: 0 0 14px;
+    color: var(--muted);
+  }
+
+  .boton-contorno {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0 20px;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .boton-contorno.grande {
+    height: 48px;
+    padding: 0 24px;
+    font-size: .92rem;
+  }
+
+  .rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 22px;
+  }
+
+  .celda {
+    display: flex;
+  }
+
+  .celda > :global(*) {
+    flex: 1;
+  }
+
+  .celda[hidden] {
+    display: none;
+  }
+
+  .mas {
+    display: flex;
+    justify-content: center;
+    margin-top: 28px;
+  }
+
+  .mas[hidden] {
+    display: none;
+  }
+</style>

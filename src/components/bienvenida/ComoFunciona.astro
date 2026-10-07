@@ -1,0 +1,107 @@
+---
+const pasos = [
+  {
+    n: '1',
+    color: 'var(--yellow)',
+    titulo: 'Descubre',
+    texto:
+      'Rumba, conciertos, fútbol, teatro y planes gratis de todo el país, en un solo lugar. Búscalos por ciudad o explóralos en el mapa.',
+  },
+  {
+    n: '2',
+    color: 'var(--pink)',
+    titulo: 'Mira quién va',
+    texto: 'Sigue a tus amigos y ve a qué eventos van, qué guardan y qué recomiendan.',
+  },
+  {
+    n: '3',
+    color: 'var(--lilac)',
+    titulo: 'Arma parche',
+    // H1: se quitó el absoluto "sin salir de Fulleventos" (depende del modo de compra, P1)
+    texto: 'Crea un grupo para ir juntos o únete a uno abierto, y compra tus boletas.',
+  },
+];
+---
+
+<section id="como-funciona" class="como" aria-labelledby="como-titulo">
+  <p class="antetitulo">Cómo funciona</p>
+  <h2 id="como-titulo">Planes mejores, con tu gente</h2>
+  <div class="pasos">
+    {
+      pasos.map((p) => (
+        <div class="paso">
+          <span class="numero" style={`background: ${p.color}`}>{p.n}</span>
+          <h3>{p.titulo}</h3>
+          <p>{p.texto}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .como {
+    padding-top: 72px;
+  }
+
+  .antetitulo {
+    margin: 0 0 6px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h2 {
+    margin: 0 0 28px;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  /* Pasa directo de 1 a 3 columnas, sin la fila suelta de 2 + 1 (H61) */
+  .pasos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  @media (min-width: 720px) {
+    .pasos {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .paso {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .numero {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.3rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .paso p {
+    color: var(--muted);
+  }
+</style>

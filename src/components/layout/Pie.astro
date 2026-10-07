@@ -1,0 +1,34 @@
+---
+// Texto del prototipo. El pie legal (H5) se hace con los datos reales (P8) y el modo de compra (P1).
+const anio = new Date().getFullYear();
+---
+
+<footer class="pie">
+  <div class="fila">
+    <span>© {anio} Fulleventos · Colombia</span>
+    <span>
+      Compra segura dentro de Fulleventos. Las boletas las emite la boletera oficial del evento o el
+      organizador.
+    </span>
+  </div>
+</footer>
+
+<style>
+  .pie {
+    margin-top: 72px;
+    border-top: 1px solid var(--line);
+  }
+
+  .fila {
+    box-sizing: content-box;
+    max-width: var(--ancho-max);
+    margin-inline: auto;
+    padding: 28px var(--margen-lateral) 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    justify-content: space-between;
+    font-size: .85rem;
+    color: var(--muted);
+  }
+</style>

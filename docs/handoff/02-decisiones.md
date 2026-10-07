@@ -231,3 +231,23 @@ Las tomó el cliente al revisar el plan de implementación del héroe.
   - **Qué:** héroe → "Este finde en Colombia" → "Cómo funciona" → Mapa → Únete → Noticias.
   - **Por qué:** en el prototipo el primer "Comprar" aparecía después de 5,5 pantallas en celular. Así los planes a la venta quedan justo después del héroe.
   - **Descartado:** el orden del prototipo (héroe → Cómo funciona → Mapa → Noticias → Agenda → Únete).
+
+### 2.14 Decisiones para terminar la Bienvenida (7 de octubre de 2026)
+
+El cliente pidió construir el producto "tal cual" el prototipo, con las correcciones obligatorias de la auditoría, pantalla por pantalla. Para la Bienvenida eligió lo siguiente.
+
+- **Precio con el cargo (H21).** Las tarjetas dicen "Desde $45.000" y debajo "+ cargo por servicio", sin calcular el porcentaje (pendiente P4). **Descartado:** "Desde $48.600 con cargos" y dejar el precio sin mencionar el cargo.
+- **Boleteras (H1).** TuBoleta, Ticketmaster y Fever se reemplazan por "[BOLETERA]" y la agenda lleva la nota "Contenido de ejemplo". Las fuentes de los eventos gratis ("Entrada libre", "Idartes") se mantienen. **Descartado:** mostrar los nombres reales con la nota.
+- **Mini-mapa (H60).** Todo el mini-mapa es un solo enlace a `/mapa`; los pines son decorativos. **Descartado:** un enlace por ciudad, que exigiría pines de 24–28 px y agrupar la costa ("Costa Caribe · 3"), sin diseño.
+- **Noticias (H36).** Se muestran sin enlace hasta que exista la página de noticia. Por eso las cuatro llevan `h3` (H59). **Descartado:** enlazar a rutas que todavía no existen.
+- **Encabezado en celular (H40, H8).** Por debajo de 768 px el encabezado no es fijo. Por debajo de 480 px el selector de ciudad baja a su propia línea dentro del buscador. **Descartado:** el ajuste del código base (ocultar los enlaces del menú).
+- **"Este finde" en celular (H44).** Rejilla de una columna, como el prototipo. El carrusel de 4 a 6 tarjetas queda pendiente de diseño.
+- **Pie de página (H5).** Los dos textos del prototipo. El pie legal se hace con los datos reales (P8) y el modo de compra (P1).
+- **Buscador.** Se conserva "¿Qué plan buscas?". El texto unificado (H41) se decide al construir las pantallas con sesión.
+
+Ajustes de implementación que se derivan de la auditoría, sin texto nuevo inventado:
+
+- **H39.** El chip "Planes con amigos" pasa a llamarse "Con parches abiertos".
+- **H1.** El paso 3 de "Cómo funciona" pierde el absoluto "sin salir de Fulleventos": "Crea un grupo para ir juntos o únete a uno abierto, y compra tus boletas."
+- **H61.** "Cómo funciona" pasa directo de 1 a 3 columnas (desde 720 px) y no deja una tarjeta sola. Los chips pasan a dos líneas desde 768 px; por debajo se desplazan de lado con un desvanecido en el borde.
+- **H59.** Los nombres accesibles de los chips de ciudad empiezan por el texto visible: "Bogotá 6 planes".

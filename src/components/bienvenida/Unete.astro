@@ -1,0 +1,102 @@
+---
+import Etiqueta from '../ui/Etiqueta.astro';
+import Icono from '../ui/Icono.astro';
+---
+
+<section aria-labelledby="unete-titulo" class="unete superficie-oscura">
+  <div class="texto">
+    <Etiqueta tamano="md" class="etiqueta-bloque">Tu gente ya está aquí</Etiqueta>
+    <h2 id="unete-titulo">Ve a qué van tus amigos y súmate al parche</h2>
+    <p class="bajada">
+      Crea tu cuenta en un minuto, elige tu ciudad y lo que te gusta, y te mostramos los planes de tu
+      gente.
+    </p>
+  </div>
+  <div class="acciones">
+    <a href="/registro" class="acceso claro"><Icono nombre="google" grosor={2.2} />Continuar con Google</a>
+    <a href="/registro" class="acceso contorno">Continuar con mi celular</a>
+    <p class="ya">¿Ya tienes cuenta? <a href="/entrar">Entrar</a></p>
+  </div>
+</section>
+
+<style>
+  .unete {
+    margin-top: 80px;
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-2xl);
+    padding: clamp(28px, 5vw, 56px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .texto {
+    flex: 1 1 380px;
+    min-width: 0;
+  }
+
+  .texto :global(.etiqueta-bloque) {
+    margin-bottom: 14px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.8rem, 3.6vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    text-transform: uppercase;
+  }
+
+  .bajada {
+    margin-top: 14px;
+    max-width: 48ch;
+    color: var(--on-dark-muted);
+  }
+
+  .acciones {
+    flex: 1 1 280px;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .acceso {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 52px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+  }
+
+  .claro,
+  .claro:hover {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .contorno,
+  .contorno:hover {
+    border: 1px solid rgba(255, 255, 255, .4);
+    color: var(--on-dark);
+  }
+
+  .ya {
+    margin-top: 4px;
+    font-size: .84rem;
+    color: var(--on-dark-muted);
+    text-align: center;
+  }
+
+  .ya a,
+  .ya a:hover {
+    color: var(--on-dark);
+    font-weight: 700;
+    border-bottom: 1px solid var(--on-dark);
+  }
+</style>

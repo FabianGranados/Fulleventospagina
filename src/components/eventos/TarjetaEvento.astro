@@ -1,0 +1,196 @@
+---
+import Icono from '../ui/Icono.astro';
+import type { Evento } from '../../data/eventos';
+import { nombreCiudad } from '../../data/ciudades';
+import { cifra, pesos, placaFecha, rutaEvento } from '../../lib/formato';
+
+interface Props {
+  evento: Evento;
+}
+
+const { evento: e } = Astro.props;
+const { dia, mes } = placaFecha(e.fecha);
+const ciudad = nombreCiudad(e.ciudad);
+const href = rutaEvento(e.ciudad, e.titulo);
+const social =
+  `${cifra(e.van)} van` +
+  (e.parches ? ` · ${e.parches} ${e.parches === 1 ? 'parche abierto' : 'parches abiertos'}` : '');
+---
+
+<article
+  class="tarjeta"
+  data-tarjeta
+  data-ciudad={e.ciudad}
+  data-etiquetas={e.etiquetas.join(' ')}
+  data-parches={e.parches}
+>
+  <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}>
+    <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
+    <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`}>
+      <Icono nombre="corazon" tamano={18} />
+    </button>
+  </div>
+  <div class="cuerpo">
+    <span class="categoria">{e.categoria}</span>
+    <h3 class="titulo"><a href={href}>{e.titulo}</a></h3>
+    <span class="lugar">{e.lugar} · <b>{ciudad}</b></span>
+    <span class="social"><Icono nombre="persona" tamano={14} />{social}</span>
+    <div class="compra">
+      <span class="precio">
+        {e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}
+        {e.precio > 0 && <small>+ cargo por servicio</small>}
+        <small>{e.vende}</small>
+      </span>
+      <a
+        class="cta"
+        href={href}
+        aria-label={e.precio ? `Comprar boletas para ${e.titulo}` : `Ver plan: ${e.titulo}`}
+      >
+        {e.precio ? 'Comprar' : 'Ver plan'}
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .tarjeta {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .imagen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 55%), var(--bg2);
+  }
+
+  .fecha {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    text-align: center;
+    line-height: 1;
+    min-width: 46px;
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 900;
+  }
+
+  .fecha span {
+    font-size: .66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .guardar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .94);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+
+  .guardar[aria-pressed='true'] {
+    color: var(--brand);
+  }
+
+  .guardar[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
+  }
+
+  .cuerpo {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .categoria {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .titulo {
+    margin: 4px 0 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .lugar {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .lugar b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .social {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .compra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 14px;
+  }
+
+  .precio {
+    font-weight: 700;
+    font-size: .95rem;
+  }
+
+  .precio small {
+    display: block;
+    font-weight: 400;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .cta,
+  .cta:hover {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    background: var(--brand);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 11px 15px;
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+</style>
