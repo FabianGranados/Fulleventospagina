@@ -368,3 +368,8 @@ El cliente pidió un héroe minimalista en computador, a partir de una referenci
 - **Celular (hasta 820 px):** igual que antes, con la etiqueta amarilla y el titular de bloques con degradado (decisión 2.13).
 - **Un solo h1:** los dos titulares están en el HTML, pero solo uno se muestra según el ancho. El otro tiene `display: none`, así que nunca hay dos h1 en el árbol accesible.
 - **Descartado:** los puntos de carrusel de la referencia. Insinúan varias diapositivas que no existen y serían un control que no hace nada.
+
+### 2.20 Color en el titular minimalista (7 de octubre de 2026)
+
+- **Qué:** el titular de computador lleva en las letras el degradado durazno → rosado de la marca, en tonos suaves (`--peach-suave #F8D3B6` y `--pink-suave #F4C0D8`). La segunda línea va al revés, como alterna el titular de bloques en celular.
+- **Por qué:** el cliente quiso conservar los colores de la marca, pero "no tan intensos". Los dos tonos superan 12:1 de contraste sobre el fondo oscuro del héroe.

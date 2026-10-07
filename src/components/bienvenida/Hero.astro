@@ -211,6 +211,18 @@ const cuando = `${diaSemana[0].toUpperCase()}${diaSemana.slice(1)} ${dia} ${mes}
       text-wrap: balance;
     }
 
+    /* Letras con el degradado de la marca en tonos suaves (decisión 2.20), alternado por línea como en celular */
+    .titular-escritorio span {
+      background: linear-gradient(90deg, var(--peach-suave), var(--pink-suave));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .titular-escritorio span + span {
+      background-image: linear-gradient(90deg, var(--pink-suave), var(--peach-suave));
+    }
+
     .bajada {
       margin-top: 20px;
       max-width: 42ch;

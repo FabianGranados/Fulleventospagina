@@ -51,6 +51,9 @@
     var(--hero);
   --degradado-titular: linear-gradient(90deg, var(--peach), var(--pink));
   --degradado-titular-inv: linear-gradient(90deg, var(--pink), var(--peach));
+  /* Durazno y rosado aclarados para el titular minimalista de computador (decisión 2.20) */
+  --peach-suave: #F8D3B6;
+  --pink-suave: #F4C0D8;
 
   /* Tipografía */
   --display: 'Archivo', 'Arial Black', 'Helvetica Neue', sans-serif;
