@@ -33,6 +33,9 @@ const parche = d ? m.parcheUsuaria : undefined;
 const amigos = (parche ? sinBoleta(parche) : []).map((id) => persona(id)!);
 const yaTienen = (parche ? conBoletaSinMi(parche) : []).map((id) => persona(id)!);
 const corto = (nombre: string) => nombre.split(' ').slice(0, -1).join(' ') || nombre;
+// Miembros sin aria-label (B2, axe label-content-name-mismatch): el nombre accesible sale del texto y empieza
+// por lo visible ("Natalia" + el apellido solo para lectores); las iniciales del avatar son aria-hidden
+const apellido = (nombre: string) => nombre.slice(corto(nombre).length).trim();
 const pasos = ['Boletas', 'Datos', 'Pago', 'Listo'];
 // "Avisar a mi parche" abre el chat del parche de Camila para este evento (H42); sin parche, la bandeja
 const chatParche = m.parcheUsuaria;
@@ -134,9 +137,9 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
               </div>
               <div role="group" aria-label="Miembros del parche" class="miembros" id="co-miembros" tabindex="-1">
                 {amigos.map((a, i) => (
-                  <button type="button" class="miembro" aria-label={a.nombre} aria-pressed={i === 0 ? 'true' : 'false'} data-miembro={a.id}>
+                  <button type="button" class="miembro" aria-pressed={i === 0 ? 'true' : 'false'} data-miembro={a.id}>
                     <span class="av" style={`background: ${colorDe[a.color]}`} aria-hidden="true">{a.iniciales}</span>
-                    {corto(a.nombre)}
+                    <span>{corto(a.nombre)}<span class="solo-lectores"> {apellido(a.nombre)}</span></span>
                     <Icono nombre="visto" tamano={14} grosor={3} class="check" />
                   </button>
                 ))}
@@ -148,7 +151,7 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
                     {yaTienen.map((a) => (
                       <li class="miembro con-boleta">
                         <span class="av" style={`background: ${colorDe[a.color]}`} aria-hidden="true">{a.iniciales}</span>
-                        {corto(a.nombre)}
+                        <span>{corto(a.nombre)}<span class="solo-lectores"> {apellido(a.nombre)}</span></span>
                       </li>
                     ))}
                   </ul>
@@ -993,6 +996,11 @@ const fechaLarga = `${m.fechaLarga.toLowerCase()} de ${m.anio}`;
     background: var(--bg);
     border-style: dashed;
     color: var(--muted);
+  }
+
+  /* Las iniciales sobre el color del avatar van en tinta, por contraste */
+  .con-boleta .av {
+    color: var(--ink);
   }
 
   .cupo {
