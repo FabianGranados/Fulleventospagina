@@ -3,7 +3,7 @@
 // Las personas salen de personas.ts y los eventos de eventos.ts (un solo bloque de datos, H37 y H53).
 // "Hoy" ficticio del ejemplo: martes 6 de octubre de 2026 (4.9, ficha técnica). Las horas y las fechas
 // relativas de los mensajes ("Ayer", "Dom 4 oct") son texto fijo; en producción las calcula el servidor (H53).
-export const HOY = '2026-10-06';
+export { HOY_DEMO as HOY } from './demo';
 
 // La usuaria del demo (Camila Vargas) en personas.ts
 export const YO = 'camivargas';

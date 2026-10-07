@@ -265,3 +265,58 @@ El cliente pidió terminar las pantallas que faltan sin detenerse entre una y ot
 - **Texto del buscador con sesión (H41).** "Busca planes, gente o lugares", el texto unificado que recomienda la sección 7.
 - **"Volver al feed" pasa a "Volver" (H41).** Regresa a la pantalla de origen cuando se llegó desde Fulleventos; si no, va a Inicio.
 - **Sin diseño todavía, se dejan visibles pero sin destino propio:** "Crear evento" lleva a `/crear-evento` (formulario de organizadores, H14 y H38) y "Notificaciones" no abre nada (H54).
+
+### 2.16 Decisiones al construir las pantallas con sesión (7 de octubre de 2026)
+
+Las 7 pantallas restantes se construyeron en paralelo, cada una por un agente distinto, con las mismas reglas del handoff. Estas son las decisiones de interpretación que tomaron y que el cliente debe conocer. El detalle está en el código y en los comentarios de cada componente.
+
+**Comunes a todo el sitio**
+- **"Hoy" del demo:** el martes 6 de octubre de 2026 en todas las pantallas (`src/data/demo.ts`, H37), como fija la ficha técnica de Mensajes (4.9). Con los datos de ejemplo, el filtro "Hoy" de Agenda y Mapa muestra su estado vacío, porque no hay eventos ese día.
+- **Guardar con marcador (H41):** en todas las tarjetas (Bienvenida, Agenda y Mapa). El corazón queda solo para "Me gusta" en Inicio.
+- **Filtros como radios nativos (H59):** ciudad, categoría, fecha, pestañas del feed, encuestas y opciones de compra son radios dentro de `fieldset`/`legend`, con estilo de píldora o tarjeta.
+- **Filtros y pestañas en la URL (H42):** `?ciudad=`, `?categoria=`, `?fecha=`, `?pestana=` y `?q=` se leen al cargar y se actualizan al cambiar.
+- **Encabezados:** cuando el orden de encabezados lo exigía (axe, H59), los títulos de tarjetas y publicaciones quedaron como `h2` en vez de `h3`.
+- **Botones sin destino diseñado (H38):** muestran "Próximamente" o quedan con `aria-disabled`. Por ejemplo: "Enviar a un amigo", Etiquetar, Foto, Reseña, Comentarios, Más opciones, "Buscar amigos en mis contactos" y "Enviar" del muro.
+- **Destinos que todavía no existen:** `/entrar` (H12), `/mis-boletas` (H20), `/crear-evento` (H14), `/yo/editar`, `/guardados` y `/ajustes`.
+
+**Por pantalla**
+- **Registro:**
+  - Se agregan "Ciudad" (lista obligatoria), "Fecha de nacimiento" (H10) y una casilla aparte para la autorización de datos (H28).
+  - En celular el bloque decorativo se reduce a una franja con "PASO N DE 3" (H45).
+  - Los textos de error son propios ("Escribe tu nombre.", "El celular debe tener 10 dígitos y empezar por 3.", etc.).
+  - Laura y Andrés ("Está en tus contactos") no se muestran sin el permiso de contactos.
+- **Inicio:**
+  - El feed va primero en celular y tableta (H15).
+  - Se quitan del texto de ejemplo la reventa (H32) y los puntos de encuentro (H30).
+  - Cada historia abre el mapa de su ciudad, porque el visor de historias no está diseñado.
+- **Agenda:**
+  - Fechas reales: "Hoy", "Este finde" (9 al 12) y "Próxima semana" (13 al 18).
+  - La búsqueda `?q=` filtra por título, lugar, ciudad y categoría.
+  - El aviso del repost queda en el flujo, como en el prototipo.
+- **Mapa:**
+  - La hoja inferior de celular no está diseñada. Para resolver H42, al elegir una ciudad la página baja a la lista y el foco va a su título.
+  - Sin ciudad elegida, la lista se agrupa por ciudad; con ciudad, por día.
+  - Pines con nombre "Bogotá 6 planes".
+- **Evento:**
+  - Los 18 eventos sin detalle usan la misma plantilla sin las secciones que solo tienen datos para e1. Los pagos venden una sola opción, "Boleta".
+  - La compra es una demostración rotulada: "Cargo por servicio (8%, de ejemplo)", "9:58 (demostración)" y el aviso "no se cobra nada ni se emite una boleta real". Los campos de tarjeta son una maqueta inerte dentro de "Campos seguros de [PASARELA]".
+  - "Agregar al calendario" descarga un `.ics`.
+  - El checkout usa su propio `<dialog>`, porque necesita una cabecera con pasos y temporizador.
+- **Mensajes:**
+  - Una dirección por conversación (`/mensajes/<id>`).
+  - La conversación de celular abre a pantalla completa en el último mensaje (H43).
+  - Los avisos de compra no dicen cantidad ni localidad (H30).
+  - Textos de interfaz propios para aprobar: "Mostrando N chats", "Saliste de {parche}" y "No uses «oficial», «verificado» ni «Fulleventos» en el nombre.".
+- **Perfil:**
+  - Al abrir el propio perfil por `/perfil/camivargas` se muestra "Mi perfil".
+  - Las demás personas solo muestran nombre, iniciales y un estado vacío, sin inventar biografías.
+  - "Planes" reemplaza a "Eventos" (H37).
+
+**Sigue sin diseño (N70) y quedó pendiente**
+- Barra inferior móvil (H40).
+- Pantalla "Entrar" (H12), versiones públicas (H33) y resultados de búsqueda (H41).
+- Reportar y bloquear (H9), invitaciones y tipos de parche (H30), "Solicitud de pago" (H29) y verificación de organizadores (H48).
+- Estados de carga, error y pago (H17).
+- "Mis boletas" (H20), pie legal (H5) y variantes de compra por modo (P1).
+- Carrusel de "Este finde" en celular (H44) y tarjeta compacta de Agenda en celular (H47).
+- Favicon: el del sitio anterior usa la paleta descartada.

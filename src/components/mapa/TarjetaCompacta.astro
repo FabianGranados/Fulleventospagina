@@ -49,7 +49,7 @@ const href = rutaEvento(e.ciudad, e.titulo);
         <Icono nombre="repostear" tamano={14} grosor={2.2} /><span data-repost-texto>{reposteado ? 'Reposteado' : 'Repostear'}</span>
       </button>
       <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`} data-guardar>
-        <Icono nombre="corazon" tamano={16} />
+        <Icono nombre="marcador" tamano={16} />
       </button>
       <!-- Visible también con ciudad elegida (H7): lleva al mapa y enfoca el pin (H42) -->
       <button type="button" class="ver-mapa" aria-label={`Ver en el mapa: ${ciudad}`} data-ver-mapa={e.ciudad}>

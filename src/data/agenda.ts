@@ -1,3 +1,4 @@
+import { HOY_DEMO } from './demo';
 // Datos de ejemplo de la Agenda (handoff 4.6, "Datos de ejemplo"). En producción vienen del backend (H53).
 // Línea social de cada evento: quién aparece, reposts totales (incluye a "quien"), colores de los
 // 2 avatares y si lo repostearon tus amigos cercanos (filtro "Lo que repostea tu gente").
@@ -48,12 +49,12 @@ export const categoriasAgenda = [
   { id: 'teatro', texto: 'Arte y teatro' },
 ];
 
-// Fechas (H39: filtran de verdad). El prototipo no define qué día es "hoy": el demo lo fija en el
-// viernes 9 de octubre de 2026, primer día del fin de semana de ejemplo (9 al lunes festivo 12).
+// Fechas (H39: filtran de verdad). "Hoy" es el del demo (src/data/demo.ts), común a todas las pantallas;
+// el fin de semana de ejemplo va del viernes 9 al lunes festivo 12.
 // "Próxima semana" va del martes 13 al domingo 18. En producción, "hoy" sale del reloj del servidor
 // (zona America/Bogota).
 export const fechasAgenda = [
-  { id: 'hoy', texto: 'Hoy', desde: '2026-10-09', hasta: '2026-10-09', titulo: 'Hoy', periodo: 'hoy' },
+  { id: 'hoy', texto: 'Hoy', desde: HOY_DEMO, hasta: HOY_DEMO, titulo: 'Hoy', periodo: 'hoy' },
   { id: 'finde', texto: 'Este finde', desde: '2026-10-09', hasta: '2026-10-12', titulo: 'Este finde', periodo: 'este finde' },
   { id: 'semana', texto: 'Próxima semana', desde: '2026-10-13', hasta: '2026-10-18', titulo: 'La próxima semana', periodo: 'la próxima semana' },
 ];

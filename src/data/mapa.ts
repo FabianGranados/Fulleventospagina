@@ -1,3 +1,4 @@
+import { HOY_DEMO } from './demo';
 // Datos propios de la pantalla Mapa (handoff 4.7, "Datos de ejemplo"). En producción vienen del backend
 // con coordenadas reales (H53) y el proveedor de mapas está pendiente (P5).
 import { ciudades, type Ciudad } from './ciudades';
@@ -66,10 +67,10 @@ export const categoriasMapa = [
   { id: 'teatro', texto: 'Arte y teatro' },
 ];
 
-// Filtro de fecha real (H39). El demo fija "hoy" en el 7 de octubre de 2026 y los eventos de ejemplo
+// Filtro de fecha real (H39). "Hoy" es el del demo (src/data/demo.ts) y los eventos de ejemplo
 // solo cubren el puente del 9 al 12 de octubre; en producción el rango sale del servidor (America/Bogota).
 export const fechasMapa = [
-  { id: 'hoy', texto: 'Hoy', desde: '2026-10-07', hasta: '2026-10-07', frase: 'hoy', rango: 'hoy, miércoles 7 de octubre' },
+  { id: 'hoy', texto: 'Hoy', desde: HOY_DEMO, hasta: HOY_DEMO, frase: 'hoy', rango: 'hoy, martes 6 de octubre' },
   {
     id: 'finde',
     texto: 'Este finde',
