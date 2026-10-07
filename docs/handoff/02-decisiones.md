@@ -355,3 +355,16 @@ El cliente pidió terminar el frontend antes del backend, empezando por el héro
   - **Por qué:** antes el encabezado ocupaba 264 px y el titular del héroe empezaba a media pantalla. Ahora ocupa unos 165 px. "Crear cuenta" sale de la primera fila porque no cabe a 320 px, y el héroe ya la repite como botón principal ("Crear mi cuenta gratis").
   - **Accesibilidad:** el botón usa `aria-expanded` y `aria-controls`. Escape cierra el menú y devuelve el foco al botón, y al tocar un enlace el menú se cierra. Sin JavaScript, el menú se ve abierto y el botón no aparece.
 - **Prueba social:** sigue oculta hasta que el backend entregue cifras reales (P11). No se inventan números.
+
+### 2.19 Héroe minimalista en computador (7 de octubre de 2026)
+
+El cliente pidió un héroe minimalista en computador, a partir de una referencia (foto a todo el ancho, titular limpio, un botón con flecha y una tarjeta flotante de producto), y que en celular quede como estaba.
+
+- **Desde 821 px (computador y tableta horizontal):**
+  - Titular en DM Sans 700, blanco, sin mayúsculas ni bloques de degradado: "De la rumba del viernes al concierto del sábado". El texto no cambia, solo su estilo.
+  - Sin la etiqueta "Arma tu parche".
+  - El botón "Crear mi cuenta gratis" lleva una flecha que se mueve 3 px al pasar el mouse (sin movimiento con `prefers-reduced-motion`). "Ver la agenda sin registrarme" se mantiene (decisión 2.13).
+- **Desde 1024 px:** una tarjeta flotante abajo a la derecha con el plan destacado. Es el equivalente de la tarjeta de producto de la referencia: "Destacado este finde", título, lugar, ciudad, fecha y hora, y precio con "+ cargo por servicio". Toda la tarjeta es un enlace al evento. En el demo es e1 ("Noche de salsa y boleros en vivo"); en producción lo elige el equipo editorial desde el backend.
+- **Celular (hasta 820 px):** igual que antes, con la etiqueta amarilla y el titular de bloques con degradado (decisión 2.13).
+- **Un solo h1:** los dos titulares están en el HTML, pero solo uno se muestra según el ancho. El otro tiene `display: none`, así que nunca hay dos h1 en el árbol accesible.
+- **Descartado:** los puntos de carrusel de la referencia. Insinúan varias diapositivas que no existen y serían un control que no hace nada.
