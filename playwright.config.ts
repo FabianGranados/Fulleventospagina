@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
-const puerto = 4322;
+// Puerto configurable para no reutilizar el servidor de otra copia del proyecto
+const puerto = Number(process.env.PUERTO_PRUEBAS ?? 4322);
 
 export default defineConfig({
   testDir: 'tests',
@@ -13,6 +14,6 @@ export default defineConfig({
   webServer: {
     command: `node tests/servidor-estatico.mjs ${puerto}`,
     url: `http://localhost:${puerto}/`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });
