@@ -24,6 +24,14 @@ const href = rutaEvento(e.ciudad, e.titulo);
   data-ciudad={e.ciudad}
   data-fecha={e.fecha}
   data-etiquetas={e.etiquetas.join(' ')}
+  data-titulo={e.titulo}
+  data-categoria={e.categoria}
+  data-lugar={e.lugar}
+  data-nombre-ciudad={ciudad}
+  data-dia={dia}
+  data-mes={mes}
+  data-bg1={e.bg1}
+  data-bg2={e.bg2}
 >
   <div class="miniatura">
     <span class="foto" role="img" aria-label="[Foto del evento]" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}></span>
@@ -45,7 +53,8 @@ const href = rutaEvento(e.ciudad, e.titulo);
       </a>
     </div>
     <div class="acciones">
-      <button type="button" class="repost" aria-pressed={reposteado ? 'true' : 'false'} data-repost>
+      <!-- Mismo patrón que la Agenda (H41): "Repostear" abre la ventana; "Reposteado" lo quita -->
+      <button type="button" class="repost" aria-pressed={reposteado ? 'true' : 'false'} data-repost data-abrir-modal="ventana-repost">
         <Icono nombre="repostear" tamano={14} grosor={2.2} /><span data-repost-texto>{reposteado ? 'Reposteado' : 'Repostear'}</span>
       </button>
       <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`} data-guardar>

@@ -8,6 +8,7 @@ import CabeceraMapa from '../components/mapa/CabeceraMapa.astro';
 import MapaColombia from '../components/mapa/MapaColombia.astro';
 import PanelResultados from '../components/mapa/PanelResultados.astro';
 import RankingCiudades from '../components/mapa/RankingCiudades.astro';
+import VentanaRepost from '../components/eventos/VentanaRepost.astro';
 import { categoriasMapa } from '../data/mapa';
 ---
 
@@ -16,7 +17,7 @@ import { categoriasMapa } from '../data/mapa';
   <main id="contenido" class="contenedor principal">
     <CabeceraMapa />
 
-    <div class="chips" role="group" aria-label="Filtrar por categoría">
+    <div class="chips" role="group" aria-label="Filtrar por categoría" data-chips>
       {
         categoriasMapa.map((c) => (
           <button type="button" class="chip" data-categoria={c.id} aria-pressed={c.id === 'all' ? 'true' : 'false'}>
@@ -39,12 +40,14 @@ import { categoriasMapa } from '../data/mapa';
     <RankingCiudades />
   </main>
   <Pie />
+  <VentanaRepost />
 </Base>
 
 <script>
   import { eventos } from '../data/eventos';
   import { ciudadesMapa, categoriasMapa, fechasMapa, miCiudad, LIMITE_LISTA } from '../data/mapa';
   import { planes, ciudadesTexto } from '../lib/formato';
+  import { destinosRepost } from '../data/agenda';
 
   type Estado = { ciudad: string | null; zoom: number; categoria: string; fecha: string; todo: boolean };
 
@@ -68,6 +71,7 @@ import { categoriasMapa } from '../data/mapa';
   const selector = document.querySelector<HTMLSelectElement>('[data-selector-ciudad]');
   const anuncio = $('[data-anuncio]');
   const botonMas = $<HTMLButtonElement>('[data-mas]', panel);
+  const vistaLista = $<HTMLAnchorElement>('[data-vista-lista]');
 
   const pines = $$<HTMLButtonElement>('[data-pin]', mapa);
   const celdas = $$('[data-celda]', lista);
@@ -138,7 +142,7 @@ import { categoriasMapa } from '../data/mapa';
       ? `${resumen}, ${fecha.rango}. Toca un punto del mapa para ver qué hay en cada ciudad.`
       : `${resumen} ${fecha.rango}. Mira lo que hay este finde.`;
     $$<HTMLInputElement>('input[name="fecha"]').forEach((r) => (r.checked = r.value === estado.fecha));
-    $$('[data-categoria]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
+    $$('[data-chips] [data-categoria]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
 
     // --- Mapa ---
     const Z = estado.zoom;
@@ -253,6 +257,14 @@ import { categoriasMapa } from '../data/mapa';
     const qs = params.toString();
     history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
 
+    // "Lista" lleva a la Agenda con los mismos filtros (H41): ciudad, categoría y fecha usan los mismos ids
+    const agenda = new URLSearchParams();
+    if (estado.ciudad) agenda.set('ciudad', estado.ciudad);
+    if (estado.categoria !== 'all') agenda.set('categoria', estado.categoria);
+    if (estado.fecha !== 'finde') agenda.set('fecha', estado.fecha);
+    const consultaAgenda = agenda.toString();
+    vistaLista.href = `/agenda${consultaAgenda ? `?${consultaAgenda}` : ''}`;
+
     ajustarTabulacion();
 
     if (anunciar) {
@@ -310,7 +322,7 @@ import { categoriasMapa } from '../data/mapa';
     }),
   );
 
-  $$('[data-categoria]').forEach((b) =>
+  $$('[data-chips] [data-categoria]').forEach((b) =>
     b.addEventListener('click', () => {
       estado.categoria = b.dataset.categoria!;
       estado.todo = false;
@@ -352,9 +364,12 @@ import { categoriasMapa } from '../data/mapa';
     const objetivo = ev.target as HTMLElement;
     const repost = objetivo.closest<HTMLButtonElement>('[data-repost]');
     if (repost) {
-      const activo = repost.getAttribute('aria-pressed') !== 'true';
-      repost.setAttribute('aria-pressed', String(activo));
-      $('[data-repost-texto]', repost).textContent = activo ? 'Reposteado' : 'Repostear';
+      // "Repostear" sigue hasta la ventana compartida (Modal); "Reposteado" quita el repost sin abrirla (6.2.4)
+      if (repost.getAttribute('aria-pressed') === 'true') {
+        ev.stopPropagation();
+        marcarRepost(repost, false);
+        anuncio.textContent = `Quitaste el repost de «${repost.closest<HTMLElement>('[data-tarjeta]')!.dataset.titulo}».`;
+      }
       return;
     }
     const guardar = objetivo.closest<HTMLButtonElement>('[data-guardar]');
@@ -372,6 +387,20 @@ import { categoriasMapa } from '../data/mapa';
       pin.focus({ preventScroll: true });
       mapa.scrollIntoView({ behavior: comportamiento(), block: 'nearest' });
     }
+  });
+
+  // Repost confirmado en la ventana: marca la tarjeta y lo anuncia, con el texto de la Agenda (N17)
+  const marcarRepost = (boton: HTMLElement, activo: boolean) => {
+    boton.setAttribute('aria-pressed', String(activo));
+    $('[data-repost-texto]', boton).textContent = activo ? 'Reposteado' : 'Repostear';
+  };
+  document.addEventListener('repost:confirmado', (ev) => {
+    const { id, destino } = (ev as CustomEvent<{ id: string; destino: string }>).detail;
+    const tarjeta = $$('[data-tarjeta]', lista).find((t) => t.dataset.id === id);
+    if (!tarjeta) return;
+    marcarRepost($('[data-repost]', tarjeta), true);
+    const donde = destinosRepost.find((d) => d.id === destino) ?? destinosRepost[0];
+    anuncio.textContent = `Reposteaste «${tarjeta.dataset.titulo}» en ${donde.aviso}.`;
   });
 
   new ResizeObserver(() => ajustarTabulacion()).observe(lienzo);

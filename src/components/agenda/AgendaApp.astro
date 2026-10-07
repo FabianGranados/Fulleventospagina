@@ -387,7 +387,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       }
     });
 
-    document.addEventListener('agenda:repost', (ev) => {
+    document.addEventListener('repost:confirmado', (ev) => {
       const { id, destino } = (ev as CustomEvent<{ id: string; destino: string }>).detail;
       const t = tarjetas.find((x) => x.dataset.id === id);
       if (!t) return;

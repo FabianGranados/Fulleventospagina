@@ -1,7 +1,10 @@
 ---
 // N16 · Ventana "Repostear evento" sobre el Modal compartido (N68): Escape, clic afuera,
 // foco atrapado y retorno del foco al botón que la abrió (H7). Los destinos son radios (H59).
-// Al confirmar emite "agenda:repost" con el id del evento y el destino; la Agenda hace el resto.
+// Un solo patrón para repostear en Agenda y Mapa (H41). La abre un botón con data-abrir-modal="ventana-repost"
+// dentro de una tarjeta [data-tarjeta] con data-id, data-titulo, data-categoria, data-lugar, data-nombre-ciudad,
+// data-dia, data-mes, data-bg1 y data-bg2. Al confirmar emite "repost:confirmado" con el id y el destino;
+// cada pantalla marca su tarjeta y avisa.
 import Modal from '../ui/Modal.astro';
 import { usuaria } from '../../data/personas';
 import { destinosRepost } from '../../data/agenda';
@@ -74,7 +77,7 @@ import { destinosRepost } from '../../data/agenda';
     form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       const destino = String(new FormData(form).get('destino') ?? 'feed');
-      document.dispatchEvent(new CustomEvent('agenda:repost', { detail: { id: idEvento, destino } }));
+      document.dispatchEvent(new CustomEvent('repost:confirmado', { detail: { id: idEvento, destino } }));
       // close() devuelve el foco al botón "Repostear" de la tarjeta (Modal, H7)
       dialogo.close();
     });
