@@ -1,0 +1,131 @@
+---
+// N8 · Historias "dónde está tu gente". "Tu plan" abre el campo para publicar (H36).
+// El visor de historias no está diseñado (H36): mientras tanto cada historia abre el mapa en la
+// ciudad de esa persona (H42), y el destino se dice en el nombre accesible.
+import { historias } from '../../data/inicio';
+import { nombreCiudad } from '../../data/ciudades';
+---
+
+<div class="fila-historias">
+  <ul class="historias" aria-label="Historias de tu gente">
+    <li>
+      <a href="#compositor-campo" class="historia" data-abrir-compositor>
+        <span class="anillo vista" aria-hidden="true"><span class="circulo tu-plan">+</span></span>
+        <span class="rotulo">Tu plan</span>
+        <span class="solo-lectores">: sube tu plan</span>
+      </a>
+    </li>
+    {
+      historias.map((h) => (
+        <li>
+          <a href={`/mapa?ciudad=${h.ciudad}`} class="historia">
+            <span class:list={['anillo', { vista: h.vista }]}>
+              <span class:list={['circulo', h.color]}>{h.iniciales}</span>
+            </span>
+            <span class="rotulo">
+              {h.nombre}
+              <span class="ciudad">{nombreCiudad(h.ciudad)}</span>
+            </span>
+            <span class="solo-lectores">
+              {`: historia${h.vista ? '' : ' no vista'}. Ver planes de ${nombreCiudad(h.ciudad)} en el mapa`}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  /* Siempre desborda: la barra se oculta y un desvanecido en el borde avisa que hay más (H61, detalle fino 6) */
+  .fila-historias {
+    position: relative;
+    min-width: 0;
+  }
+
+  .fila-historias::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 32px;
+    background: linear-gradient(90deg, rgba(251, 247, 243, 0), var(--bg));
+    pointer-events: none;
+  }
+
+  /* position: relative para que el texto oculto no estire la página (detalle fino global 4) */
+  .historias {
+    position: relative;
+    list-style: none;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px 32px 4px 4px;
+    margin: -4px;
+  }
+
+  .historias::-webkit-scrollbar {
+    display: none;
+  }
+
+  li {
+    flex: 0 0 auto;
+  }
+
+  .historia {
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    border-radius: var(--radius-md);
+  }
+
+  .anillo {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, var(--peach), var(--brand-logo));
+    display: grid;
+    place-items: center;
+  }
+
+  .anillo.vista {
+    background: var(--line);
+  }
+
+  .circulo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid var(--bg);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .85rem;
+    color: var(--ink);
+  }
+
+  .tu-plan { background: var(--surface); }
+  .c1 { background: var(--peach); }
+  .c2 { background: var(--lilac); }
+  .c3 { background: var(--pink); }
+  .c4 { background: var(--lime); }
+  .c5 { background: var(--yellow); }
+  .c6 { background: var(--aqua); }
+
+  .rotulo {
+    font-size: .74rem;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  .ciudad {
+    display: block;
+    color: var(--muted);
+  }
+</style>

@@ -1,0 +1,509 @@
+---
+// N12 · Publicación del feed con evento adjunto, y N13 · bloque de parche (variante "post").
+// Los alternadores (Voy, Unirme, Me gusta, Guardar) los maneja el script de la página por data-alternar.
+import Icono from '../ui/Icono.astro';
+import Avatar from '../ui/Avatar.astro';
+import type { Publicacion } from '../../data/inicio';
+import { horaEvento, parches } from '../../data/inicio';
+import { eventos } from '../../data/eventos';
+import { persona } from '../../data/personas';
+import { nombreCiudad } from '../../data/ciudades';
+import { cifra, placaFecha, rutaEvento } from '../../lib/formato';
+
+interface Props {
+  publicacion: Publicacion;
+}
+
+const { publicacion: p } = Astro.props;
+const e = eventos.find((ev) => ev.id === p.evento)!;
+const autor = persona(p.autor)!;
+const parche = p.parche ? parches.find((pa) => pa.id === p.parche) : undefined;
+const { dia, mes } = placaFecha(e.fecha);
+const semana = new Date(`${e.fecha}T12:00:00-05:00`)
+  .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'America/Bogota' })
+  .replace('.', '');
+const diaSemana = semana.charAt(0).toUpperCase() + semana.slice(1);
+// Espacios de no separación para que la hora no se parta entre "p." y "m." (detalle fino 33)
+const hora = horaEvento[e.id].replace(/ /g, ' ');
+const lugar = e.lugar.split(' · ').join(', ');
+const categoria = e.categoria + (e.precio ? '' : ' · Gratis');
+const href = rutaEvento(e.ciudad, e.titulo);
+// El conteo de eventos.ts ya incluye a la usuaria si marcó "Voy" (detalle fino 13)
+const vanBase = e.van - (p.voy ? 1 : 0);
+const usados = parche ? parche.miembros : 0;
+const usadosBase = parche ? usados - (parche.soyMiembro ? 1 : 0) : 0;
+const pct = parche?.cupoMax ? Math.round((usados / parche.cupoMax) * 100) : 0;
+const idTitulo = `publicacion-${p.id}`;
+---
+
+<article
+  class="publicacion"
+  aria-labelledby={idTitulo}
+  data-publicacion
+  data-pestanas={p.pestanas.join(' ')}
+  data-ciudad={e.ciudad}
+>
+  <div class="cabeza">
+    <a href={`/perfil/${autor.id}`} class="avatar-enlace" tabindex="-1" aria-hidden="true">
+      <Avatar color={autor.color} tamano={42} iniciales={autor.iniciales} class="avatar-autor" />
+    </a>
+    <div class="quien">
+      <h2 id={idTitulo} class="linea-autor">
+        <a href={`/perfil/${autor.id}`}>{autor.nombre}</a> <span>{p.accion}</span>
+      </h2>
+      <p class="meta">{p.tiempo} · {p.ciudadAutor}</p>
+    </div>
+    <button type="button" class="mas" aria-label="Más opciones" data-proximamente="reportar o bloquear publicaciones">
+      <Icono nombre="masOpciones" tamano={18} class="relleno" />
+    </button>
+  </div>
+
+  <p class="texto">{p.texto}</p>
+
+  {
+    p.estrellas && (
+      <div class="estrellas" role="img" aria-label={`Calificación ${p.estrellas} de 5`}>
+        {Array.from({ length: 5 }, (_, i) => (
+          <Icono nombre="estrella" tamano={18} class:list={['relleno', { apagada: i >= p.estrellas! }]} />
+        ))}
+      </div>
+    )
+  }
+
+  <div class="adjunto">
+    <div class="foto" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} aria-hidden="true">
+      <span class="placa"><b>{dia}</b><span>{mes}</span></span>
+    </div>
+    <div class="info">
+      <span class="categoria">{categoria}</span>
+      <a href={href} class="titulo">{e.titulo}</a>
+      <span class="donde">
+        <time datetime={e.fecha}>{diaSemana} {dia} {mes}</time> · {hora} · {lugar} · <b>{nombreCiudad(e.ciudad)}</b>
+      </span>
+      <div class="social">
+        <span class="van">
+          <span class="pila" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span>
+          <span><span data-conteo-van={p.id}>{cifra(e.van)}</span> van · 3 amigos</span>
+        </span>
+        <button
+          type="button"
+          class="voy"
+          aria-pressed={p.voy ? 'true' : 'false'}
+          data-alternar="voy"
+          data-id={p.id}
+          data-base={vanBase}
+        >
+          <span data-texto>{p.voy ? 'Vas' : 'Voy'}</span><span class="solo-lectores"> a {e.titulo}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {
+    parche && parche.cupoMax && (
+      <div class="parche">
+        <div class="parche-texto">
+          <p class="parche-fila">
+            <b>Parche: {parche.nombre}</b>
+            <span data-cupos={parche.id}>{usados} de {parche.cupoMax} cupos</span>
+          </p>
+          <span class="riel" aria-hidden="true">
+            <span class="lleno" style={`width: ${pct}%`} data-barra={parche.id} />
+          </span>
+        </div>
+        <button
+          type="button"
+          class="unirme"
+          aria-pressed={parche.soyMiembro ? 'true' : 'false'}
+          data-alternar="unirme"
+          data-parche={parche.id}
+          data-base={usadosBase}
+          data-max={parche.cupoMax}
+        >
+          <span data-texto>{parche.soyMiembro ? 'Estás en el parche' : 'Unirme al parche'}</span>
+          <span class="solo-lectores"> {parche.nombre}</span>
+        </button>
+      </div>
+    )
+  }
+
+  <div class="acciones">
+    <button
+      type="button"
+      class="accion gusta"
+      aria-pressed="false"
+      aria-label={`Me gusta, ${p.meGusta}`}
+      data-alternar="gusta"
+      data-base={p.meGusta}
+    >
+      <Icono nombre="corazon" tamano={20} />
+      <span data-texto>{p.meGusta}</span>
+    </button>
+    <button
+      type="button"
+      class="accion"
+      aria-label={`Comentarios, ${p.comentarios}`}
+      data-proximamente="ver y escribir comentarios"
+    >
+      <Icono nombre="mensajes" tamano={20} />{p.comentarios}
+    </button>
+    <button type="button" class="accion" data-proximamente="compartir publicaciones">
+      <Icono nombre="compartir" tamano={20} />Compartir
+    </button>
+    <button
+      type="button"
+      class="guardar"
+      aria-pressed="false"
+      aria-label={`Guardar ${e.titulo}`}
+      data-alternar="guardar"
+    >
+      <Icono nombre="marcador" tamano={20} />
+    </button>
+  </div>
+  <div class="aviso-lugar" data-aviso-lugar></div>
+</article>
+
+<style>
+  .publicacion {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .cabeza {
+    padding: 16px 18px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .avatar-enlace {
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+
+  .cabeza :global(.avatar-autor) {
+    font-size: .8rem;
+  }
+
+  .quien {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
+  }
+
+  .linea-autor {
+    font-size: 15px;
+    font-weight: 400;
+  }
+
+  .linea-autor a {
+    font-weight: 700;
+  }
+
+  .linea-autor span,
+  .meta {
+    color: var(--muted);
+  }
+
+  .meta {
+    font-size: .8rem;
+  }
+
+  .mas {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+  }
+
+  .relleno,
+  .publicacion :global(.relleno) {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .texto {
+    margin: 10px 18px 14px;
+    font-size: .97rem;
+  }
+
+  .estrellas {
+    margin: -6px 18px 12px;
+    display: flex;
+    gap: 2px;
+    width: max-content;
+    color: #E0A21B;
+  }
+
+  .estrellas :global(.apagada) {
+    color: var(--line);
+  }
+
+  .adjunto {
+    margin: 0 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .foto {
+    flex: 1 1 180px;
+    min-height: 150px;
+    position: relative;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 58%), var(--bg2);
+  }
+
+  .placa {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    min-width: 62px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .placa b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.2rem;
+  }
+
+  .placa span {
+    font-size: .64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .info {
+    flex: 2 1 260px;
+    min-width: 0;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .categoria {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .titulo {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .donde {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .donde b {
+    color: var(--ink);
+  }
+
+  .social {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .van {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .pila {
+    display: flex;
+  }
+
+  .pila i {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+  }
+
+  .pila i + i {
+    margin-left: -8px;
+  }
+
+  .c1 { background: var(--peach); }
+  .c2 { background: var(--lilac); }
+  .c3 { background: var(--pink); }
+
+  .voy {
+    height: 38px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .84rem;
+    font-weight: 700;
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .voy[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .parche {
+    margin: 12px 18px 0;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+  }
+
+  .parche-texto {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  .parche-fila {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 8px;
+    font-size: .84rem;
+  }
+
+  .parche-fila span {
+    color: var(--muted);
+  }
+
+  .riel {
+    display: block;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--line);
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .lleno {
+    display: block;
+    height: 100%;
+    background: var(--brand);
+    border-radius: 4px;
+  }
+
+  /* Ancho mínimo para que la barra no se acorte al unirse (detalle fino 11) */
+  .unirme {
+    min-width: 152px;
+    height: 38px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .84rem;
+    font-weight: 700;
+    background: var(--brand);
+    color: var(--on-dark);
+  }
+
+  .unirme[aria-pressed='true'] {
+    background: var(--ink);
+  }
+
+  .acciones {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .accion {
+    height: 40px;
+    border: 0;
+    background: transparent;
+    border-radius: var(--radius-pill);
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .86rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .gusta[aria-pressed='true'] {
+    color: var(--brand);
+  }
+
+  .gusta[aria-pressed='true'] :global(svg),
+  .guardar[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
+  }
+
+  .guardar {
+    margin-left: auto;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+  }
+
+  .guardar[aria-pressed='true'] {
+    color: var(--ink);
+  }
+
+  .aviso-lugar:empty {
+    display: none;
+  }
+
+  .aviso-lugar {
+    padding: 0 10px 10px;
+  }
+
+  /* Objetivos táctiles de 44 px en celular */
+  @media (max-width: 767px) {
+    .mas,
+    .guardar {
+      width: 44px;
+      height: 44px;
+    }
+
+    .accion,
+    .voy,
+    .unirme {
+      height: 44px;
+    }
+  }
+</style>
