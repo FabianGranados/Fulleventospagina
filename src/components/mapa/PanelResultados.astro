@@ -1,0 +1,282 @@
+---
+// N22 · Panel de resultados del mapa: cabecera fija + lista (con scroll interno cuando va al lado del mapa).
+// El estado inicial es "Toda Colombia" con todas las categorías y "Este finde"; el script de la página
+// lo actualiza (src/pages/mapa.astro).
+import Icono from '../ui/Icono.astro';
+import TarjetaCompacta from './TarjetaCompacta.astro';
+import { ciudadesMapa, LIMITE_LISTA } from '../../data/mapa';
+import { eventos } from '../../data/eventos';
+import { planes } from '../../lib/formato';
+
+// Orden fijo de ciudades y, dentro de cada una, por fecha (los empates conservan el orden de los datos)
+const grupos = ciudadesMapa
+  .map((c) => ({
+    ciudad: c,
+    eventos: eventos.filter((e) => e.ciudad === c.id).sort((a, b) => a.fecha.localeCompare(b.fecha)),
+  }))
+  .filter((g) => g.eventos.length);
+
+// Días del grupo de una ciudad, para agrupar por día cuando hay una ciudad elegida (H47)
+const dias = (lista: typeof eventos) => [...new Set(lista.map((e) => e.fecha))];
+const nombreDia = (iso: string) => {
+  const texto = new Date(`${iso}T12:00:00-05:00`).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota',
+  });
+  return texto.replace(',', '');
+};
+
+let indice = 0;
+const total = eventos.length;
+---
+
+<aside class="panel" aria-label="Planes en el mapa" data-panel>
+  <div class="cabecera">
+    <p class="antetitulo" data-panel-antetitulo>Todo el país</p>
+    <h2 id="panel-titulo" tabindex="-1">
+      <span data-panel-nombre>Toda Colombia</span>{' '}
+      <span class="conteo">· <span data-panel-conteo>{planes(total)}</span></span>
+    </h2>
+    <p class="sub" data-panel-sub>Ordenados por ciudad y fecha. Usa «Ver en el mapa» para ubicar cada plan.</p>
+    <p class="ejemplo">Contenido de ejemplo</p>
+    <button type="button" class="boton-contorno chico" data-accion="todo" data-solo-ciudad hidden>
+      <Icono nombre="volver" tamano={15} grosor={2.2} />Ver toda Colombia
+    </button>
+  </div>
+
+  <div class="lista" id="mapa-lista" data-lista>
+    <div class="vacio" data-vacio hidden>
+      <span class="icono-vacio"><Icono nombre="mapaVacio" tamano={22} /></span>
+      <p class="vacio-mensaje" data-vacio-mensaje></p>
+      <p class="vacio-pista" data-vacio-pista></p>
+      <div class="vacio-acciones">
+        <button type="button" class="boton-oscuro" data-accion="fecha-finde" hidden>Ver este finde</button>
+        <button type="button" class="boton-oscuro" data-accion="categorias" hidden>Ver todas las categorías</button>
+        <button type="button" class="boton-contorno" data-accion="todo" data-solo-ciudad hidden>Ver toda Colombia</button>
+      </div>
+    </div>
+
+    {
+      grupos.map((g) => (
+        <>
+          <h3 class="grupo" data-grupo-ciudad={g.ciudad.id}>
+            <span>{g.ciudad.nombre}</span>
+            <span class="grupo-conteo">
+              <span class="solo-lectores">, </span>
+              <span data-grupo-conteo>{planes(g.eventos.length)}</span>
+            </span>
+          </h3>
+          {dias(g.eventos).map((dia) => {
+            const delDia = g.eventos.filter((e) => e.fecha === dia);
+            return (
+              <>
+                <h3 class="grupo" data-grupo-dia={dia} data-ciudad={g.ciudad.id} hidden>
+                  <span>{nombreDia(dia)}</span>
+                  <span class="grupo-conteo">
+                    <span class="solo-lectores">, </span>
+                    <span data-grupo-conteo>{planes(delDia.length)}</span>
+                  </span>
+                </h3>
+                {delDia.map((e) => (
+                  <div class="celda" data-celda hidden={indice++ >= LIMITE_LISTA}>
+                    <TarjetaCompacta evento={e} reposteado={e.id === 'e2'} />
+                  </div>
+                ))}
+              </>
+            );
+          })}
+        </>
+      ))
+    }
+
+    <div class="mas" data-mas-contenedor>
+      <button type="button" class="boton-contorno grande" aria-expanded="false" aria-controls="mapa-lista" data-mas>
+        {`Ver ${total - LIMITE_LISTA} planes más`}
+      </button>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .panel {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cabecera {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .antetitulo {
+    margin: 0 0 4px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.55rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  h2:focus {
+    outline: none;
+  }
+
+  h2:focus-visible {
+    outline: 3px solid var(--brand);
+  }
+
+  .conteo {
+    font-family: var(--ui);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
+  .sub {
+    margin: 6px 0 0;
+    font-size: .86rem;
+    color: var(--muted);
+  }
+
+  .ejemplo {
+    margin-top: 4px;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .boton-contorno,
+  .boton-oscuro {
+    height: 40px;
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-size: .84rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .boton-contorno {
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .boton-oscuro {
+    border: 0;
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .boton-contorno.chico {
+    margin-top: 10px;
+    height: 36px;
+    padding: 0 14px;
+    font-size: .82rem;
+  }
+
+  .boton-contorno.grande {
+    height: 48px;
+    padding: 0 24px;
+    font-size: .92rem;
+  }
+
+  .boton-contorno[hidden],
+  .boton-oscuro[hidden] {
+    display: none;
+  }
+
+  /* position: relative contiene los textos ocultos dentro de la lista con scroll (8.1 #4) */
+  .lista {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 0 20px 6px;
+  }
+
+  .grupo {
+    margin: 16px 0 0;
+    padding-bottom: 6px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-bottom: 2px solid var(--line-strong);
+  }
+
+  .grupo-conteo {
+    font-weight: 500;
+    letter-spacing: .04em;
+    color: var(--muted);
+  }
+
+  .vacio {
+    padding: 36px 6px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .vacio[hidden] {
+    display: none;
+  }
+
+  .icono-vacio {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+  }
+
+  .vacio-mensaje {
+    font-weight: 700;
+  }
+
+  .vacio-pista {
+    font-size: .86rem;
+    color: var(--muted);
+  }
+
+  .vacio-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .mas {
+    display: flex;
+    justify-content: center;
+    padding: 18px 0 14px;
+  }
+
+  .mas[hidden] {
+    display: none;
+  }
+</style>
