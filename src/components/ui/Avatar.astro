@@ -1,0 +1,50 @@
+---
+export type ColorAvatar = 'c1' | 'c2' | 'c3' | 'c4' | 'c5' | 'c6';
+
+interface Props {
+  color: ColorAvatar;
+  tamano?: number;
+  iniciales?: string;
+  borde?: 'hero' | 'blanco' | 'ninguno';
+  class?: string;
+}
+
+const { color, tamano = 34, iniciales, borde = 'ninguno', class: clase } = Astro.props;
+---
+
+<span
+  class:list={['avatar', color, `borde-${borde}`, clase]}
+  style={`--tamano-avatar: ${tamano}px`}
+  aria-hidden={iniciales ? undefined : 'true'}
+>
+  {iniciales}
+</span>
+
+<style>
+  .avatar {
+    flex-shrink: 0;
+    width: var(--tamano-avatar);
+    height: var(--tamano-avatar);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .c1 { background: var(--peach); }
+  .c2 { background: var(--lilac); }
+  .c3 { background: var(--pink); }
+  .c4 { background: var(--lime); }
+  .c5 { background: var(--yellow); }
+  .c6 { background: var(--aqua); }
+
+  .borde-hero {
+    border: 2px solid var(--hero);
+  }
+
+  .borde-blanco {
+    border: 2px solid var(--surface);
+  }
+</style>

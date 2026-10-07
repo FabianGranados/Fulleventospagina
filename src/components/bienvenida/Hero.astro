@@ -1,0 +1,77 @@
+---
+import Etiqueta from '../ui/Etiqueta.astro';
+import Titular from '../ui/Titular.astro';
+import Boton from '../ui/Boton.astro';
+import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import PruebaSocial from './PruebaSocial.astro';
+
+interface Props {
+  // Se muestra solo con datos reales (decisión 2.13); sin datos no se pinta.
+  pruebaSocial?: { personas: number; ciudades: number };
+}
+
+const { pruebaSocial } = Astro.props;
+---
+
+<section aria-label="Bienvenida" class="hero superficie-oscura">
+  <Etiqueta tamano="lg" class="etiqueta-hero">Arma tu parche</Etiqueta>
+  <Titular
+    lineas={[
+      { texto: 'De la rumba' },
+      { texto: 'del viernes', sangria: 'clamp(0em, 2vw, 1.15em)' },
+      { texto: 'al concierto del sábado', sangria: 'clamp(0em, 1vw, .4em)', maxAncho: '13ch' },
+    ]}
+  />
+  <p class="bajada">
+    Descubre planes en Bogotá, Medellín, Cali, Barranquilla y todo el país, mira quién de tus amigos
+    va y arma parche para no llegar solo.
+  </p>
+  <div class="acciones">
+    <Boton href="/registro">Crear mi cuenta gratis</Boton>
+    <EnlaceSubrayado href="#agenda" sobreOscuro>Ver la agenda sin registrarme</EnlaceSubrayado>
+  </div>
+  {pruebaSocial && <PruebaSocial {...pruebaSocial} />}
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 520px;
+    padding: 56px clamp(22px, 5vw, 64px) 52px;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    background: var(--fondo-heroe);
+    color: var(--on-dark);
+  }
+
+  .hero :global(.etiqueta-hero) {
+    align-self: flex-start;
+    margin-left: clamp(0px, 3vw, 44px);
+  }
+
+  .bajada {
+    margin-top: 26px;
+    max-width: 48ch;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, .9);
+  }
+
+  .acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 22px;
+    margin-top: 26px;
+  }
+
+  /* Ajuste de celular del código base (decisión 2.13) */
+  @media (max-width: 820px) {
+    .hero {
+      min-height: 0;
+      border-radius: 22px;
+    }
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+interface Props {
+  tamano?: 'lg' | 'md' | 'sm';
+  class?: string;
+}
+
+const { tamano = 'md', class: clase } = Astro.props;
+---
+
+<span class:list={['etiqueta', tamano, clase]}><slot /></span>
+
+<style>
+  .etiqueta {
+    display: inline-block;
+    background: var(--yellow);
+    color: var(--ink);
+    font-family: var(--display);
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .lg {
+    font-size: 1.05rem;
+    padding: 5px 12px;
+  }
+
+  .md {
+    font-size: .85rem;
+    padding: 4px 10px;
+  }
+
+  .sm {
+    font-size: .72rem;
+    padding: 3px 8px;
+  }
+</style>

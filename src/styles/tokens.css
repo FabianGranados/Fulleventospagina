@@ -1,0 +1,73 @@
+/* Tokens del sistema visual: docs/handoff/03-sistema-visual.md */
+:root {
+  color-scheme: light;
+
+  /* Marca: #D9452F solo para el logo; #C23A24 para todo rojo con texto encima o texto rojo */
+  --brand-logo: #D9452F;
+  --brand: #C23A24;
+  --yellow: #F6DC6A;
+  --peach: #F3B27E;
+  --pink: #EE93BC;
+
+  /* Texto */
+  --ink: #17120F;
+  --muted: #6E6259;
+  --on-dark: #FFFFFF;
+  --on-dark-muted: #D8CEC6;
+  --placeholder: #6E6259;
+  --rating: #8A5A00;
+
+  /* Superficies y líneas */
+  --bg: #FBF7F3;
+  --surface: #FFFFFF;
+  --surface-sunken: #F3ECE5;
+  --line: #EAE1D8;
+  --line-soft: #F1EAE3;
+  --line-input: #D9CEC3;
+  --line-strong: #17120F;
+  --disabled-fill: #B9AEA4;
+
+  /* Acentos y avatares (orden canónico .c1–.c6) */
+  --lilac: #A3A8F0;
+  --lime: #B9E07A;
+  --aqua: #8FD3D0;
+
+  /* Oscuros */
+  --hero: #140E10;
+  --photo-dark: #2A1A16;
+  --map-land: #2E2220;
+  --map-border: #8A6A55;
+  --map-placeholder: #EDE5DC;
+
+  /* Hover recuperado del código base (decisión 2.13) */
+  --light-hover: #F3ECE6;
+
+  /* Fondos especiales */
+  --fondo-heroe:
+    radial-gradient(circle at 74% 30%, rgba(214, 140, 70, .55) 0, transparent 22%),
+    radial-gradient(circle at 92% 78%, rgba(190, 70, 80, .45) 0, transparent 26%),
+    radial-gradient(circle at 60% 92%, rgba(230, 170, 80, .25) 0, transparent 18%),
+    radial-gradient(ellipse at 8% 40%, rgba(70, 30, 80, .55) 0, transparent 45%),
+    var(--hero);
+  --degradado-titular: linear-gradient(90deg, var(--peach), var(--pink));
+  --degradado-titular-inv: linear-gradient(90deg, var(--pink), var(--peach));
+
+  /* Tipografía */
+  --display: 'Archivo', 'Arial Black', 'Helvetica Neue', sans-serif;
+  --ui: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Radios */
+  --radius-pill: 999px;
+  --radius-2xl: 28px;
+  --radius-xl: 24px;
+  --radius-lg: 20px;
+  --radius-card: 18px;
+  --radius-md: 16px;
+  --radius-sm: 14px;
+  --radius-field: 12px;
+  --radius-xs: 10px;
+
+  /* Contenedor */
+  --ancho-max: 1240px;
+  --margen-lateral: clamp(16px, 4vw, 24px);
+}

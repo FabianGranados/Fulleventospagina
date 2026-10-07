@@ -1,0 +1,45 @@
+---
+interface Props {
+  href?: string;
+  variante?: 'claro';
+  type?: 'button' | 'submit';
+  class?: string;
+}
+
+const { href, variante = 'claro', type = 'button', class: clase } = Astro.props;
+---
+
+{
+  href ? (
+    <a href={href} class:list={['boton', variante, clase]}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={['boton', variante, clase]}>
+      <slot />
+    </button>
+  )
+}
+
+<style>
+  .boton {
+    display: inline-block;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 15px 26px;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  /* Botón claro para fondos oscuros (.btn-light del código base) */
+  .claro,
+  .claro:hover {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .claro:hover {
+    background: var(--light-hover);
+  }
+</style>

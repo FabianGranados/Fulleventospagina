@@ -1,0 +1,35 @@
+---
+import PilaAvatares from '../ui/PilaAvatares.astro';
+
+interface Props {
+  personas: number;
+  ciudades: number;
+}
+
+const { personas, ciudades } = Astro.props;
+const cifra = (n: number) => n.toLocaleString('es-CO');
+---
+
+<p class="prueba">
+  <PilaAvatares colores={['c1', 'c2', 'c3', 'c4']} tamano={38} solape={9} borde="hero" />
+  <span>
+    <b>{cifra(personas)} {personas === 1 ? 'persona' : 'personas'}</b>{' en '}<b>{cifra(ciudades)} {ciudades === 1 ? 'ciudad' : 'ciudades'}</b>{` ${personas === 1 ? 'ya tiene' : 'ya tienen'} plan este finde`}
+  </span>
+</p>
+
+<style>
+  .prueba {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 26px;
+    font-size: .88rem;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, .88);
+  }
+
+  b {
+    color: var(--on-dark);
+    font-weight: 700;
+  }
+</style>

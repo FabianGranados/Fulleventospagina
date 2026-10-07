@@ -1,0 +1,27 @@
+---
+import Avatar, { type ColorAvatar } from './Avatar.astro';
+
+interface Props {
+  colores: ColorAvatar[];
+  tamano?: number;
+  solape?: number;
+  borde?: 'hero' | 'blanco' | 'ninguno';
+}
+
+const { colores, tamano = 34, solape = 9, borde = 'ninguno' } = Astro.props;
+---
+
+<span class="pila" style={`--solape: -${solape}px`}>
+  {colores.map((color) => <Avatar color={color} tamano={tamano} borde={borde} />)}
+</span>
+
+<style>
+  .pila {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .pila > :global(* + *) {
+    margin-left: var(--solape);
+  }
+</style>
