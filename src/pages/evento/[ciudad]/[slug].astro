@@ -167,6 +167,7 @@ const datosCompra = {
           <VentanaCompra m={m} />
           <BoletaDigital m={m} />
           <Modal id="visor-boleta" titulo="Tus boletas">
+            <p class="visor-aviso">Esta compra es una demostración: no se cobra nada ni se emite una boleta real.</p>
             <div class="visor" data-visor-boletas />
           </Modal>
           <script type="application/json" id="datos-compra" set:html={JSON.stringify(datosCompra)} />
@@ -281,6 +282,15 @@ const datosCompra = {
 
   .pagina-evento :global(.pie) {
     margin-top: 0;
+  }
+
+  /* Mismo aviso de demostración del checkout (B3, H24) */
+  .visor-aviso {
+    font-size: .8rem;
+    font-weight: 700;
+    background: var(--yellow);
+    border-radius: var(--radius-field);
+    padding: 8px 12px;
   }
 
   .visor {
