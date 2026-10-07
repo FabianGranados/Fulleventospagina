@@ -1,0 +1,30 @@
+---
+// 4.6 Agenda: el marketplace nacional dentro de la sesión, con repost (decisión 2.7).
+// Los filtros viven en la URL: /agenda?ciudad=medellin&categoria=rumba&fecha=finde (H42).
+import Base from '../layouts/Base.astro';
+import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import Pie from '../components/layout/Pie.astro';
+import AgendaApp from '../components/agenda/AgendaApp.astro';
+import VentanaRepost from '../components/agenda/VentanaRepost.astro';
+---
+
+<Base titulo="Fulleventos · Agenda" tamanoBase={15}>
+  <EncabezadoApp variante="completo" activa="agenda" />
+  <main id="contenido" class="contenedor principal">
+    <AgendaApp />
+  </main>
+  <Pie />
+  <VentanaRepost />
+</Base>
+
+<style>
+  .principal {
+    padding-top: 28px;
+    padding-bottom: 64px;
+  }
+
+  /* El main ya deja 64 px abajo, como el prototipo; el pie va pegado */
+  .principal + :global(.pie) {
+    margin-top: 0;
+  }
+</style>

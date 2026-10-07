@@ -1,0 +1,312 @@
+---
+// N15 · Tarjeta de evento, variante "marketplace" (Agenda): Guardar, marca "Reposteaste",
+// línea social de reposts y fila de acciones (Repostear + Enviar a un amigo).
+// La interactividad (guardar, repostear) la maneja el script de la página (AgendaApp).
+import Icono from '../ui/Icono.astro';
+import PilaAvatares from '../ui/PilaAvatares.astro';
+import type { Evento } from '../../data/eventos';
+import { nombreCiudad } from '../../data/ciudades';
+import { lineaRepost, type SocialAgenda } from '../../data/agenda';
+import { pesos, placaFecha, rutaEvento, slug } from '../../lib/formato';
+
+interface Props {
+  evento: Evento;
+  social: SocialAgenda;
+  reposteado?: boolean;
+  oculta?: boolean;
+}
+
+const { evento: e, social, reposteado = false, oculta = false } = Astro.props;
+const { dia, mes } = placaFecha(e.fecha);
+const ciudad = nombreCiudad(e.ciudad);
+const href = rutaEvento(e.ciudad, e.titulo);
+const tituloId = `tarjeta-${e.id}-titulo`;
+// Texto sin tildes para la búsqueda del encabezado
+const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-/g, ' ');
+---
+
+<article
+  class="tarjeta"
+  aria-labelledby={tituloId}
+  hidden={oculta}
+  data-tarjeta
+  data-id={e.id}
+  data-ciudad={e.ciudad}
+  data-etiquetas={e.etiquetas.join(' ')}
+  data-fecha={e.fecha}
+  data-amigos={String(social.amigos)}
+  data-texto={texto}
+  data-quien={social.quien}
+  data-reposts={social.reposts}
+  data-titulo={e.titulo}
+  data-categoria={e.categoria}
+  data-lugar={e.lugar}
+  data-nombre-ciudad={ciudad}
+  data-dia={dia}
+  data-mes={mes}
+  data-bg1={e.bg1}
+  data-bg2={e.bg2}
+>
+  <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}>
+    <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
+    <!-- H41: "Guardar" usa el marcador (el corazón es "Me gusta" en Inicio) -->
+    <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`} data-guardar>
+      <Icono nombre="marcador" tamano={18} />
+    </button>
+    <span class="marca" hidden={!reposteado} data-marca>
+      <Icono nombre="repost" tamano={13} grosor={2.6} />Reposteaste
+    </span>
+  </div>
+  <div class="cuerpo">
+    <span class="categoria">{e.categoria}</span>
+    <!-- H59 pide un encabezado por tarjeta; aquí cuelgan directo del h1 de la página, por eso h2 -->
+    <h2 class="titulo" id={tituloId}><a href={href}>{e.titulo}</a></h2>
+    <span class="lugar">{e.lugar} · <b>{ciudad}</b></span>
+    <span class="social">
+      <PilaAvatares colores={social.colores} tamano={26} solape={7} borde="blanco" />
+      <span data-linea>{lineaRepost(social, reposteado)}</span>
+    </span>
+    <div class="compra">
+      <span class="precio">
+        {e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}
+        {e.precio > 0 && <small>+ cargo por servicio</small>}
+        <small>{e.vende}</small>
+      </span>
+      <a class="cta" href={href} aria-label={e.precio ? `Comprar boletas para ${e.titulo}` : `Ver plan: ${e.titulo}`}>
+        {e.precio ? 'Comprar' : 'Ver plan'}
+      </a>
+    </div>
+    <div class="acciones">
+      <button
+        type="button"
+        class="repostear"
+        aria-pressed={String(reposteado)}
+        data-repostear
+        data-abrir-modal="ventana-repost"
+      >
+        <Icono nombre="repost" tamano={16} grosor={2.2} /><span data-repostear-texto>{reposteado ? 'Reposteado' : 'Repostear'}</span>
+      </button>
+      <!-- H38: la hoja para enviar a amigos no está diseñada; queda visible y anunciada como "Próximamente" -->
+      <button type="button" class="enviar" aria-label="Enviar a un amigo" aria-disabled="true" aria-describedby="agenda-proximamente">
+        <Icono nombre="avion" tamano={16} />
+      </button>
+    </div>
+  </div>
+</article>
+
+<style>
+  .tarjeta {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .imagen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 55%), var(--bg2);
+  }
+
+  .fecha {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    text-align: center;
+    line-height: 1;
+    min-width: 64px;
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 900;
+  }
+
+  .fecha span {
+    font-size: .66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .guardar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .94);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+
+  .guardar[aria-pressed='true'] {
+    color: var(--brand);
+  }
+
+  .guardar[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
+  }
+
+  .marca {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--yellow);
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .cuerpo {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .categoria {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .titulo {
+    margin: 4px 0 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .lugar {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .lugar b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .social {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .compra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 14px;
+  }
+
+  .precio {
+    font-weight: 700;
+    font-size: .95rem;
+  }
+
+  .precio small {
+    display: block;
+    font-weight: 400;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .cta,
+  .cta:hover {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    background: var(--brand);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 10px 14px;
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .acciones {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .repostear {
+    flex: 1;
+    height: 40px;
+    border-radius: var(--radius-pill);
+    font-size: .84rem;
+    font-weight: 700;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .repostear[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .enviar {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: default;
+  }
+
+  /* Objetivos táctiles de 44 px en celular */
+  @media (max-width: 767px) {
+    .cta {
+      min-height: 44px;
+    }
+
+    .repostear {
+      height: 44px;
+    }
+
+    .enviar {
+      width: 44px;
+      height: 44px;
+    }
+  }
+</style>
