@@ -320,3 +320,24 @@ Las 7 pantallas restantes se construyeron en paralelo, cada una por un agente di
 - "Mis boletas" (H20), pie legal (H5) y variantes de compra por modo (P1).
 - Carrusel de "Este finde" en celular (H44) y tarjeta compacta de Agenda en celular (H47).
 - Favicon: el del sitio anterior usa la paleta descartada.
+
+### 2.17 Correcciones de la auditoría del sitio implementado (7 de octubre de 2026)
+
+El agente auditor revisó el sitio completo y no encontró hallazgos críticos: 1 alto, 7 medios y 6 bajos. Se corrigieron todos menos los que dependen del cliente. Decisiones de interpretación:
+
+- **Un solo modelo de datos (H37, H53):** la hora de cada evento vive en `src/data/eventos.ts`; los parches, en `src/data/parches.ts`; el estado de la usuaria del demo (a qué va, qué le interesa, sus boletas y sus amigos), en `src/data/asistencia.ts`.
+- **"Salseros de jueves":** el handoff no fija el dato. Se usa el del chat: 12 miembros, 7 con boleta y sin cupo máximo. Evento ya no dice "6 de 8 cupos".
+- **"Para mi parche" (H25):** solo se puede elegir a quienes no tienen boleta. Los que ya la tienen aparecen aparte con el rótulo "Ya tienen boleta".
+- **Estado de cada plan (8.2.8):** "En parche" > "Vas" > "Te interesa", igual en Evento, Inicio y Perfil.
+- **Amigos que van:** se calculan con los amigos de la usuaria que están en un parche del evento. Por eso e1 pasa de "3 amigos" a "7 amigos" y de "10 amigos más" a "4 amigos más".
+- **"N nuevos" de Inicio:** sale del chat (3).
+- **Enlaces a Mensajes (H42):** van a `/mensajes/<conversación>`. "Armar parche" abre `/mensajes?nuevo=parche&evento=<id>`, y "Mensaje" a alguien sin conversación abre `/mensajes?nuevo=chat&persona=<id>`.
+- **Mapa (H41):** repostea con la misma ventana de la Agenda, que pasó a `src/components/eventos/`, y tiene el selector "Lista / Mapa" que lleva a la Agenda con los mismos filtros.
+- **No indexar mientras sea demostración (H34):** etiqueta `noindex, nofollow` en `Base.astro` y `public/robots.txt` con `Disallow: /`. **Hay que quitarlas al publicar con datos reales.**
+- **Aviso de demostración** junto a la boleta del paso 4 y en "Tus boletas", y la nota "Contenido de ejemplo" en las páginas de evento.
+- **Títulos de página:** "{Título} · Fulleventos" en todo el sitio (la portada sigue "Fulleventos Colombia").
+- **Sin resolver:**
+  - La historia de Andrés (llega a Bogotá el jueves y abre un parche en Medellín el viernes): 8.2.3 y 8.2.7 la señalan, pero no dicen cómo resolverla.
+  - Los marcadores `[ASÍ]` de Evento: hacen falta los datos reales (P8). Son un bloqueo de publicación.
+  - El perfil del organizador (`/perfil/galeria-cafe-libro`): no está diseñado.
+  - La unificación de las 7 tarjetas de evento y de los formatos repetidos: es un refactor aparte.

@@ -45,8 +45,8 @@ Decidido por el cliente el 7 de octubre de 2026.
   - `Icono` (agregar íconos ahí, con el trazo exacto del prototipo);
   - `Avatar`, `PilaAvatares`, `Etiqueta`, `Titular`, `Boton`, `EnlaceSubrayado` y `EncabezadoSeccion`;
   - `Modal` (N68, con `<dialog>`; se abre con `data-abrir-modal="id"`).
-- `components/eventos/TarjetaEvento.astro` (N15, variante pública).
-- Datos semilla en `src/data/`: `ciudades`, `eventos` (con `conteoCiudad`), `noticias`, `personas` (la usuaria del demo es Camila Vargas) y `demo` (`HOY_DEMO`, el único "hoy" del demo). Cada pantalla tiene además su propio archivo de datos (`agenda`, `mapa`, `inicio`, `evento`, `mensajes`, `perfil`, `registro`). Formatos en `src/lib/formato.ts`: `cifra`, `pesos`, `planes`, `placaFecha`, `slug` y `rutaEvento`.
+- `components/eventos/TarjetaEvento.astro` (N15, variante pública) y `components/eventos/VentanaRepost.astro` (N16, Agenda y Mapa).
+- Datos semilla en `src/data/`: `ciudades`, `eventos` (con `conteoCiudad`), `noticias`, `personas` (la usuaria del demo es Camila Vargas) `demo` (`HOY_DEMO`, el único "hoy" del demo), `parches` (miembros, cupos y quién tiene boleta) y `asistencia` (a qué va la usuaria del demo, sus boletas y sus amigos). La hora de cada evento está en `eventos.ts`: no la copies en otros archivos (H37). Cada pantalla tiene además su propio archivo de datos (`agenda`, `mapa`, `inicio`, `evento`, `mensajes`, `perfil`, `registro`). Formatos en `src/lib/formato.ts`: `cifra`, `pesos`, `planes`, `placaFecha`, `slug` y `rutaEvento`.
 - Rutas: `/`, `/registro`, `/inicio`, `/agenda`, `/mapa`, `/evento/:ciudad/:slug`, `/mensajes`, `/perfil/:usuario` y `/yo`.
 
 ## Reglas que no se negocian
@@ -110,3 +110,8 @@ Es la especificación visual y de comportamiento, no una base de código:
 - Rama de trabajo: `rediseno-pagina` (no trabajar directo en `main`). El código React anterior quedó guardado en la rama `respaldo-react-viejo`.
 - Mensajes de commit en español, describiendo el porqué del cambio.
 - Comunícate con el usuario en español.
+
+## Antes de publicar con datos reales
+
+- Quitar `noindex` de `src/layouts/Base.astro` y `Disallow: /` de `public/robots.txt`, y configurar `site` en `astro.config.mjs` (H34).
+- Reemplazar todos los marcadores `[ASÍ]` con datos reales (P8) y quitar los avisos de demostración de la compra.
