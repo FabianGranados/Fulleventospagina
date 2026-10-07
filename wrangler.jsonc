@@ -1,0 +1,8 @@
+// Configuración del Worker en Cloudflare. El nombre debe coincidir con el del panel
+// (Workers & Pages → fulleventospagina) o Workers Builds rechaza el despliegue.
+// El adaptador @astrojs/cloudflare completa el resto al compilar.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fulleventospagina",
+  "compatibility_date": "2026-10-06"
+}
