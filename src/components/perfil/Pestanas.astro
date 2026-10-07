@@ -1,0 +1,118 @@
+---
+// N63 · Pestañas con el patrón ARIA completo (H59): flechas, Inicio y Fin, tabindex itinerante y
+// aria-controls hacia paneles role="tabpanel" con id `panel-{id}` y aria-labelledby `pestana-{id}`.
+// Los paneles los pone la página. La pestaña elegida se refleja en ?pestana= (recomendación de 4.10),
+// para que "Recuerdos" del menú de Inicio pueda abrir directo esa pestaña.
+interface Props {
+  etiqueta: string;
+  pestanas: { id: string; texto: string }[];
+}
+
+const { etiqueta, pestanas } = Astro.props;
+---
+
+<div class="pestanas" role="tablist" aria-label={etiqueta} data-pestanas>
+  {
+    pestanas.map((p, i) => (
+      <button
+        type="button"
+        role="tab"
+        id={`pestana-${p.id}`}
+        aria-controls={`panel-${p.id}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        tabindex={i === 0 ? 0 : -1}
+        data-pestana={p.id}
+      >
+        {p.texto}
+      </button>
+    ))
+  }
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pestanas]').forEach((lista) => {
+    const pestanas = [...lista.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+
+    const elegir = (elegida: HTMLButtonElement, enfocar: boolean, actualizarUrl: boolean) => {
+      pestanas.forEach((p) => {
+        const activa = p === elegida;
+        p.setAttribute('aria-selected', String(activa));
+        p.tabIndex = activa ? 0 : -1;
+        const panel = document.getElementById(p.getAttribute('aria-controls') ?? '');
+        if (panel) panel.hidden = !activa;
+      });
+      if (enfocar) elegida.focus();
+      // Que la pestaña elegida no quede cortada en celular (5.2.8)
+      // (solo desplaza la fila de pestañas, nunca la página)
+      const caja = lista.getBoundingClientRect();
+      const tab = elegida.getBoundingClientRect();
+      if (tab.right > caja.right) lista.scrollLeft += tab.right - caja.right;
+      else if (tab.left < caja.left) lista.scrollLeft -= caja.left - tab.left;
+      if (actualizarUrl) {
+        const url = new URL(location.href);
+        if (elegida === pestanas[0]) url.searchParams.delete('pestana');
+        else url.searchParams.set('pestana', elegida.dataset.pestana ?? '');
+        history.replaceState(history.state, '', url);
+      }
+    };
+
+    pestanas.forEach((p, i) => {
+      p.addEventListener('click', () => elegir(p, false, true));
+      p.addEventListener('keydown', (ev) => {
+        const destino = {
+          ArrowRight: pestanas[(i + 1) % pestanas.length],
+          ArrowLeft: pestanas[(i - 1 + pestanas.length) % pestanas.length],
+          Home: pestanas[0],
+          End: pestanas[pestanas.length - 1],
+        }[ev.key];
+        if (!destino) return;
+        ev.preventDefault();
+        elegir(destino, true, true);
+      });
+    });
+
+    const inicial = new URLSearchParams(location.search).get('pestana');
+    const desdeUrl = pestanas.find((p) => p.dataset.pestana === inicial);
+    if (desdeUrl) elegir(desdeUrl, false, false);
+  });
+</script>
+
+<style>
+  .pestanas {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    /* Línea base con sombra interior: el subrayado activo se pinta encima (8.2.8) */
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+
+  [role='tab'] {
+    flex-shrink: 0;
+    white-space: nowrap;
+    height: 48px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    padding: 0 16px;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  [role='tab'][aria-selected='true'] {
+    color: var(--ink);
+    border-bottom-color: var(--brand);
+  }
+
+  /* El overflow de la fila recorta el anillo exterior: se dibuja hacia dentro (H51) */
+  [role='tab']:focus-visible {
+    outline-offset: -3px;
+  }
+
+  /* Las 3 pestañas caben desde 379 px (sugerencia de 8.2.8); por debajo queda el desplazamiento */
+  @media (max-width: 419px) {
+    [role='tab'] {
+      padding: 0 10px;
+    }
+  }
+</style>

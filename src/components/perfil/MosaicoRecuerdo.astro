@@ -1,0 +1,48 @@
+---
+// N65 · Mosaico de recuerdo. Va sin enlace mientras no exista la vista de evento terminado (H36),
+// como se decidió con las noticias de Bienvenida (decisión 2.14). El nombre sale del texto visible.
+import type { Recuerdo } from '../../data/perfil';
+import { nombreCiudad } from '../../data/ciudades';
+
+interface Props {
+  recuerdo: Recuerdo;
+}
+
+const { recuerdo: r } = Astro.props;
+---
+
+<article class="recuerdo" style={`--bg1: ${r.bg1}; --bg2: ${r.bg2}`}>
+  <div class="franja">
+    <h3>{r.titulo}</h3>
+    <p>{nombreCiudad(r.ciudad)} · {r.mes}</p>
+  </div>
+</article>
+
+<style>
+  .recuerdo {
+    aspect-ratio: 1;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    background: radial-gradient(circle at 40% 35%, var(--bg1) 0, transparent 55%), var(--bg2);
+  }
+
+  .franja {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(20, 14, 16, .72);
+    color: var(--on-dark);
+    font-size: .8rem;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-size: inherit;
+    font-weight: 700;
+  }
+
+  p {
+    color: #E2D8D0;
+  }
+</style>

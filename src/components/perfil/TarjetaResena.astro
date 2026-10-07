@@ -1,0 +1,88 @@
+---
+// N66 · Tarjeta de reseña. Calificación unificada: estrellas decorativas + "4 de 5" visible en #8A5A00
+// (5,93:1, H52) y texto accesible "Calificación 4 de 5" (8.2.8). El título va sin enlace mientras no
+// exista la vista de evento terminado (H36, decisión 2.14).
+import Icono from '../ui/Icono.astro';
+import type { Resena } from '../../data/perfil';
+import { cifra } from '../../lib/formato';
+
+interface Props {
+  resena: Resena;
+}
+
+const { resena: v } = Astro.props;
+const utiles =
+  v.utiles === 1
+    ? '1 persona lo encontró útil'
+    : v.utiles > 1
+      ? `${cifra(v.utiles)} personas lo encontraron útil`
+      : '';
+---
+
+<article class="resena">
+  <div class="arriba">
+    <h3>{v.titulo}</h3>
+    <p class="calificacion">
+      <span class="estrellas" aria-hidden="true">
+        {[1, 2, 3, 4, 5].map((n) => <span class:list={{ llena: n <= v.estrellas }}><Icono nombre="estrella" tamano={14} grosor={1.6} /></span>)}
+      </span>
+      <span class="solo-lectores">Calificación </span>{v.estrellas} de 5
+    </p>
+  </div>
+  <p class="texto">{v.texto}</p>
+  <p class="pie">{[v.mes, utiles].filter(Boolean).join(' · ')}</p>
+</article>
+
+<style>
+  .resena {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 18px 20px;
+  }
+
+  .arriba {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .calificacion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--rating);
+  }
+
+  .estrellas {
+    display: inline-flex;
+    gap: 1px;
+  }
+
+  .estrellas span {
+    display: inline-flex;
+  }
+
+  .llena :global(svg) {
+    fill: currentColor;
+  }
+
+  .texto {
+    margin-top: 6px;
+  }
+
+  .pie {
+    margin-top: 8px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+</style>

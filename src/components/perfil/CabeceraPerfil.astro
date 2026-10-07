@@ -1,0 +1,211 @@
+---
+// N62 · Cabecera de perfil con estadísticas, en sus dos variantes (H46):
+// "Mi perfil" (propio: "Editar perfil", sin "Seguir" ni "Mensaje") y "Perfil de otra persona".
+import Avatar from '../ui/Avatar.astro';
+import BotonSeguir from './BotonSeguir.astro';
+import type { Persona } from '../../data/personas';
+import { coloresGusto, type Perfil } from '../../data/perfil';
+import { nombreCiudad } from '../../data/ciudades';
+import { cifra } from '../../lib/formato';
+
+interface Props {
+  persona: Persona;
+  perfil?: Perfil;
+  propio: boolean;
+}
+
+const { persona, perfil, propio } = Astro.props;
+const nombreCorto = persona.nombre.split(' ')[0];
+
+// "@usuario · [barrio, ]ciudad". El barrio solo lo ve quien la persona autorice (H30):
+// en el demo, solo la propia persona en Mi perfil.
+const ubicacion = perfil
+  ? [propio ? perfil.barrio : undefined, nombreCiudad(perfil.ciudad)].filter(Boolean).join(', ')
+  : '';
+const linea = [`@${persona.id}`, ubicacion].filter(Boolean).join(' · ');
+---
+
+<section class="cabecera" aria-label={propio ? 'Mi perfil' : 'Perfil'}>
+  <!-- Portada por defecto mientras no haya foto (decorativa: el nombre ya está en el h1) -->
+  <div class="portada"></div>
+
+  <div class="identidad">
+    <span class="avatar-xl" aria-hidden="true">
+      <Avatar color={persona.color} tamano={128} iniciales={persona.iniciales} />
+    </span>
+    <div class="nombre">
+      <h1>{persona.nombre}</h1>
+      <p>{linea}</p>
+    </div>
+    <div class="acciones">
+      {
+        propio ? (
+          <a href="/yo/editar" class="secundario">Editar perfil</a>
+        ) : (
+          <>
+            <BotonSeguir nombre={nombreCorto} />
+            {/* La conversación directa con la persona (/mensajes/:conversacion) todavía no existe (H42) */}
+            <a href="/mensajes" class="secundario">Mensaje<span class="solo-lectores"> a {nombreCorto}</span></a>
+          </>
+        )
+      }
+    </div>
+  </div>
+
+  {
+    perfil && (
+      <div class="bio-estadisticas">
+        <p class="bio">{perfil.biografia}</p>
+        <dl class="estadisticas">
+          {perfil.estadisticas.map((s) => (
+            <div>
+              <dt>{s.etiqueta}</dt>
+              <dd>{cifra(s.valor)}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    )
+  }
+
+  {
+    perfil && perfil.gustos.length > 0 && (
+      <ul class="gustos" aria-label="Gustos">
+        {perfil.gustos.map((g, i) => (
+          <li style={`--fondo-gusto: ${coloresGusto[i % coloresGusto.length]}`}>{g}</li>
+        ))}
+      </ul>
+    )
+  }
+</section>
+
+<style>
+  .cabecera {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+  }
+
+  .portada {
+    height: 200px;
+    background:
+      radial-gradient(circle at 20% 40%, rgba(238, 147, 188, .7) 0, transparent 30%),
+      radial-gradient(circle at 80% 60%, rgba(246, 220, 106, .6) 0, transparent 28%),
+      var(--photo-dark);
+  }
+
+  .identidad,
+  .bio-estadisticas,
+  .gustos {
+    padding: 0 32px 28px;
+  }
+
+  .identidad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px 24px;
+  }
+
+  /* Se monta 64 px sobre la portada; position y z-index por si la portada pasa a ser imagen */
+  .avatar-xl {
+    position: relative;
+    z-index: 1;
+    margin-top: -64px;
+    line-height: 1;
+  }
+
+  .avatar-xl :global(.avatar) {
+    border: 5px solid var(--surface);
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 2.4rem;
+  }
+
+  .nombre {
+    flex: 1 1 260px;
+    min-width: 0;
+    padding-top: 12px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 2rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .nombre p {
+    margin-top: 2px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .acciones {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* Píldora secundaria (N69, contorno claro de 44 px) */
+  .secundario {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 20px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    font-size: .92rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .bio-estadisticas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 40px;
+    align-items: flex-start;
+  }
+
+  .bio {
+    flex: 1 1 320px;
+    max-width: 56ch;
+  }
+
+  .estadisticas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+  }
+
+  dt {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  dd {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .gustos {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* N60 · Gustos estáticos: etiquetas de color, no botones */
+  .gustos li {
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    font-size: .84rem;
+    font-weight: 500;
+    background: var(--fondo-gusto);
+  }
+</style>
