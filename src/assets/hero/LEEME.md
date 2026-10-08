@@ -6,4 +6,4 @@ Deja aquí la foto con el nombre `foto.jpg` (también sirve `.jpeg`, `.png` o `.
 - De un evento en Colombia (concierto, rumba, festival), con derechos de uso: foto propia o de un banco con licencia libre (Unsplash, Pexels).
 - Anota abajo de dónde salió y quién la tomó.
 
-Origen de la foto actual: (ninguna todavía)
+Origen de la foto actual: Pexels, "Group of people in a concert during night time" (https://www.pexels.com/photo/group-of-people-in-a-concert-during-night-time-5152546/), licencia de Pexels (uso libre, también comercial, sin atribución obligatoria). Archivo original de 2000 × 1333 px.
