@@ -5,7 +5,7 @@ import { ciudades } from '../../data/ciudades';
 import { conVolver } from '../../lib/sesion';
 
 // N2 · Encabezado de visitante. En la Bienvenida sus enlaces van a las secciones de la página; en las páginas
-// públicas con sesión opcional (Evento, Agenda y Mapa, decisión 2.24) va junto al EncabezadoApp: cada uno con
+// públicas con sesión opcional (Evento, Agenda, Mapa y Noticias, decisiones 2.24 y 2.25) va junto al EncabezadoApp: cada uno con
 // su clase (solo-visitante / solo-sesion) y solo uno visible.
 interface Props {
   class?: string;
@@ -51,6 +51,8 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
       <a href={enBienvenida ? '#como-funciona' : '/#como-funciona'}>Cómo funciona</a>
       <a href="/mapa" class="con-insignia" aria-current={actual('/mapa')}>Mapa <span class="insignia">Nuevo</span></a>
       <a href={enBienvenida ? '#agenda' : '/agenda'} aria-current={actual('/agenda')}>Agenda</a>
+      <!-- Centro de noticias (decisión 2.25): siempre la página, también desde la Bienvenida (como el Mapa) -->
+      <a href="/noticias" aria-current={actual('/noticias')}>Noticias</a>
       <a href={entrar} class="fuerte entrar" data-volver-actual={enBienvenida ? undefined : '/entrar'}>Entrar</a>
       <a href={crear} class="crear" data-volver-actual={enBienvenida ? undefined : '/registro'}>Crear cuenta</a>
     </nav>
@@ -241,7 +243,7 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
     font-weight: 700;
   }
 
-  /* Página actual (Agenda o Mapa públicos, decisión 2.24) */
+  /* Página actual (Agenda, Mapa o Noticias públicos, decisiones 2.24 y 2.25) */
   .nav a[aria-current='page'] {
     text-decoration: underline;
     text-decoration-color: var(--brand);
