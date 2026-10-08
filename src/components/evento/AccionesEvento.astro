@@ -2,7 +2,7 @@
 // N27 · Acciones del evento y "quién va". "Invitar amigos" y "Compartir" comparten la URL del evento (H34, H38).
 import Icono from '../ui/Icono.astro';
 import { cifra } from '../../lib/formato';
-import type { ModeloEvento } from './modelo';
+import { textoVan, type ModeloEvento } from './modelo';
 import { leInteresa, tieneBoleta } from '../../data/asistencia';
 import { VENTA_PROPIA } from '../../config';
 
@@ -40,25 +40,48 @@ const avatares = amigos.slice(0, 4);
 const mas = amigos.length - avatares.length;
 ---
 
+<!-- Página pública (decisión 2.24): los botones salen como los ve el visitante. Con sesión, asistencia.ts aplica el
+     estado de la usuaria (data-sesion-pulsado); sin sesión, data-requiere-cuenta abre "Crea tu cuenta" -->
 <div class="acciones-evento">
   <div class="fila">
-    <button type="button" class="boton voy" aria-pressed={m.voy ? 'true' : 'false'} data-voy>
+    <button
+      type="button"
+      class="boton voy"
+      aria-pressed="false"
+      data-voy
+      data-sesion-pulsado={String(m.voy)}
+      data-requiere-cuenta="para decir que vas"
+    >
       <Icono nombre="visto" tamano={18} grosor={2.4} />
-      <span data-texto-voy>{m.voy ? 'Vas a ir' : 'Voy'}</span>
+      <span data-texto-voy>Voy</span>
     </button>
-    <button type="button" class="boton claro interes" aria-pressed={interesa ? 'true' : 'false'} data-interes>
+    <button
+      type="button"
+      class="boton claro interes"
+      aria-pressed="false"
+      data-interes
+      data-sesion-pulsado={String(interesa)}
+      data-requiere-cuenta="para marcar lo que te interesa"
+    >
       <Icono nombre="estrella" tamano={18} />
       Me interesa
     </button>
     {
       marcaBoleta && (
-        <button type="button" class="boton claro tengo" aria-pressed={tengoBoleta ? 'true' : 'false'} data-tengo-boleta>
+        <button
+          type="button"
+          class="boton claro tengo"
+          aria-pressed="false"
+          data-tengo-boleta
+          data-sesion-pulsado={String(tengoBoleta)}
+          data-requiere-cuenta="para marcar que ya tienes boleta"
+        >
           <Icono nombre="boleta" tamano={18} />
           Ya tengo boleta
         </button>
       )
     }
-    <button type="button" class="boton claro" data-compartir="invitar">
+    <button type="button" class="boton claro" data-compartir="invitar" data-requiere-cuenta="para invitar a tus amigos">
       <Icono nombre="avion" tamano={18} />
       Invitar amigos
     </button>
@@ -70,7 +93,18 @@ const mas = amigos.length - avatares.length;
 
   {
     d && (
-      <div class="quien-va">
+      <div class="quien-va solo-visitante">
+        <p>
+          <b>{textoVan(e.van)}</b> · <span class="gris">{cifra(d.interesados)} interesados</span>
+        </p>
+        <a href="#parches" class="enlace">Ver parches</a>
+      </div>
+    )
+  }
+
+  {
+    d && (
+      <div class="quien-va solo-sesion">
         {avatares.length > 0 && (
           <span class="pila" aria-hidden="true">
             {avatares.map((a) => (

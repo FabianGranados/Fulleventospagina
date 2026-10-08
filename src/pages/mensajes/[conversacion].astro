@@ -13,6 +13,6 @@ export function getStaticPaths() {
 const { id, nombre } = Astro.props;
 ---
 
-<Base titulo={`${nombre} · Mensajes · Fulleventos`} tamanoBase={15}>
+<Base titulo={`${nombre} · Mensajes · Fulleventos`} tamanoBase={15} requiereSesion>
   <BandejaMensajes abierta={id} vista="chat" />
 </Base>

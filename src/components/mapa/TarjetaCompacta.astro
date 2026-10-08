@@ -54,10 +54,27 @@ const href = rutaEvento(e.ciudad, e.titulo);
     </div>
     <div class="acciones">
       <!-- Mismo patrón que la Agenda (H41): "Repostear" abre la ventana; "Reposteado" lo quita -->
-      <button type="button" class="repost" aria-pressed={reposteado ? 'true' : 'false'} data-repost data-abrir-modal="ventana-repost">
-        <Icono nombre="repostear" tamano={14} grosor={2.2} /><span data-repost-texto>{reposteado ? 'Reposteado' : 'Repostear'}</span>
+      <!-- Sin sesión piden cuenta (decisión 2.24). El servidor pinta el repost como lo ve el visitante; con sesión,
+           la página aplica el de la usuaria (data-reposteado-sesion) -->
+      <button
+        type="button"
+        class="repost"
+        aria-pressed="false"
+        data-repost
+        data-reposteado-sesion={reposteado ? '' : undefined}
+        data-abrir-modal="ventana-repost"
+        data-requiere-cuenta="para repostear planes"
+      >
+        <Icono nombre="repostear" tamano={14} grosor={2.2} /><span data-repost-texto>Repostear</span>
       </button>
-      <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`} data-guardar>
+      <button
+        type="button"
+        class="guardar"
+        aria-pressed="false"
+        aria-label={`Guardar ${e.titulo}`}
+        data-guardar
+        data-requiere-cuenta="para guardar tus planes"
+      >
         <Icono nombre="marcador" tamano={16} />
       </button>
       <!-- Visible también con ciudad elegida (H7): lleva al mapa y enfoca el pin (H42) -->

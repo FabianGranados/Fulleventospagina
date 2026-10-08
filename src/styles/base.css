@@ -10,6 +10,13 @@
   display: none !important;
 }
 
+/* Sesión de demostración (decisión 2.24, lib/sesion.ts): <html data-sesion="no|si"> muestra la versión del
+   visitante o la de la usuaria. Sin JavaScript se queda en "no" (versión pública). */
+[data-sesion='no'] .solo-sesion,
+[data-sesion='si'] .solo-visitante {
+  display: none !important;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);

@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
+import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
 import Pie from '../components/layout/Pie.astro';
 import Hero from '../components/bienvenida/Hero.astro';
 import AgendaFinde from '../components/bienvenida/AgendaFinde.astro';
@@ -11,7 +12,9 @@ import Noticias from '../components/bienvenida/Noticias.astro';
 ---
 
 <Base titulo="Fulleventos Colombia">
-  <EncabezadoVisitante />
+  <!-- Pública. Con la sesión de demostración (decisión 2.24) el encabezado pasa a ser el de la app -->
+  <EncabezadoVisitante class="solo-visitante" />
+  <EncabezadoApp variante="completo" class="solo-sesion" />
   <!-- Orden de la auditoría H44 (decisión 2.13): los planes a la venta justo después del héroe -->
   <main id="contenido" class="contenedor principal">
     <Hero />

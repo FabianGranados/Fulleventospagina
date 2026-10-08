@@ -133,10 +133,14 @@ const gente = sugerencias.filter((s) => !s.requiereContactos);
     </div>
     <div class="acciones">
       <button type="button" class="atras" data-atras>Atrás</button>
-      <a href="/inicio" class="boton primario corto con-icono">
-        Ir a mi feed <Icono nombre="flecha" tamano={16} grosor={2.4} />
+      {/* Inicia la sesión de demostración y vuelve a ?volver= o a Inicio (decisión 2.24) */}
+      <a href="/inicio" class="boton primario corto con-icono" data-terminar-registro>
+        <span data-texto-terminar>Ir a mi feed</span> <Icono nombre="flecha" tamano={16} grosor={2.4} />
       </a>
     </div>
+    <p class="error" role="alert" data-error-sesion hidden>
+      <Icono nombre="informacion" tamano={16} /><span>Tu navegador no deja guardar la sesión de demostración (por ejemplo, en una ventana privada). Prueba en una ventana normal.</span>
+    </p>
   </div>
 </section>
 

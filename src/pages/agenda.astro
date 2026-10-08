@@ -1,20 +1,25 @@
 ---
 // 4.6 Agenda: el marketplace nacional dentro de la sesión, con repost (decisión 2.7).
 // Los filtros viven en la URL: /agenda?ciudad=medellin&categoria=rumba&fecha=finde (H42).
+// Pública (decisión 2.24, H33): el visitante ve la agenda de todo el país; con la sesión de demostración, la de Camila.
 import Base from '../layouts/Base.astro';
 import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
+import VentanaCuenta from '../components/ui/VentanaCuenta.astro';
 import Pie from '../components/layout/Pie.astro';
 import AgendaApp from '../components/agenda/AgendaApp.astro';
 import VentanaRepost from '../components/eventos/VentanaRepost.astro';
 ---
 
 <Base titulo="Agenda · Fulleventos" tamanoBase={15}>
-  <EncabezadoApp variante="completo" activa="agenda" />
+  <EncabezadoVisitante class="solo-visitante" />
+  <EncabezadoApp variante="completo" activa="agenda" class="solo-sesion" />
   <main id="contenido" class="contenedor principal">
     <AgendaApp />
   </main>
   <Pie />
   <VentanaRepost />
+  <VentanaCuenta />
 </Base>
 
 <style>

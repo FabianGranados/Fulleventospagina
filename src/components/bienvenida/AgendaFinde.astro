@@ -99,7 +99,8 @@ const ocultos = eventos.length - LIMITE;
     );
     const chipsCiudad = [...raiz.querySelectorAll<HTMLButtonElement>('[data-ciudad]')].filter((b) => b.classList.contains('chip'));
     const chipsCategoria = [...raiz.querySelectorAll<HTMLButtonElement>('[data-categoria]')];
-    const selector = document.querySelector<HTMLSelectElement>('[data-selector-ciudad]');
+    // Selector de ciudad de los dos encabezados (visitante y con sesión, decisión 2.24); solo uno está visible
+    const selectores = [...document.querySelectorAll<HTMLSelectElement>('select[data-selector-ciudad]')];
     const vacio = raiz.querySelector<HTMLElement>('[data-vacio]')!;
     const mensajeVacio = raiz.querySelector<HTMLElement>('[data-vacio-mensaje]')!;
     const botonMas = raiz.querySelector<HTMLButtonElement>('[data-mas]')!;
@@ -154,7 +155,7 @@ const ocultos = eventos.length - LIMITE;
 
       chipsCiudad.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ciudad === estado.ciudad)));
       chipsCategoria.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
-      if (selector) selector.value = estado.ciudad;
+      selectores.forEach((s) => (s.value = estado.ciudad));
       verMapa.href = estado.ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${estado.ciudad}`;
 
       if (anunciar) {
@@ -179,11 +180,13 @@ const ocultos = eventos.length - LIMITE;
         pintar();
       }),
     );
-    selector?.addEventListener('change', () => {
-      estado.ciudad = selector.value || 'all';
-      estado.todo = false;
-      pintar();
-    });
+    selectores.forEach((selector) =>
+      selector.addEventListener('change', () => {
+        estado.ciudad = selector.value || 'all';
+        estado.todo = false;
+        pintar();
+      }),
+    );
     botonMas.addEventListener('click', () => {
       estado.todo = !estado.todo;
       pintar();

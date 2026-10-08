@@ -7,7 +7,7 @@ import PilaAvatares from '../ui/PilaAvatares.astro';
 import type { Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
 import { lineaRepost, type SocialAgenda } from '../../data/agenda';
-import { pesos, placaFecha, rutaEvento, slug } from '../../lib/formato';
+import { cifra, pesos, placaFecha, rutaEvento, slug } from '../../lib/formato';
 
 interface Props {
   evento: Evento;
@@ -50,10 +50,17 @@ const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-
   <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}>
     <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
     <!-- H41: "Guardar" usa el marcador (el corazón es "Me gusta" en Inicio) -->
-    <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`} data-guardar>
+    <button
+      type="button"
+      class="guardar"
+      aria-pressed="false"
+      aria-label={`Guardar ${e.titulo}`}
+      data-guardar
+      data-requiere-cuenta="para guardar tus planes"
+    >
       <Icono nombre="marcador" tamano={18} />
     </button>
-    <span class="marca" hidden={!reposteado} data-marca>
+    <span class="marca solo-sesion" hidden={!reposteado} data-marca>
       <Icono nombre="repost" tamano={13} grosor={2.6} />Reposteaste
     </span>
   </div>
@@ -62,9 +69,14 @@ const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-
     <!-- H59 pide un encabezado por tarjeta; aquí cuelgan directo del h1 de la página, por eso h2 -->
     <h2 class="titulo" id={tituloId}><a href={href}>{e.titulo}</a></h2>
     <span class="lugar">{e.lugar} · <b>{ciudad}</b></span>
-    <span class="social">
+    <!-- Con sesión: quiénes de tu gente lo repostearon; al visitante, solo el total (decisión 2.24) -->
+    <span class="social solo-sesion">
       <PilaAvatares colores={social.colores} tamano={26} solape={7} borde="blanco" />
       <span data-linea>{lineaRepost(social, reposteado)}</span>
+    </span>
+    <span class="social solo-visitante">
+      <Icono nombre="repost" tamano={14} grosor={2.2} />
+      {cifra(social.reposts)} {social.reposts === 1 ? 'repost' : 'reposts'}
     </span>
     <div class="compra">
       <span class="precio">
@@ -77,14 +89,18 @@ const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-
       </a>
     </div>
     <div class="acciones">
+      <!-- El servidor lo pinta como lo ve el visitante; con sesión, AgendaApp aplica el repost de la usuaria
+           (data-reposteado-sesion) -->
       <button
         type="button"
         class="repostear"
-        aria-pressed={String(reposteado)}
+        aria-pressed="false"
         data-repostear
+        data-reposteado-sesion={reposteado ? '' : undefined}
         data-abrir-modal="ventana-repost"
+        data-requiere-cuenta="para repostear planes"
       >
-        <Icono nombre="repost" tamano={16} grosor={2.2} /><span data-repostear-texto>{reposteado ? 'Reposteado' : 'Repostear'}</span>
+        <Icono nombre="repost" tamano={16} grosor={2.2} /><span data-repostear-texto>Repostear</span>
       </button>
       <!-- H38: la hoja para enviar a amigos no está diseñada; queda visible y anunciada como "Próximamente" -->
       <button type="button" class="enviar" aria-label="Enviar a un amigo" aria-disabled="true" aria-describedby="agenda-proximamente">

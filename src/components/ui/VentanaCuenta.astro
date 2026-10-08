@@ -1,0 +1,96 @@
+---
+// Ventana "Crea tu cuenta para {acción}" (decisión 2.24, H33). Va una sola vez en las páginas públicas que tienen
+// acciones de cuenta (Evento, Agenda y Mapa) y usa el Modal compartido (N68).
+// Sin sesión, cualquier control con data-requiere-cuenta="<acción>" (p. ej. "para decir que vas") no se ejecuta:
+// abre esta ventana con "Crear cuenta" → /registro?volver=<ruta actual> y "Ya tengo cuenta · Entrar" →
+// /entrar?volver=<ruta actual>. Con sesión no hace nada y la acción funciona como siempre.
+import Modal from './Modal.astro';
+---
+
+<Modal id="ventana-cuenta" titulo="Crea tu cuenta" ancho={440}>
+  <div class="cuerpo">
+    <p class="texto">Es gratis y solo tarda un minuto. Con tu cuenta ves a qué va tu gente, armas parche y guardas tus planes.</p>
+    <a href="/registro" class="crear" data-cuenta-registro>Crear cuenta</a>
+    <p class="ya"><a href="/entrar" data-cuenta-entrar>Ya tengo cuenta · Entrar</a></p>
+  </div>
+</Modal>
+
+<script>
+  import { conVolver, haySesion, rutaActual } from '../../lib/sesion';
+
+  const dialogo = document.getElementById('ventana-cuenta') as HTMLDialogElement | null;
+
+  if (dialogo) {
+    const titulo = document.getElementById('ventana-cuenta-titulo')!;
+    const registro = dialogo.querySelector<HTMLAnchorElement>('[data-cuenta-registro]')!;
+    const entrar = dialogo.querySelector<HTMLAnchorElement>('[data-cuenta-entrar]')!;
+    let origen: HTMLElement | null = null;
+
+    // En la fase de captura de window, antes que cualquier otro manejador (también el de data-abrir-modal)
+    addEventListener(
+      'click',
+      (ev) => {
+        const control = (ev.target as Element | null)?.closest<HTMLElement>('[data-requiere-cuenta]');
+        if (!control || haySesion()) return;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        const accion = control.dataset.requiereCuenta;
+        titulo.textContent = accion ? `Crea tu cuenta ${accion}` : 'Crea tu cuenta';
+        const volver = rutaActual();
+        registro.href = conVolver('/registro', volver);
+        entrar.href = conVolver('/entrar', volver);
+        origen = control;
+        if (!dialogo.open) dialogo.showModal();
+      },
+      true,
+    );
+
+    // Al cerrar, el foco vuelve al control que la abrió (H7)
+    dialogo.addEventListener('close', () => {
+      origen?.focus();
+      origen = null;
+    });
+  }
+</script>
+
+<style>
+  .cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .texto {
+    color: var(--muted);
+  }
+
+  .crear,
+  .crear:hover {
+    height: 52px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ya {
+    text-align: center;
+    font-size: .92rem;
+  }
+
+  .ya a {
+    display: inline-block;
+    min-height: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .ya a:hover {
+    color: var(--brand);
+  }
+</style>

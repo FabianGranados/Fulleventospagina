@@ -406,3 +406,38 @@ El cliente decidió que en el primer lanzamiento no habrá pasarela de pagos: **
 - **Qué:** los eventos sin ficha completa (todos menos e1) muestran la sección "Sobre el evento" con una descripción de una o dos frases (campo `resumen` en `src/data/eventos.ts`). También aparece en los atajos de la página y en la descripción del JSON-LD.
 - **Por qué:** el cliente pidió una descripción breve. Antes esos eventos pasaban de los datos clave directo a la ubicación.
 - **Cómo se escribió:** solo con lo que se sabe del evento (categoría, lugar, ciudad y si la entrada es libre). No se inventan artistas, horarios, servicios ni cifras. En producción el texto lo escribe el organizador.
+
+### 2.24 Vista pública y sesión de demostración (8 de octubre de 2026)
+
+Un visitante sin cuenta que entraba a un evento desde la Bienvenida veía la página "con sesión": el encabezado de la app con el avatar "CV", "Laura, Andrés, Sofía y 4 amigos más van", los parches con su muro, etc. Lo mismo pasaba en Agenda y Mapa. Todavía no hay autenticación real (llega con el backend), así que el cliente decidió una **sesión de demostración** que funciona como funcionará la real. Esto resuelve H33.
+
+- **Decisión.**
+  - Por defecto todo el mundo es visitante. Al "Entrar" o al terminar el Registro se inicia la sesión de demostración (la de Camila Vargas, la usuaria del demo) y el navegador la recuerda. "Cerrar sesión" vuelve a visitante.
+  - **Públicas:** Bienvenida, Evento (`/evento/:ciudad/:slug`), Agenda y Mapa. Con sesión pasan a la vista de Camila.
+  - **Piden sesión:** Inicio, Mensajes (`/mensajes` y `/mensajes/*`), `/yo` y `/perfil/*`. Sin sesión llevan a `/entrar?volver=<ruta actual>`.
+- **Mecanismo (`src/lib/sesion.ts`).**
+  - La sesión es la clave `fe-sesion-demo` = `'1'` en `localStorage`. Las funciones son `haySesion()`, `iniciarSesion()`, `cerrarSesion()` y `rutaVolver()`. Todo acceso al almacenamiento va en `try/catch`: si falla (ventana privada, almacenamiento bloqueado) cuenta como "sin sesión", y Entrar y Registro lo dicen en pantalla.
+  - `rutaVolver()` solo acepta rutas internas: empiezan por `/`, no por `//`, sin `\` ni caracteres de control, y no son `/entrar` ni `/registro`. Si no, va a `/inicio`.
+  - `<html>` sale del servidor con `data-sesion="no"`. Un script muy corto al principio del `<head>` de `layouts/Base.astro`, antes de los estilos, lee la clave y pone `data-sesion="si"`: la página se pinta de una vez en su versión, sin parpadeo. Sin JavaScript se ve la versión de visitante.
+  - En las páginas que piden sesión (prop `requiereSesion` de Base), ese mismo script las oculta y hace `location.replace('/entrar?volver=…')` con la ruta, los filtros y el ancla. Si la sesión cambia en otra pestaña o al volver con "Atrás", la página se recarga.
+  - Dos clases globales en `styles/base.css`: `.solo-sesion` (se oculta sin sesión) y `.solo-visitante` (se oculta con sesión).
+  - Evento, Agenda, Mapa y Bienvenida renderizan los dos encabezados, `EncabezadoVisitante` con `solo-visitante` y `EncabezadoApp` con `solo-sesion`. Cada uno maneja solo sus propios elementos, el ajuste de `scroll-padding-top` (H16) lo hace solo el visible, y Agenda, Mapa y "Este finde" escuchan el selector de ciudad y el buscador de los dos.
+  - Los botones con estado de la usuaria ("Voy", "Me interesa", "Ya tengo boleta", "Repostear") salen del servidor como los ve el visitante. Con sesión, el script de la página aplica el estado de Camila.
+- **Qué ve el visitante en cada pantalla.**
+  - **Encabezado:** el de visitante (N2) con "Entrar" y "Crear cuenta". Fuera de la Bienvenida, "Cómo funciona" va a `/#como-funciona`, "Agenda" a `/agenda` y buscar lleva a la Agenda. "Entrar" y "Crear cuenta" llevan `?volver=` con la página actual, también con sus filtros.
+  - **Evento:** todo lo público (descripción, programación, localidades y precios, lo que debes saber, ubicación, organizador, botón de la boletera y planes parecidos). En lugar de los amigos que van, "186 van · 340 interesados". En lugar de los parches y el muro: "Hay N parches abiertos para este plan. Crea tu cuenta para unirte o armar el tuyo.", con "Crear cuenta" y "Entrar".
+  - **Agenda:** antetítulo "Agenda" en vez de "Agenda para ti" y una bajada sin gustos. La categoría "Para ti" se llama "Todo" (como en el Mapa) y "Lo que repostea tu gente" no aparece (si llega en la URL, se ignora). En cada tarjeta, el total de reposts ("14 reposts") sin nombres ni avatares de amigos, y sin la marca "Reposteaste".
+  - **Mapa:** sin "Mi ciudad: Bogotá" (es la ciudad de Camila) y sin el estado "Reposteado".
+  - **Bienvenida:** igual que antes. Con sesión, el encabezado pasa a ser el de la app y se oculta el bloque "Únete" (invita a crear la cuenta que ya se tiene).
+- **Acciones que piden cuenta.** Sin sesión no se ejecutan: abren la ventana "Crea tu cuenta para {acción}" (`components/ui/VentanaCuenta.astro`, sobre el Modal compartido, una por página). Tiene el botón "Crear cuenta" (a `/registro?volver=<ruta actual>`) y el enlace "Ya tengo cuenta · Entrar" (a `/entrar?volver=<ruta actual>`). Se marcan con `data-requiere-cuenta="para …"`:
+  - **Evento:** "Voy" ("para decir que vas"), "Me interesa", "Ya tengo boleta", "Invitar amigos", "Armar parche", "Seguir" y "Escribir al organizador", y "Ver las N fotos" (lleva a un perfil). "Unirme" queda dentro de los parches, que el visitante no ve.
+  - **Agenda y Mapa:** "Repostear" y "Guardar" (marcador). En la Bienvenida el marcador sigue local sin cuenta, como estaba.
+  - "Compartir" (copiar el enlace) y "Copiar dirección" funcionan sin cuenta.
+- **Pantalla Entrar (`/entrar`). Diseño provisional:** H12 pide diseñarla bien, con verificación del celular, recuperación de la cuenta y registro de consentimientos.
+  - Tiene el estilo del Registro: su encabezado (solo el logo), la misma tarjeta y botones de 52 px.
+  - Contenido: "Entra a Fulleventos", la nota "Demostración: entras como Camila Vargas.", "Continuar con Google", "Continuar con mi celular" y "¿No tienes cuenta? Crear cuenta" (a `/registro`, conservando `volver`).
+  - En el demo, cualquiera de los dos botones inicia la sesión al instante y vuelve a `volver` (o a Inicio). No se piden contraseñas ni datos reales. Si ya hay sesión, la pantalla lleva directo al destino.
+- **Registro.** "Ir a mi feed" del paso 3 inicia la sesión de demostración y lleva a `volver` (por defecto `/inicio`). Si `volver` es otra página (por ejemplo el evento desde el que se pidió la cuenta), el botón dice "Continuar". "¿Ya tienes cuenta? Entrar" conserva `volver`.
+- **Cerrar sesión.** Botón "Cerrar sesión" en Mi perfil (`/yo`), junto a "Guardados" y "Ajustes y privacidad". Cierra la sesión de demostración y lleva a la Bienvenida como visitante.
+- **Pruebas.** `tests/pantallas.spec.ts` hace dos pasadas. Sin sesión revisa todas las páginas, salvo las que piden sesión, de las que comprueba que lleven a `/entrar?volver=<ruta>`. Con sesión revisa `/agenda/`, `/mapa/`, `/inicio/`, `/mensajes/`, `/yo/` y un evento. Las comprobaciones son las mismas: sin scroll horizontal a 320, 390, 768 y 1280 px, y axe sin violaciones a 390 y 1280 px.
+- **En producción** la sesión la da el backend: una cookie de sesión segura y las páginas que piden sesión protegidas en el servidor, no en el navegador. La vista de cada evento, agenda y mapa se arma con los datos de quien entra. `lib/sesion.ts`, el script de Base y la nota "Demostración" se reemplazan entonces, pero las clases `solo-sesion` / `solo-visitante`, la ventana "Crea tu cuenta" y el parámetro `volver` siguen sirviendo.

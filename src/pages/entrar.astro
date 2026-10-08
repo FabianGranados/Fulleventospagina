@@ -1,0 +1,171 @@
+---
+// Entrar (decisión 2.24, H33). DISEÑO PROVISIONAL: H12 pide diseñar bien la pantalla de inicio de sesión
+// (verificación del celular, recuperación de la cuenta y registro de consentimientos).
+// En el demo no hay backend: "Continuar con Google" y "Continuar con mi celular" inician al instante la sesión de
+// demostración (la de Camila Vargas) y vuelven a ?volver= (solo rutas internas) o a Inicio. No se piden
+// contraseñas ni datos reales. En producción la sesión la da el backend.
+import Base from '../layouts/Base.astro';
+import Pie from '../components/layout/Pie.astro';
+import Icono from '../components/ui/Icono.astro';
+import EncabezadoRegistro from '../components/registro/EncabezadoRegistro.astro';
+import { usuaria } from '../data/personas';
+---
+
+<Base titulo="Entrar · Fulleventos" descripcion="Entra a Fulleventos para ver a qué va tu gente, guardar tus planes y armar parche.">
+  <EncabezadoRegistro enlace="ninguno" />
+  <main id="contenido" class="contenedor entrar">
+    <section class="tarjeta" aria-labelledby="entrar-titulo">
+      <div>
+        <h1 id="entrar-titulo">Entra a Fulleventos</h1>
+        <p class="bajada">Mira a qué va tu gente, guarda tus planes y arma parche.</p>
+      </div>
+
+      <p class="nota">Demostración: entras como {usuaria.nombre}.</p>
+
+      <div class="botones">
+        <button type="button" class="boton contorno" data-entrar>
+          <Icono nombre="google" grosor={2.2} />Continuar con Google
+        </button>
+        <button type="button" class="boton contorno" data-entrar>
+          <Icono nombre="celular" />Continuar con mi celular
+        </button>
+      </div>
+
+      <p class="error" role="alert" data-error-sesion hidden>
+        <Icono nombre="informacion" tamano={16} /><span>Tu navegador no deja guardar la sesión de demostración (por ejemplo, en una ventana privada). Prueba en una ventana normal.</span>
+      </p>
+
+      <p class="crear">¿No tienes cuenta? <a href="/registro" data-crear-cuenta>Crear cuenta</a></p>
+    </section>
+  </main>
+  <Pie />
+</Base>
+
+<script>
+  import { conVolver, haySesion, iniciarSesion, rutaVolver } from '../lib/sesion';
+
+  const volver = new URLSearchParams(location.search).get('volver');
+  const destino = rutaVolver(volver);
+
+  // Con sesión no hay nada que hacer aquí
+  if (haySesion()) location.replace(destino);
+
+  // "Crear cuenta" conserva ?volver= para que el registro también regrese al mismo punto
+  const crear = document.querySelector<HTMLAnchorElement>('[data-crear-cuenta]')!;
+  if (rutaVolver(volver, '')) crear.href = conVolver('/registro', destino);
+
+  document.querySelectorAll<HTMLButtonElement>('[data-entrar]').forEach((b) =>
+    b.addEventListener('click', () => {
+      if (!iniciarSesion()) {
+        document.querySelector<HTMLElement>('[data-error-sesion]')!.hidden = false;
+        return;
+      }
+      location.replace(destino);
+    }),
+  );
+</script>
+
+<style>
+  .entrar {
+    padding-top: 8px;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Misma tarjeta del Registro (N59) */
+  .tarjeta {
+    width: 100%;
+    max-width: 520px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-2xl);
+    padding: clamp(24px, 4vw, 48px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.9rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  .bajada {
+    margin-top: 6px;
+    color: var(--muted);
+  }
+
+  /* Aviso de demostración, como el de la compra (B3, H24) */
+  .nota {
+    align-self: flex-start;
+    font-size: .86rem;
+    font-weight: 700;
+    background: var(--yellow);
+    border-radius: var(--radius-field);
+    padding: 8px 12px;
+  }
+
+  .botones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Botones de 52 px (N69), como "Continuar con Google" del Registro */
+  .boton {
+    height: 52px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: .95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .contorno {
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .contorno:hover {
+    background: var(--light-hover);
+  }
+
+  .error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: .84rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--brand);
+  }
+
+  .error :global(svg) {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .crear {
+    text-align: center;
+    font-size: .92rem;
+    color: var(--muted);
+  }
+
+  .crear a {
+    display: inline-block;
+    min-height: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .crear a:hover {
+    color: var(--brand);
+  }
+</style>

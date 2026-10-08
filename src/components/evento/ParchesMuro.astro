@@ -6,6 +6,7 @@ import { persona, usuaria } from '../../data/personas';
 import type { DetalleEvento } from '../../data/evento';
 import { rutaNuevoParche } from '../../data/mensajes';
 import { parchesDelEvento, totalMiembros } from '../../data/parches';
+import { conVolver } from '../../lib/sesion';
 
 interface Props {
   d: DetalleEvento;
@@ -25,6 +26,10 @@ const pct = (usados: number, maximo: number) => Math.round((usados / maximo) * 1
 // Los mismos parches de Inicio y Mensajes (parches.ts, H25): con cupo, "N de M cupos"; sin cupo, "N miembros"
 const lista = parchesDelEvento(eventoId).map((p) => ({ ...p, usados: totalMiembros(p), propio: p.miembros.includes(usuaria.id) }));
 const fondo: Record<string, string> = colorDe;
+// Al visitante (decisión 2.24) no se le muestran los parches ni el muro (nombres, miembros y mensajes de otras
+// personas): solo cuántos hay y cómo entrar. Crear cuenta y Entrar vuelven a esta página.
+const ruta = Astro.url.pathname;
+const n = lista.length;
 ---
 
 <section id="parches" class="seccion-evento" aria-labelledby="h-parches">
@@ -33,12 +38,26 @@ const fondo: Record<string, string> = colorDe;
       <h2 id="h-parches" class="titulo-seccion">Parches para este evento</h2>
       <p class="sub">Únete a un grupo para llegar acompañado, o arma el tuyo.</p>
     </div>
-    <a class="armar" href={rutaNuevoParche(eventoId)}>
+    <a class="armar" href={rutaNuevoParche(eventoId)} data-requiere-cuenta="para armar un parche">
       <Icono nombre="mas" tamano={16} grosor={2.2} />
       Armar parche
     </a>
   </div>
 
+  <div class="invitacion solo-visitante">
+    <p>
+      {n === 0
+        ? 'Todavía no hay parches para este plan.'
+        : `Hay ${n} ${n === 1 ? 'parche abierto' : 'parches abiertos'} para este plan.`}{' '}
+      Crea tu cuenta para {n === 0 ? 'armar el primero' : 'unirte o armar el tuyo'}.
+    </p>
+    <div class="invitacion-botones">
+      <a href={conVolver('/registro', ruta)} class="invitacion-crear">Crear cuenta</a>
+      <a href={conVolver('/entrar', ruta)} class="invitacion-entrar">Entrar</a>
+    </div>
+  </div>
+
+  <div class="con-sesion solo-sesion">
   <div role="tablist" aria-label="Parches y muro" class="pestanas" data-pestanas>
     <button type="button" role="tab" id="pestana-parches" aria-controls="panel-parches" aria-selected="true">
       Parches ({lista.length})
@@ -102,6 +121,7 @@ const fondo: Record<string, string> = colorDe;
         );
       })
     }
+  </div>
   </div>
 </section>
 
@@ -185,6 +205,55 @@ const fondo: Record<string, string> = colorDe;
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+
+  .con-sesion {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .invitacion {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 18px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 20px;
+  }
+
+  .invitacion p {
+    flex: 1 1 260px;
+  }
+
+  .invitacion-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .invitacion-crear,
+  .invitacion-entrar {
+    height: 44px;
+    border-radius: var(--radius-pill);
+    padding: 0 20px;
+    font-size: .9rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .invitacion-crear,
+  .invitacion-crear:hover {
+    background: var(--brand);
+    color: var(--on-dark);
+  }
+
+  .invitacion-entrar {
+    border: 1px solid var(--ink);
+    background: var(--surface);
   }
 
   .pestanas {

@@ -18,7 +18,8 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
       <button type="button" class="alcance-boton" aria-pressed="true" data-accion="todo">
         <Icono nombre="globo" tamano={16} />Toda Colombia
       </button>
-      <button type="button" class="alcance-boton" aria-pressed="false" data-accion="mi-ciudad" data-mi-ciudad={miCiudad}>
+      <!-- La ciudad de la usuaria solo existe con sesión (decisión 2.24) -->
+      <button type="button" class="alcance-boton solo-sesion" aria-pressed="false" data-accion="mi-ciudad" data-mi-ciudad={miCiudad}>
         <Icono nombre="inicio" tamano={16} />Mi ciudad: {nombreCiudad(miCiudad)}
       </button>
     </div>

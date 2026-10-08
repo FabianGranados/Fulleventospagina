@@ -1,8 +1,11 @@
 ---
 // 4.7 Mapa de eventos. /mapa?ciudad=<id> abre la ciudad elegida (H42); también se reflejan
 // categoria=<id> y fecha=<id> para poder compartir y volver al mismo punto.
+// Público (decisión 2.24, H33): el visitante ve todo el mapa; guardar, repostear y "Mi ciudad" son con sesión.
 import Base from '../layouts/Base.astro';
 import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
+import VentanaCuenta from '../components/ui/VentanaCuenta.astro';
 import Pie from '../components/layout/Pie.astro';
 import CabeceraMapa from '../components/mapa/CabeceraMapa.astro';
 import MapaColombia from '../components/mapa/MapaColombia.astro';
@@ -13,7 +16,8 @@ import { categoriasMapa } from '../data/mapa';
 ---
 
 <Base titulo="Mapa de eventos · Fulleventos" tamanoBase={15}>
-  <EncabezadoApp variante="completo" activa="mapa" />
+  <EncabezadoVisitante class="solo-visitante" />
+  <EncabezadoApp variante="completo" activa="mapa" class="solo-sesion" />
   <main id="contenido" class="contenedor principal">
     <CabeceraMapa />
 
@@ -41,6 +45,7 @@ import { categoriasMapa } from '../data/mapa';
   </main>
   <Pie />
   <VentanaRepost />
+  <VentanaCuenta />
 </Base>
 
 <script>
@@ -48,6 +53,7 @@ import { categoriasMapa } from '../data/mapa';
   import { ciudadesMapa, categoriasMapa, fechasMapa, miCiudad, LIMITE_LISTA } from '../data/mapa';
   import { planes, ciudadesTexto } from '../lib/formato';
   import { destinosRepost } from '../data/agenda';
+  import { haySesion } from '../lib/sesion';
 
   type Estado = { ciudad: string | null; zoom: number; categoria: string; fecha: string; todo: boolean };
 
@@ -68,7 +74,8 @@ import { categoriasMapa } from '../data/mapa';
   const lista = $('[data-lista]', panel);
   const ranking = $('[data-ranking]');
   const filaRanking = $('[data-ranking-fila]', ranking);
-  const selector = document.querySelector<HTMLSelectElement>('[data-selector-ciudad]');
+  // Selector de ciudad de los dos encabezados (visitante y con sesión, decisión 2.24); solo uno está visible
+  const selectores = $$<HTMLSelectElement>('select[data-selector-ciudad]');
   const anuncio = $('[data-anuncio]');
   const botonMas = $<HTMLButtonElement>('[data-mas]', panel);
   const vistaLista = $<HTMLAnchorElement>('[data-vista-lista]');
@@ -245,7 +252,7 @@ import { categoriasMapa } from '../data/mapa';
     ranking.hidden = orden.length === 0;
 
     // Selector del encabezado sincronizado con el mapa (N4)
-    if (selector) selector.value = estado.ciudad ?? 'all';
+    selectores.forEach((s) => (s.value = estado.ciudad ?? 'all'));
 
     // La dirección refleja ciudad, categoría y fecha (H42)
     const params = new URLSearchParams(location.search);
@@ -354,11 +361,11 @@ import { categoriasMapa } from '../data/mapa';
     if (!estado.todo) botonMas.scrollIntoView({ block: 'nearest' });
   });
 
-  selector?.addEventListener('change', () => {
+  selectores.forEach((selector) => selector.addEventListener('change', () => {
     if (selector.value === 'all') reiniciar();
     else elegir(selector.value);
     actualizar();
-  });
+  }));
 
   lista.addEventListener('click', (ev) => {
     const objetivo = ev.target as HTMLElement;
@@ -402,6 +409,9 @@ import { categoriasMapa } from '../data/mapa';
     const donde = destinosRepost.find((d) => d.id === destino) ?? destinosRepost[0];
     anuncio.textContent = `Reposteaste «${tarjeta.dataset.titulo}» en ${donde.aviso}.`;
   });
+
+  // Con sesión, los reposts de la usuaria del demo (el servidor pinta las tarjetas como las ve el visitante)
+  if (haySesion()) $$<HTMLElement>('[data-reposteado-sesion]', lista).forEach((b) => marcarRepost(b, true));
 
   new ResizeObserver(() => ajustarTabulacion()).observe(lienzo);
 

@@ -13,10 +13,12 @@ interface Props {
   variante?: 'completo' | 'detalle' | 'detalle-perfil';
   activa?: Pagina;
   noLeidos?: number;
+  // En Evento, Agenda, Mapa y Bienvenida va junto al EncabezadoVisitante con class="solo-sesion" (decisión 2.24)
+  class?: string;
 }
 
 // Sin cifra propia de la página, la de los datos del chat (una sola fuente, H13)
-const { variante = 'completo', activa, noLeidos = chatsSinLeer } = Astro.props;
+const { variante = 'completo', activa, noLeidos = chatsSinLeer, class: clase } = Astro.props;
 
 const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 'mensajes'; nombre: string }[] = [
   { id: 'inicio', href: '/inicio', icono: 'inicio', nombre: 'Inicio' },
@@ -31,7 +33,7 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
 ];
 ---
 
-<header class:list={['encabezado', variante]} data-encabezado>
+<header class:list={['encabezado', variante, clase]} data-encabezado data-encabezado-app>
   <div class="fila">
     {
       variante !== 'completo' && (
@@ -90,27 +92,28 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
 </header>
 
 <script>
-  // "Volver" regresa a la pantalla de origen cuando se llegó desde Fulleventos (N1).
-  document.querySelector<HTMLAnchorElement>('[data-volver]')?.addEventListener('click', (ev) => {
-    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
-      ev.preventDefault();
-      history.back();
-    }
-  });
+  document.querySelectorAll<HTMLElement>('[data-encabezado-app]').forEach((encabezado) => {
+    // "Volver" regresa a la pantalla de origen cuando se llegó desde Fulleventos (N1).
+    encabezado.querySelector<HTMLAnchorElement>('[data-volver]')?.addEventListener('click', (ev) => {
+      if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+        ev.preventDefault();
+        history.back();
+      }
+    });
 
-  // Mientras no exista la pantalla de resultados (H41), buscar abre la agenda con la ciudad elegida.
-  document.querySelector<HTMLFormElement>('[data-buscador-app]')?.addEventListener('submit', (ev) => {
-    if (document.querySelector('[data-agenda-app]')) ev.preventDefault();
-  });
+    // Mientras no exista la pantalla de resultados (H41), buscar abre la agenda con la ciudad elegida.
+    encabezado.querySelector<HTMLFormElement>('[data-buscador-app]')?.addEventListener('submit', (ev) => {
+      if (document.querySelector('[data-agenda-app]')) ev.preventDefault();
+    });
 
-  const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
-  if (encabezado) {
+    // Si este encabezado está oculto (la versión de visitante es la visible, decisión 2.24), no toca el valor
     const ajustar = () => {
+      if (!encabezado.getClientRects().length) return;
       const fijo = getComputedStyle(encabezado).position === 'sticky';
       document.documentElement.style.scrollPaddingTop = `${fijo ? encabezado.offsetHeight + 12 : 12}px`;
     };
     new ResizeObserver(ajustar).observe(encabezado);
-  }
+  });
 </script>
 
 <style>

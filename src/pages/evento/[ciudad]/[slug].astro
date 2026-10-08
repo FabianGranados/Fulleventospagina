@@ -4,8 +4,12 @@
 // Primer lanzamiento sin venta propia (decisión 2.22): precios, localidades y el botón a la boletera.
 // Con VENTA_PROPIA = true vuelve la compra dentro de Fulleventos, que es una DEMOSTRACIÓN sin backend
 // (P3 pasarela, P4 cargo, P7 y P8 siguen pendientes para la fase 2).
+// Pública (decisión 2.24, H33): el visitante ve todo lo público y las acciones de cuenta le piden crearla;
+// con la sesión de demostración se ve como Camila (amigos que van, parches y muro).
 import Base from '../../../layouts/Base.astro';
 import EncabezadoApp from '../../../components/layout/EncabezadoApp.astro';
+import EncabezadoVisitante from '../../../components/layout/EncabezadoVisitante.astro';
+import VentanaCuenta from '../../../components/ui/VentanaCuenta.astro';
 import Pie from '../../../components/layout/Pie.astro';
 import Modal from '../../../components/ui/Modal.astro';
 import HeroeEvento from '../../../components/evento/HeroeEvento.astro';
@@ -143,7 +147,8 @@ const datosCompra = VENTA_PROPIA && {
   {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>{VENTA_PROPIA ? 'Ir a comprar boletas' : 'Ir a las boletas'}</a>}
   <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
   <div class:list={['pagina-evento', { 'con-barra': vende, 'barra-con-nota': vende && !VENTA_PROPIA && !e.urlVenta }]}>
-    <EncabezadoApp variante="detalle" />
+    <EncabezadoVisitante class="solo-visitante" />
+    <EncabezadoApp variante="detalle" class="solo-sesion" />
     <main id="contenido" class="contenedor principal">
       <!-- Los datos del evento todavía tienen marcadores [ASÍ] del prototipo (P8): se rotulan como ejemplo,
            con la misma nota de la Bienvenida y la Agenda (M6) -->
@@ -182,6 +187,7 @@ const datosCompra = VENTA_PROPIA && {
         </>
       )
     }
+    <VentanaCuenta />
   </div>
 </Base>
 
@@ -227,7 +233,8 @@ const datosCompra = VENTA_PROPIA && {
   });
 
   // H16: el foco no queda debajo del encabezado, los atajos fijos ni la barra de compra
-  const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
+  // De los dos encabezados (visitante y con sesión, decisión 2.24), el visible
+  const encabezado = [...document.querySelectorAll<HTMLElement>('[data-encabezado]')].find((e) => e.getClientRects().length);
   const atajos = document.querySelector<HTMLElement>('[data-atajos]');
   const barra = document.querySelector<HTMLElement>('[data-barra-compra]');
   const ajustar = () =>

@@ -45,6 +45,7 @@ import TarjetaRegistro from '../components/registro/TarjetaRegistro.astro';
 
 <script>
   import { pasos, MINIMO_GUSTOS } from '../data/registro';
+  import { iniciarSesion, rutaVolver } from '../lib/sesion';
 
   type Regla = () => string;
 
@@ -231,4 +232,20 @@ import TarjetaRegistro from '../components/registro/TarjetaRegistro.astro';
       $<HTMLElement>('[data-texto-seguir]', b).textContent = sigue ? 'Siguiendo' : 'Seguir';
     }),
   );
+
+  // ---------- Fin: sesión de demostración (decisión 2.24) ----------
+  // Sin backend la cuenta no se crea: se inicia la sesión de la usuaria del demo y se vuelve a donde estaba
+  // (?volver=, solo rutas internas) o a Inicio. Si vuelve a otra página, el botón dice "Continuar".
+  const destino = rutaVolver(new URLSearchParams(location.search).get('volver'));
+  const terminar = $<HTMLAnchorElement>('[data-terminar-registro]');
+  terminar.href = destino;
+  if (destino !== '/inicio') $<HTMLElement>('[data-texto-terminar]').textContent = 'Continuar';
+  terminar.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    if (!iniciarSesion()) {
+      $<HTMLElement>('[data-error-sesion]').hidden = false;
+      return;
+    }
+    location.assign(destino);
+  });
 </script>

@@ -47,7 +47,7 @@ const pestanas = [
 const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulleventos`;
 ---
 
-<Base titulo={titulo} tamanoBase={15}>
+<Base titulo={titulo} tamanoBase={15} requiereSesion>
   <EncabezadoApp variante="detalle-perfil" />
   <main id="contenido" class="contenedor perfil">
     <CabeceraPerfil persona={persona} perfil={perfil} propio={propio} />
@@ -60,6 +60,8 @@ const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulle
           {VENTA_PROPIA && <a href="/mis-boletas">Mis boletas</a>}
           <a href="/guardados">Guardados</a>
           <a href="/ajustes">Ajustes y privacidad</a>
+          {/* Sesión de demostración (decisión 2.24): vuelve a la Bienvenida como visitante */}
+          <button type="button" class="cerrar-sesion" data-cerrar-sesion>Cerrar sesión</button>
         </nav>
       )
     }
@@ -99,6 +101,15 @@ const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulle
   <Pie />
 </Base>
 
+<script>
+  import { cerrarSesion } from '../../lib/sesion';
+
+  document.querySelector('[data-cerrar-sesion]')?.addEventListener('click', () => {
+    cerrarSesion();
+    location.assign('/');
+  });
+</script>
+
 <style>
   .perfil {
     padding-top: 24px;
@@ -113,7 +124,8 @@ const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulle
     gap: 8px;
   }
 
-  .cuenta a {
+  .cuenta a,
+  .cerrar-sesion {
     height: 44px;
     border-radius: var(--radius-pill);
     padding: 0 20px;
@@ -123,6 +135,14 @@ const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulle
     align-items: center;
     font-size: .92rem;
     font-weight: 700;
+  }
+
+  .cerrar-sesion {
+    color: var(--ink);
+  }
+
+  .cerrar-sesion:hover {
+    color: var(--brand);
   }
 
   [role='tabpanel']:focus-visible {

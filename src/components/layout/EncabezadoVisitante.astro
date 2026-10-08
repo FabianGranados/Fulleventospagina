@@ -2,13 +2,29 @@
 import Icono from '../ui/Icono.astro';
 import Logo from '../ui/Logo.astro';
 import { ciudades } from '../../data/ciudades';
+import { conVolver } from '../../lib/sesion';
+
+// N2 · Encabezado de visitante. En la Bienvenida sus enlaces van a las secciones de la página; en las páginas
+// públicas con sesión opcional (Evento, Agenda y Mapa, decisión 2.24) va junto al EncabezadoApp: cada uno con
+// su clase (solo-visitante / solo-sesion) y solo uno visible.
+interface Props {
+  class?: string;
+}
+
+const { class: clase } = Astro.props;
+const ruta = Astro.url.pathname.replace(/\/$/, '') || '/';
+const enBienvenida = ruta === '/';
+// "Entrar" y "Crear cuenta" devuelven a esta misma página (el script suma los filtros de la URL al tocarlos)
+const entrar = enBienvenida ? '/entrar' : conVolver('/entrar', ruta);
+const crear = enBienvenida ? '/registro' : conVolver('/registro', ruta);
+const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
 ---
 
-<header class="encabezado" data-encabezado>
+<header class:list={['encabezado', clase]} data-encabezado data-encabezado-visitante>
   <div class="fila">
     <Logo href="/" />
 
-    <form class="buscador" role="search" action="/buscar" method="get">
+    <form class="buscador" role="search" action="/agenda" method="get" data-buscador-app>
       <Icono nombre="lupa" tamano={18} class="lupa" />
       <input type="search" name="q" placeholder="¿Qué plan buscas?" aria-label="Buscar planes" />
       <label class="ciudad">
@@ -25,67 +41,79 @@ import { ciudades } from '../../data/ciudades';
     </form>
 
     <!-- En celular el menú se pliega detrás de un botón; sin JavaScript queda abierto -->
-    <button type="button" class="abrir-menu" aria-expanded="false" aria-controls="menu-principal" hidden data-abrir-menu>
+    <button type="button" class="abrir-menu" aria-expanded="false" aria-controls="menu-visitante" hidden data-abrir-menu>
       <Icono nombre="menu" tamano={22} class="icono-abrir" />
       <Icono nombre="cerrar" tamano={22} class="icono-cerrar" />
       <span class="solo-lectores">Menú</span>
     </button>
 
-    <nav aria-label="Principal" class="nav" id="menu-principal">
-      <a href="#como-funciona">Cómo funciona</a>
-      <a href="/mapa" class="con-insignia">Mapa <span class="insignia">Nuevo</span></a>
-      <a href="#agenda">Agenda</a>
-      <a href="/entrar" class="fuerte entrar">Entrar</a>
-      <a href="/registro" class="crear">Crear cuenta</a>
+    <nav aria-label="Principal" class="nav" id="menu-visitante" data-menu-visitante>
+      <a href={enBienvenida ? '#como-funciona' : '/#como-funciona'}>Cómo funciona</a>
+      <a href="/mapa" class="con-insignia" aria-current={actual('/mapa')}>Mapa <span class="insignia">Nuevo</span></a>
+      <a href={enBienvenida ? '#agenda' : '/agenda'} aria-current={actual('/agenda')}>Agenda</a>
+      <a href={entrar} class="fuerte entrar" data-volver-actual={enBienvenida ? undefined : '/entrar'}>Entrar</a>
+      <a href={crear} class="crear" data-volver-actual={enBienvenida ? undefined : '/registro'}>Crear cuenta</a>
     </nav>
   </div>
 </header>
 
 <script>
-  // Mientras no exista la pantalla de resultados (H41), buscar lleva a la agenda con la
-  // ciudad elegida (decisión 2.15). El selector ya filtra la agenda al cambiar.
-  const buscador = document.querySelector<HTMLFormElement>('.buscador');
-  buscador?.addEventListener('submit', (ev) => {
-    const agenda = document.querySelector<HTMLElement>('#agenda');
-    if (!agenda) return;
-    ev.preventDefault();
-    agenda.scrollIntoView();
-    document.querySelector<HTMLElement>('#agenda-titulo')?.focus();
-  });
+  import { conVolver, rutaActual } from '../../lib/sesion';
 
-  // Menú plegable de celular (decisión 2.18): Escape lo cierra y devuelve el foco al botón
-  const botonMenu = document.querySelector<HTMLButtonElement>('[data-abrir-menu]');
-  const menu = document.querySelector<HTMLElement>('#menu-principal');
-  if (botonMenu && menu) {
-    botonMenu.hidden = false;
-    menu.classList.add('plegable');
-    const alternar = (abrir: boolean) => {
-      botonMenu.setAttribute('aria-expanded', String(abrir));
-      menu.classList.toggle('abierto', abrir);
-    };
-    botonMenu.addEventListener('click', () => alternar(botonMenu.getAttribute('aria-expanded') !== 'true'));
-    menu.addEventListener('click', (ev) => {
-      if ((ev.target as HTMLElement).closest('a')) alternar(false);
-    });
-    document.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Escape' && botonMenu.getAttribute('aria-expanded') === 'true') {
-        alternar(false);
-        botonMenu.focus();
+  document.querySelectorAll<HTMLElement>('[data-encabezado-visitante]').forEach((encabezado) => {
+    // Mientras no exista la pantalla de resultados (H41), buscar lleva a la agenda con la ciudad elegida
+    // (decisión 2.15). En la Bienvenida baja a "Este finde"; en la Agenda filtra sin recargar (AgendaApp).
+    const buscador = encabezado.querySelector<HTMLFormElement>('[data-buscador-app]');
+    buscador?.addEventListener('submit', (ev) => {
+      if (document.querySelector('[data-agenda-app]')) {
+        ev.preventDefault();
+        return;
       }
+      const agenda = document.querySelector<HTMLElement>('#agenda');
+      if (!agenda) return;
+      ev.preventDefault();
+      agenda.scrollIntoView();
+      document.querySelector<HTMLElement>('#agenda-titulo')?.focus();
     });
-  }
 
-  // El foco y los saltos de ancla no deben quedar debajo del encabezado fijo (H16).
-  const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
-  if (encabezado) {
+    // "Entrar" y "Crear cuenta" vuelven al mismo punto, con los filtros que tenga la URL en ese momento
+    encabezado.querySelectorAll<HTMLAnchorElement>('[data-volver-actual]').forEach((a) =>
+      a.addEventListener('click', () => (a.href = conVolver(a.dataset.volverActual!, rutaActual()))),
+    );
+
+    // Menú plegable de celular (decisión 2.18): Escape lo cierra y devuelve el foco al botón
+    const botonMenu = encabezado.querySelector<HTMLButtonElement>('[data-abrir-menu]');
+    const menu = encabezado.querySelector<HTMLElement>('[data-menu-visitante]');
+    if (botonMenu && menu) {
+      botonMenu.hidden = false;
+      menu.classList.add('plegable');
+      const alternar = (abrir: boolean) => {
+        botonMenu.setAttribute('aria-expanded', String(abrir));
+        menu.classList.toggle('abierto', abrir);
+      };
+      botonMenu.addEventListener('click', () => alternar(botonMenu.getAttribute('aria-expanded') !== 'true'));
+      menu.addEventListener('click', (ev) => {
+        if ((ev.target as HTMLElement).closest('a')) alternar(false);
+      });
+      document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && botonMenu.getAttribute('aria-expanded') === 'true') {
+          alternar(false);
+          botonMenu.focus();
+        }
+      });
+    }
+
+    // El foco y los saltos de ancla no deben quedar debajo del encabezado fijo (H16). Si este encabezado está
+    // oculto (la otra versión es la visible, decisión 2.24), no toca el valor.
     const ajustar = () => {
+      if (!encabezado.getClientRects().length) return;
       const fijo = getComputedStyle(encabezado).position === 'sticky';
       const alto = fijo ? encabezado.offsetHeight + 12 : 12;
       document.documentElement.style.scrollPaddingTop = `${alto}px`;
     };
     new ResizeObserver(ajustar).observe(encabezado);
     addEventListener('resize', ajustar);
-  }
+  });
 </script>
 
 <style>
@@ -211,6 +239,14 @@ import { ciudades } from '../../data/ciudades';
 
   .fuerte {
     font-weight: 700;
+  }
+
+  /* Página actual (Agenda o Mapa públicos, decisión 2.24) */
+  .nav a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-color: var(--brand);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
   }
 
   .crear,

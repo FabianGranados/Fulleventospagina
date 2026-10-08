@@ -31,11 +31,16 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 <div class="agenda" data-agenda-app data-pagina={PAGINA}>
   <div class="cabecera">
     <div class="titulos">
-      <p class="antetitulo">Agenda para ti</p>
+      <!-- "Para ti" solo con sesión: el visitante ve la agenda de todo el país, sin gustos (decisión 2.24) -->
+      <p class="antetitulo"><span class="solo-sesion">Agenda para ti</span><span class="solo-visitante">Agenda</span></p>
       <h1 id="agenda-titulo" tabindex="-1" data-titulo>Este finde en Colombia</h1>
-      <p class="bajada">
+      <p class="bajada solo-sesion">
         Elegidos por tus gustos (salsa, rock, fútbol y planes gratis) en todo el país, de la costa al Amazonas,
         empezando por Bogotá. Repostea los que te gusten para que tu gente los vea.
+      </p>
+      <p class="bajada solo-visitante">
+        Planes en todo el país, de la costa al Amazonas, empezando por Bogotá. Crea tu cuenta para guardarlos,
+        repostearlos y ver a qué va tu gente.
       </p>
     </div>
     <div class="controles">
@@ -81,9 +86,16 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       <legend class="solo-lectores">Filtrar por categoría</legend>
       {
         categoriasAgenda.map((c) => (
-          <label class="chip">
+          <label class:list={['chip', { 'solo-sesion': c.id === 'amigos' }]}>
             <input type="radio" name="agenda-categoria" value={c.id} checked={c.id === 'all'} data-categoria />
-            {c.texto}
+            {c.id === 'all' ? (
+              <>
+                <span class="solo-sesion">{c.texto}</span>
+                <span class="solo-visitante">Todo</span>
+              </>
+            ) : (
+              c.texto
+            )}
           </label>
         ))
       }
@@ -149,11 +161,13 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
   import { ciudades } from '../../data/ciudades';
   import { fechasAgenda, destinosRepost, lineaRepost, categoriasAgenda } from '../../data/agenda';
   import { planes, ciudadesTexto, slug } from '../../lib/formato';
+  import { haySesion } from '../../lib/sesion';
 
   const raiz = document.querySelector<HTMLElement>('[data-agenda-app]');
 
   if (raiz) {
     const PAGINA = Number(raiz.dataset.pagina);
+    const conSesion = haySesion();
     const nombres: Record<string, string> = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
     const idsCiudad = new Set(['all', ...ciudades.map((c) => c.id)]);
     const idsCategoria = new Set(categoriasAgenda.map((c) => c.id));
@@ -182,10 +196,11 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     const vistaMapa = $<HTMLAnchorElement>('[data-vista-mapa]');
     const verMapa = $<HTMLAnchorElement>('.ver-mapa');
 
-    // Encabezado compartido (N1): selector de ciudad y buscador
-    const selector = document.querySelector<HTMLSelectElement>('select[data-selector-ciudad]');
-    const buscador = document.querySelector<HTMLFormElement>('[data-buscador-app]');
-    const campoBusqueda = buscador?.querySelector<HTMLInputElement>('input[name="q"]');
+    // Encabezados (N1 con sesión y N2 de visitante, decisión 2.24): selector de ciudad y buscador de los dos;
+    // solo uno está visible
+    const selectores = [...document.querySelectorAll<HTMLSelectElement>('select[data-selector-ciudad]')];
+    const buscadores = [...document.querySelectorAll<HTMLFormElement>('[data-buscador-app]')];
+    const camposBusqueda = buscadores.flatMap((b) => [...b.querySelectorAll<HTMLInputElement>('input[name="q"]')]);
 
     // Estado: filtros (en la URL) + guardados y reposts (en memoria: demo sin backend)
     const estado = { ciudad: 'all', categoria: 'all', fecha: 'finde', q: '', mostrados: PAGINA };
@@ -198,7 +213,8 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       const categoria = p.get('categoria') ?? 'all';
       const fecha = p.get('fecha') ?? 'finde';
       estado.ciudad = idsCiudad.has(ciudad) ? ciudad : 'all';
-      estado.categoria = idsCategoria.has(categoria) ? categoria : 'all';
+      // "Lo que repostea tu gente" es solo con sesión (decisión 2.24)
+      estado.categoria = idsCategoria.has(categoria) && (categoria !== 'amigos' || conSesion) ? categoria : 'all';
       estado.fecha = fecha in fechas ? fecha : 'finde';
       estado.q = (p.get('q') ?? '').trim();
       estado.mostrados = PAGINA;
@@ -263,8 +279,8 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       radiosCiudad.forEach((r) => (r.checked = r.value === estado.ciudad));
       radiosCategoria.forEach((r) => (r.checked = r.value === estado.categoria));
       radiosFecha.forEach((r) => (r.checked = r.value === estado.fecha));
-      if (selector) selector.value = estado.ciudad;
-      if (campoBusqueda && document.activeElement !== campoBusqueda) campoBusqueda.value = estado.q;
+      selectores.forEach((s) => (s.value = estado.ciudad));
+      camposBusqueda.forEach((c) => document.activeElement !== c && (c.value = estado.q));
 
       // Conteos de los chips de ciudad: siguen la categoría, la fecha y la búsqueda
       radiosCiudad.forEach((r) => {
@@ -328,14 +344,14 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     radiosCiudad.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ ciudad: r.value })));
     radiosCategoria.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ categoria: r.value })));
     radiosFecha.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ fecha: r.value })));
-    selector?.addEventListener('change', () => cambiar({ ciudad: selector.value || 'all' }));
+    selectores.forEach((s) => s.addEventListener('change', () => cambiar({ ciudad: s.value || 'all' })));
 
     // El encabezado no recarga en esta página (data-agenda-app): aplicamos la búsqueda aquí
-    buscador?.addEventListener('submit', () => {
+    buscadores.forEach((buscador) => buscador.addEventListener('submit', () => {
       const datos = new FormData(buscador);
       cambiar({ q: String(datos.get('q') ?? '').trim(), ciudad: String(datos.get('ciudad') ?? 'all') });
       resultados.focus();
-    });
+    }));
 
     botonLimpiar.addEventListener('click', () => {
       cambiar({ ciudad: 'all', categoria: 'all', q: '' });
@@ -411,6 +427,9 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       leerUrl();
       pintar({ url: false });
     });
+
+    // Con sesión, los reposts de la usuaria del demo (el servidor pinta la tarjeta como la ve el visitante)
+    if (conSesion) tarjetas.filter((t) => t.querySelector('[data-reposteado-sesion]')).forEach((t) => marcarRepost(t, true));
 
     leerUrl();
     pintar({ anunciar: false, url: false });

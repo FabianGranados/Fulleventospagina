@@ -1,14 +1,37 @@
 ---
 // N3 · Encabezado mínimo de registro: logo + "¿Ya tienes cuenta? Entrar". No es fijo.
-// "Entrar" va a la pantalla de inicio de sesión (H12, H33), como en el encabezado de visitante.
+// "Entrar" va a la pantalla de inicio de sesión (H12, H33) y conserva ?volver= (decisión 2.24).
+// En la propia pantalla Entrar va solo el logo (enlace="ninguno"): "Crear cuenta" ya está en la tarjeta.
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import Logo from '../ui/Logo.astro';
+
+interface Props {
+  enlace?: 'entrar' | 'ninguno';
+}
+
+const { enlace = 'entrar' } = Astro.props;
 ---
 
 <header class="encabezado">
   <Logo href="/" />
-  <p class="ya">¿Ya tienes cuenta? <EnlaceSubrayado href="/entrar">Entrar</EnlaceSubrayado></p>
+  {
+    enlace === 'entrar' && (
+      <p class="ya">
+        ¿Ya tienes cuenta? <EnlaceSubrayado href="/entrar" class="entrar-registro">Entrar</EnlaceSubrayado>
+      </p>
+    )
+  }
 </header>
+
+<script>
+  import { conVolver, rutaVolver } from '../../lib/sesion';
+
+  // Si se llegó con ?volver=, "Entrar" lo conserva para volver al mismo punto
+  const volver = new URLSearchParams(location.search).get('volver');
+  const destino = rutaVolver(volver, '');
+  const enlace = document.querySelector<HTMLAnchorElement>('a.entrar-registro');
+  if (enlace && destino) enlace.href = conVolver('/entrar', destino);
+</script>
 
 <style>
   .encabezado {

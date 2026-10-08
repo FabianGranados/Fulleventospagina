@@ -35,11 +35,16 @@ Decidido por el cliente el 7 de octubre de 2026.
 - **Nombres de tokens:** los de la sección 3 del handoff. `--brand` = `#C23A24` (acción) y `--brand-logo` = `#D9452F` (solo el logo). La sección 7 usa otros nombres (`--brand` para el logo y `--action`); manda la sección 3.
 - **Pruebas:** `axe-core` (dependencia de desarrollo) con Playwright, que ya está en el entorno. Hay que medir a 390, 768 y 1280 px y comprobar que no hay scroll horizontal a 320 px.
 - **Comandos:** `npm run dev`, `npm run build` (sale en `dist/`) y `npm run preview`.
-- **Prueba automática:** `npm test` compila y corre `tests/pantallas.spec.ts`, que descubre solo todas las páginas de `dist/client` y revisa que no haya scroll horizontal a 320, 390, 768 y 1280 px y que axe no encuentre violaciones a 390 y 1280 px. Toda pantalla nueva debe pasarla. Para correrla en paralelo con otra copia del proyecto, usa un puerto propio: `PUERTO_PRUEBAS=4510 npm test`.
+- **Prueba automática:** `npm test` compila y corre `tests/pantallas.spec.ts`, que descubre solo todas las páginas de `dist/client` y revisa que no haya scroll horizontal a 320, 390, 768 y 1280 px y que axe no encuentre violaciones a 390 y 1280 px. Hace una pasada sin sesión (las páginas que piden sesión deben llevar a `/entrar`) y otra con la sesión de demostración (`RUTAS_CON_SESION`). Toda pantalla nueva debe pasarla. Para correrla en paralelo con otra copia del proyecto, usa un puerto propio: `PUERTO_PRUEBAS=4510 npm test`.
 
 ## Piezas compartidas (no duplicar)
 
-- `layouts/Base.astro`: `titulo`, `descripcion` y `tamanoBase` (16 en pantallas públicas, 15 en las de sesión).
+- `layouts/Base.astro`: `titulo`, `descripcion`, `tamanoBase` (16 en pantallas públicas, 15 en las de sesión) y `requiereSesion` (Inicio, Mensajes, `/yo` y `/perfil/*`: sin sesión llevan a `/entrar?volver=<ruta>`).
+- Sesión de demostración (decisión 2.24, H33):
+  - `lib/sesion.ts`: `haySesion()`, `iniciarSesion()`, `cerrarSesion()`, `rutaVolver()` (solo rutas internas) y `conVolver()`; clave `fe-sesion-demo` en `localStorage`, siempre con `try/catch`.
+  - `<html data-sesion="no|si">` lo fija un script temprano de Base. Clases globales `solo-sesion` y `solo-visitante` (en `styles/base.css`) para mostrar una u otra versión. Evento, Agenda, Mapa y Bienvenida renderizan los dos encabezados con esas clases.
+  - `components/ui/VentanaCuenta.astro`: ventana "Crea tu cuenta para {acción}" (una por página). Sin sesión, todo control con `data-requiere-cuenta="para …"` la abre en vez de ejecutarse.
+  - Los botones con estado de la usuaria salen del servidor como los ve el visitante; con sesión, el script de la página aplica el estado de Camila. No dejes nombres de amigos ni datos de Camila fuera de `solo-sesion` en las páginas públicas.
 - `components/layout/EncabezadoVisitante.astro` (N2) y `EncabezadoApp.astro` (N1, variantes `completo`, `detalle` y `detalle-perfil`, con `activa` y `noLeidos`), más `Pie.astro`.
 - `components/ui/`:
   - `Logo` (imagen de la marca; `fondo="claro"` u `"oscuro"`; archivos en `src/assets/marca/`, favicon e íconos en `public/`);
@@ -49,7 +54,7 @@ Decidido por el cliente el 7 de octubre de 2026.
 - `components/eventos/TarjetaEvento.astro` (N15, variante pública), `components/eventos/VentanaRepost.astro` (N16, Agenda y Mapa) y `components/eventos/BotonBoletera.astro` ("Comprar en {vende} ↗" hacia la boletera; inactivo con nota de demostración si el evento no tiene `urlVenta`).
 - `src/config.ts`: interruptor `VENTA_PROPIA` (decisión 2.22). En `false` (primer lanzamiento) Fulleventos no vende boletas y no se renderiza ni carga la compra propia (VentanaCompra, BoletaDigital, Cantidad, `compra.ts`, "Mis boletas", pago dividido); en `true` vuelve la compra de la fase 2.
 - Datos semilla en `src/data/`: `ciudades`, `eventos` (con `conteoCiudad`), `noticias`, `personas` (la usuaria del demo es Camila Vargas) `demo` (`HOY_DEMO`, el único "hoy" del demo), `parches` (miembros, cupos y quién tiene boleta) y `asistencia` (a qué va la usuaria del demo, sus boletas y sus amigos). La hora de cada evento está en `eventos.ts`: no la copies en otros archivos (H37). Cada pantalla tiene además su propio archivo de datos (`agenda`, `mapa`, `inicio`, `evento`, `mensajes`, `perfil`, `registro`). Formatos en `src/lib/formato.ts`: `cifra`, `pesos`, `planes`, `placaFecha`, `slug` y `rutaEvento`.
-- Rutas: `/`, `/registro`, `/inicio`, `/agenda`, `/mapa`, `/evento/:ciudad/:slug`, `/mensajes`, `/perfil/:usuario` y `/yo`.
+- Rutas: `/`, `/registro`, `/entrar` (diseño provisional, H12), `/inicio`, `/agenda`, `/mapa`, `/evento/:ciudad/:slug`, `/mensajes`, `/perfil/:usuario` y `/yo`.
 
 ## Reglas que no se negocian
 

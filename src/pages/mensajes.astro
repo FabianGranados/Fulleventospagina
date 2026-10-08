@@ -6,6 +6,6 @@ import BandejaMensajes from '../components/mensajes/BandejaMensajes.astro';
 import { CONVERSACION_INICIAL } from '../data/mensajes';
 ---
 
-<Base titulo="Mensajes · Fulleventos" tamanoBase={15}>
+<Base titulo="Mensajes · Fulleventos" tamanoBase={15} requiereSesion>
   <BandejaMensajes abierta={CONVERSACION_INICIAL} vista="lista" />
 </Base>

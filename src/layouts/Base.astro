@@ -1,6 +1,7 @@
 ---
 import '../styles/tokens.css';
 import '../styles/base.css';
+import { CLAVE_SESION } from '../lib/sesion';
 
 // Descripción propuesta, pendiente de aprobación del cliente (decisión 2.15)
 const DESCRIPCION =
@@ -11,16 +12,42 @@ interface Props {
   descripcion?: string;
   // 16 px en las pantallas públicas; 15 px en las pantallas con sesión (sección 3)
   tamanoBase?: 15 | 16;
+  // Inicio, Mensajes, /yo y /perfil/*: sin sesión llevan a /entrar?volver=<ruta actual> (decisión 2.24)
+  requiereSesion?: boolean;
 }
 
-const { titulo, descripcion = DESCRIPCION, tamanoBase = 16 } = Astro.props;
+const { titulo, descripcion = DESCRIPCION, tamanoBase = 16, requiereSesion = false } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang="es" data-sesion="no">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Sesión de demostración (decisión 2.24, lib/sesion.ts). Va antes de los estilos para que la página se
+         pinte de una vez como visitante o con sesión, sin parpadeo. Sin JavaScript queda la versión pública. -->
+    <script is:inline define:vars={{ clave: CLAVE_SESION, requiere: requiereSesion }}>
+      var leer = function () {
+        try {
+          return localStorage.getItem(clave) === '1';
+        } catch (e) {
+          return false;
+        }
+      };
+      var conSesion = leer();
+      if (conSesion) document.documentElement.setAttribute('data-sesion', 'si');
+      else if (requiere) {
+        document.documentElement.style.display = 'none';
+        location.replace('/entrar?volver=' + encodeURIComponent(location.pathname + location.search + location.hash));
+      }
+      // Si la sesión cambió en otra pestaña o al volver con "Atrás" (página guardada en memoria), se recarga
+      addEventListener('pageshow', function (ev) {
+        if (ev.persisted && leer() !== conSesion) location.reload();
+      });
+      addEventListener('storage', function (ev) {
+        if (ev.key === clave && leer() !== conSesion) location.reload();
+      });
+    </script>
     <!-- Sitio de demostración con datos de ejemplo: que los buscadores no lo indexen (M7, H34).
          Quitar esta etiqueta y public/robots.txt al publicar con datos reales. -->
     <meta name="robots" content="noindex, nofollow" />

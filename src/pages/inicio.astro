@@ -17,7 +17,7 @@ const noLeidos = chatsSinLeer;
 const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
 ---
 
-<Base titulo="Inicio · Fulleventos" tamanoBase={15}>
+<Base titulo="Inicio · Fulleventos" tamanoBase={15} requiereSesion>
   <EncabezadoApp variante="completo" activa="inicio" noLeidos={noLeidos} />
 
   <main id="contenido" class="contenedor inicio" tabindex="-1" data-nombres-ciudad={JSON.stringify(nombres)}>
