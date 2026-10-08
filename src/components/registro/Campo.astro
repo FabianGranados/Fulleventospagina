@@ -1,6 +1,7 @@
 ---
 // N41 · Campo de formulario, variante "registro": rótulo arriba, campo crema de 50 px y error por campo (H23).
 // El error se escribe desde el script de la página; mientras no hay error, el campo no lo referencia.
+// También lo usa /crear-evento (decisión 2.26), con texto largo, hora, enlace y una ayuda bajo el rótulo.
 import Icono from '../ui/Icono.astro';
 
 interface Opcion {
@@ -12,12 +13,17 @@ interface Props {
   id: string;
   etiqueta: string;
   obligatorio?: boolean;
-  tipo?: 'text' | 'date' | 'select';
+  tipo?: 'text' | 'date' | 'select' | 'time' | 'url' | 'textarea';
   placeholder?: string;
   autocomplete?: string;
   opciones?: Opcion[];
   // Primera opción vacía de la lista
   opcionVacia?: string;
+  // Ayuda permanente bajo el rótulo (id `${id}-ayuda`, referenciada por aria-describedby)
+  ayuda?: string;
+  maximo?: number;
+  inputmode?: 'numeric' | 'url' | 'text';
+  filas?: number;
 }
 
 const {
@@ -29,19 +35,36 @@ const {
   autocomplete,
   opciones = [],
   opcionVacia,
+  ayuda,
+  maximo,
+  inputmode,
+  filas = 4,
 } = Astro.props;
+const describe = ayuda ? `${id}-ayuda` : undefined;
 ---
 
 <div class="campo">
   <label for={id}>
     {etiqueta} <span class="marca">{obligatorio ? '(obligatorio)' : '(opcional)'}</span>
   </label>
+  {ayuda && <p id={`${id}-ayuda`} class="ayuda">{ayuda}</p>}
   {
     tipo === 'select' ? (
-      <select id={id} name={id} required={obligatorio} autocomplete={autocomplete} class="control">
+      <select id={id} name={id} required={obligatorio} autocomplete={autocomplete} aria-describedby={describe} class="control">
         {opcionVacia && <option value="">{opcionVacia}</option>}
         {opciones.map((o) => <option value={o.valor}>{o.texto}</option>)}
       </select>
+    ) : tipo === 'textarea' ? (
+      <textarea
+        id={id}
+        name={id}
+        required={obligatorio}
+        placeholder={placeholder}
+        maxlength={maximo}
+        rows={filas}
+        aria-describedby={describe}
+        class="control area"
+      />
     ) : (
       <input
         id={id}
@@ -50,10 +73,14 @@ const {
         required={obligatorio}
         placeholder={placeholder}
         autocomplete={autocomplete}
+        maxlength={maximo}
+        inputmode={inputmode}
+        aria-describedby={describe}
         class="control"
       />
     )
   }
+  <slot />
   <p id={`${id}-error`} class="error" hidden>
     <Icono nombre="informacion" tamano={16} />
     <span data-texto-error></span>
@@ -88,6 +115,20 @@ const {
     font-weight: 400;
     color: var(--ink);
     background: var(--bg);
+  }
+
+  .ayuda {
+    margin-top: -2px;
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .area {
+    height: auto;
+    min-height: 110px;
+    padding: 12px 14px;
+    line-height: 1.45;
+    resize: vertical;
   }
 
   select.control {

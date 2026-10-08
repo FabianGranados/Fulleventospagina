@@ -1,0 +1,1507 @@
+---
+// /crear-evento (decisión 2.26): "¿Qué quieres publicar?" y sus dos caminos.
+//   A · Un evento nuevo: 4 pasos (lo básico, cuándo y dónde, boletas, foto y revisión) y "En revisión".
+//   B · Una publicación sobre un evento que ya está: elegir evento, escribir, revisar y publicar.
+// Cada paso es un <form> real que se oculta con `hidden` (lo escrito se conserva al ir y volver, H45).
+// La lógica (pasos, validación, antiduplicados, fotos y guardado del demo) está en flujo.ts, evento-nuevo.ts y
+// publicacion.ts. DEMOSTRACIÓN: el evento nuevo no se guarda en ningún servidor; la publicación se guarda solo en
+// este navegador (lib/publicaciones.ts).
+import Campo from '../registro/Campo.astro';
+import Icono from '../ui/Icono.astro';
+import ResumenErrores from './ResumenErrores.astro';
+import ErrorCampo from './ErrorCampo.astro';
+import { ciudades, nombreCiudad } from '../../data/ciudades';
+import { eventos } from '../../data/eventos';
+import { HOY_DEMO } from '../../data/demo';
+import { estadoPlan } from '../../data/asistencia';
+import { fechaCorta, normalizar, placaFecha } from '../../lib/formato';
+import { lineaEvento, MAX_FOTOS, MAX_TEXTO, MAX_TITULO, TIPOS } from '../../lib/publicaciones';
+
+const categorias = [...new Set(eventos.map((e) => e.categoria))];
+
+// Camino B: primero los planes de la usuaria (va o está en un parche, asistencia.ts), luego el resto por fecha
+const ordenados = [...eventos].sort((a, b) => a.fecha.localeCompare(b.fecha) || a.titulo.localeCompare(b.titulo, 'es'));
+const estados = { parche: 'En parche', va: 'Vas', interesa: 'Te interesa' } as const;
+const esPlan = (id: string) => ['parche', 'va'].includes(estadoPlan(id) ?? '');
+const grupos = [
+  { id: 'tus', titulo: 'Tus planes', lista: ordenados.filter((e) => esPlan(e.id)) },
+  { id: 'otros', titulo: 'Más eventos en Fulleventos', lista: ordenados.filter((e) => !esPlan(e.id)) },
+];
+const busqueda = (e: (typeof eventos)[number]) =>
+  normalizar([e.titulo, e.lugar, nombreCiudad(e.ciudad), e.categoria].join(' '));
+
+const pasosA = ['Lo básico', 'Cuándo y dónde', 'Boletas', 'Foto y revisión'];
+const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
+---
+
+<div class="flujo" data-flujo data-pasos-a={JSON.stringify(pasosA)} data-pasos-b={JSON.stringify(pasosB)}>
+  <p class="nota-demo">Demostración: lo que publiques aquí no se guarda en ningún servidor.</p>
+
+  <section class="tarjeta" aria-label="Publicar en Fulleventos">
+    {/* Progreso del camino elegido (oculto en la elección inicial y en los estados de éxito) */}
+    <div class="progreso" data-progreso hidden>
+      <p class="progreso-texto">
+        <span data-progreso-camino></span> · <span data-progreso-texto></span>
+      </p>
+      <div
+        class="riel"
+        role="progressbar"
+        aria-label="Progreso"
+        aria-valuemin="1"
+        aria-valuemax="4"
+        aria-valuenow="1"
+        data-riel
+      >
+        <span class="relleno" data-relleno></span>
+      </div>
+    </div>
+
+    {/* ---------- Paso 0 · ¿Qué quieres publicar? ---------- */}
+    <form class="paso" data-vista="inicio" novalidate aria-labelledby="inicio-titulo">
+      <div>
+        <h2 id="inicio-titulo" tabindex="-1">¿Qué quieres publicar?</h2>
+        <p class="bajada">Elige una opción. Puedes cambiarla después.</p>
+      </div>
+      <ResumenErrores texto="Elige una opción para continuar." />
+      <fieldset class="opciones-grandes" id="modo">
+        <legend class="solo-lectores">¿Qué quieres publicar?</legend>
+        <label class="opcion-grande">
+          <input type="radio" name="modo" value="nuevo" />
+          <span class="opcion-icono" aria-hidden="true"><Icono nombre="agenda" tamano={24} /></span>
+          <span class="opcion-texto">
+            <b>Un evento nuevo</b>
+            <span>Organizas o conoces un plan que todavía no está en Fulleventos.</span>
+          </span>
+        </label>
+        <label class="opcion-grande">
+          <input type="radio" name="modo" value="publicacion" />
+          <span class="opcion-icono" aria-hidden="true"><Icono nombre="foto" tamano={24} /></span>
+          <span class="opcion-texto">
+            <b>Una publicación sobre un evento</b>
+            <span>Cuenta algo de un plan que ya está en Fulleventos: una reseña, una invitación, fotos, cómo llegar…</span>
+          </span>
+        </label>
+      </fieldset>
+      <ErrorCampo id="modo" />
+      <div class="acciones">
+        <span></span>
+        <button type="submit" class="boton primario">Continuar</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino A · 1. Lo básico ---------- */}
+    <form class="paso" data-vista="a1" novalidate aria-labelledby="a1-titulo" hidden>
+      <div>
+        <h2 id="a1-titulo" tabindex="-1">Lo básico</h2>
+        <p class="bajada">Cuéntanos qué es el plan.</p>
+      </div>
+      <ResumenErrores />
+      <Campo id="ev-nombre" etiqueta="Nombre del evento" obligatorio maximo={90} autocomplete="off" placeholder="Ej. Noche de boleros en La Candelaria">
+        {/* Antiduplicados: coincidencias con eventos que ya están (evento-nuevo.ts) */}
+        <div class="duplicados" data-duplicados hidden>
+          <p class="duplicados-titulo"><Icono nombre="informacion" tamano={18} />¿Es alguno de estos? Ya están en Fulleventos</p>
+          <ul class="duplicados-lista" data-lista-duplicados></ul>
+          <p class="duplicados-nota">Si es otro plan, sigue llenando el formulario.</p>
+        </div>
+        <p class="solo-lectores" aria-live="polite" data-anuncio-duplicados></p>
+      </Campo>
+      <Campo
+        id="ev-categoria"
+        etiqueta="Categoría"
+        obligatorio
+        tipo="select"
+        opcionVacia="Elige una categoría"
+        opciones={categorias.map((c) => ({ valor: c, texto: c }))}
+      />
+      <Campo
+        id="ev-descripcion"
+        etiqueta="Descripción corta"
+        obligatorio
+        tipo="textarea"
+        filas={3}
+        maximo={280}
+        ayuda="Una o dos frases: qué es el plan y para quién."
+      >
+        <p class="contador" data-contador="ev-descripcion" data-maximo="280">0 de 280 caracteres</p>
+      </Campo>
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="inicio">Atrás</button>
+        <button type="submit" class="boton primario">Continuar</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino A · 2. Cuándo y dónde ---------- */}
+    <form class="paso" data-vista="a2" novalidate aria-labelledby="a2-titulo" hidden>
+      <div>
+        <h2 id="a2-titulo" tabindex="-1">Cuándo y dónde</h2>
+        <p class="bajada">Así la gente lo encuentra en la agenda y en el mapa.</p>
+      </div>
+      <ResumenErrores />
+      <div class="dos-columnas">
+        <Campo id="ev-fecha" etiqueta="Fecha" obligatorio tipo="date" />
+        <Campo id="ev-hora" etiqueta="Hora de inicio" obligatorio tipo="time">
+          <p class="ayuda-viva" data-hora-colombiana aria-live="polite"></p>
+        </Campo>
+      </div>
+      <Campo
+        id="ev-ciudad"
+        etiqueta="Ciudad"
+        obligatorio
+        tipo="select"
+        opcionVacia="Elige la ciudad"
+        opciones={ciudades.map((c) => ({ valor: c.id, texto: c.nombre }))}
+      />
+      <Campo id="ev-lugar" etiqueta="Lugar" obligatorio maximo={80} placeholder="Ej. Teatro Libre" />
+      <Campo
+        id="ev-direccion"
+        etiqueta="Dirección o barrio"
+        obligatorio
+        maximo={120}
+        placeholder="Ej. Calle 62 # 10-25, Chapinero"
+        autocomplete="street-address"
+      />
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="a1">Atrás</button>
+        <button type="submit" class="boton primario" data-continuar>Continuar</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino A · 3. Boletas ---------- */}
+    <form class="paso" data-vista="a3" novalidate aria-labelledby="a3-titulo" hidden>
+      <div>
+        <h2 id="a3-titulo" tabindex="-1">Boletas</h2>
+        <p class="bajada">¿Hay que pagar para entrar?</p>
+      </div>
+      <ResumenErrores />
+      <fieldset class="opciones-medianas" id="ev-entrada">
+        <legend>¿Cómo es la entrada? <span class="marca">(obligatorio)</span></legend>
+        <label class="opcion-mediana">
+          <input type="radio" name="ev-entrada" value="gratis" />
+          <span class="opcion-texto"><b>Gratis</b><span>Entrada libre, sin boleta.</span></span>
+        </label>
+        <label class="opcion-mediana">
+          <input type="radio" name="ev-entrada" value="boleta" />
+          <span class="opcion-texto"><b>Con boleta</b><span>Se compra en una boletera o en el sitio del organizador.</span></span>
+        </label>
+      </fieldset>
+      <ErrorCampo id="ev-entrada" />
+
+      <div class="con-boleta" data-con-boleta hidden>
+        <Campo
+          id="ev-precio"
+          etiqueta="Precio desde"
+          obligatorio
+          inputmode="numeric"
+          maximo={12}
+          autocomplete="off"
+          placeholder="Ej. 45000"
+          ayuda="En pesos colombianos: el precio de la boleta más barata."
+        >
+          <p class="ayuda-viva" data-precio-visto aria-live="polite"></p>
+        </Campo>
+        <Campo id="ev-vende" etiqueta="Quién vende las boletas" obligatorio maximo={60} placeholder="Ej. el organizador o la boletera" />
+        <Campo
+          id="ev-url"
+          etiqueta="Enlace oficial de venta"
+          obligatorio
+          tipo="url"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="https://"
+          ayuda="La página donde se compran las boletas de este evento."
+        />
+        <p class="nota-venta">
+          <Icono nombre="boleta" tamano={18} />
+          <span>Fulleventos no vende boletas: el botón de compra llevará a este enlace.</span>
+        </p>
+      </div>
+
+      <Campo
+        id="ev-edad"
+        etiqueta="Edad mínima"
+        tipo="select"
+        opcionVacia="Sin edad mínima"
+        opciones={[14, 16, 18].map((n) => ({ valor: String(n), texto: `Mayores de ${n} años` }))}
+      />
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="a2">Atrás</button>
+        <button type="submit" class="boton primario" data-continuar>Continuar</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino A · 4. Foto y revisión ---------- */}
+    <form class="paso" data-vista="a4" novalidate aria-labelledby="a4-titulo" hidden>
+      <div>
+        <h2 id="a4-titulo" tabindex="-1">Foto y revisión</h2>
+        <p class="bajada">Revisa cómo se verá antes de enviarlo.</p>
+      </div>
+      <ResumenErrores />
+
+      <div class="campo-archivo">
+        <label for="ev-foto" class="rotulo">Foto del evento <span class="marca">(opcional)</span></label>
+        <p id="ev-foto-ayuda" class="ayuda">JPG, PNG o WebP de hasta 10 MB. Solo se ve en tu navegador: no se sube a ningún servidor.</p>
+        <input id="ev-foto" name="ev-foto" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="ev-foto-ayuda" class="archivo" />
+        <ErrorCampo id="ev-foto" />
+        <div class="foto-elegida" data-foto-elegida hidden>
+          <img alt="Vista previa de la foto elegida" data-foto-previa />
+          <button type="button" class="quitar" data-quitar-foto>Quitar foto</button>
+        </div>
+      </div>
+
+      <fieldset class="opciones-medianas" id="ev-organizador">
+        <legend>¿Eres el organizador? <span class="marca">(obligatorio)</span></legend>
+        <label class="opcion-mediana">
+          <input type="radio" name="ev-organizador" value="si" />
+          <span class="opcion-texto"><b>Sí, yo lo organizo</b></span>
+        </label>
+        <label class="opcion-mediana">
+          <input type="radio" name="ev-organizador" value="no" />
+          <span class="opcion-texto"><b>No, solo lo estoy compartiendo</b></span>
+        </label>
+      </fieldset>
+      <ErrorCampo id="ev-organizador" />
+
+      <div class="revision">
+        <div class="vista-previa">
+          <h3 class="subtitulo">Así se verá en la agenda</h3>
+          {/* Imita la tarjeta pública (TarjetaEvento, N15) sin enlaces: es solo una vista previa */}
+          <div class="tarjeta-evento" data-previa-evento>
+            <div class="te-imagen" data-te-imagen>
+              <img alt="" data-te-foto hidden />
+              <span class="te-fecha" data-te-placa hidden><b data-te-dia></b><span data-te-mes></span></span>
+            </div>
+            <div class="te-cuerpo">
+              <span class="te-categoria" data-te-categoria></span>
+              <p class="te-titulo" data-te-titulo></p>
+              <span class="te-lugar"><span data-te-lugar></span> · <b data-te-ciudad></b></span>
+              <div class="te-compra">
+                <span class="te-precio">
+                  <span data-te-precio></span>
+                  <small data-te-cargo>+ cargo por servicio</small>
+                  <small data-te-vende></small>
+                </span>
+                <span class="te-cta" aria-hidden="true" data-te-cta></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="resumen-datos">
+          <h3 class="subtitulo">Revisa los datos</h3>
+          <div class="grupo-datos">
+            <div class="grupo-cabeza">
+              <h4>Lo básico</h4>
+              <button type="button" class="editar" data-editar="a1">Editar<span class="solo-lectores"> lo básico</span></button>
+            </div>
+            <dl>
+              <dt>Nombre</dt><dd data-dato="ev-nombre"></dd>
+              <dt>Categoría</dt><dd data-dato="ev-categoria"></dd>
+              <dt>Descripción</dt><dd data-dato="ev-descripcion"></dd>
+            </dl>
+          </div>
+          <div class="grupo-datos">
+            <div class="grupo-cabeza">
+              <h4>Cuándo y dónde</h4>
+              <button type="button" class="editar" data-editar="a2">Editar<span class="solo-lectores"> cuándo y dónde</span></button>
+            </div>
+            <dl>
+              <dt>Fecha y hora</dt><dd data-dato="cuando"></dd>
+              <dt>Lugar</dt><dd data-dato="donde"></dd>
+            </dl>
+          </div>
+          <div class="grupo-datos">
+            <div class="grupo-cabeza">
+              <h4>Boletas</h4>
+              <button type="button" class="editar" data-editar="a3">Editar<span class="solo-lectores"> las boletas</span></button>
+            </div>
+            <dl>
+              <dt>Entrada</dt><dd data-dato="entrada"></dd>
+              <dt data-dato-con-boleta>Enlace de venta</dt><dd data-dato="ev-url" data-dato-con-boleta></dd>
+              <dt>Edad mínima</dt><dd data-dato="ev-edad"></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <p class="nota-revision">
+        <Icono nombre="escudo" tamano={18} />
+        <span>Antes de publicarlo, el equipo de Fulleventos revisa cada evento nuevo.</span>
+      </p>
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="a3">Atrás</button>
+        <button type="submit" class="boton primario">Enviar a revisión</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino A · En revisión ---------- */}
+    <div class="paso exito" data-vista="a-listo" hidden>
+      <span class="exito-icono" aria-hidden="true"><Icono nombre="palomita" tamano={26} grosor={2.6} /></span>
+      <h2 id="a-listo-titulo" tabindex="-1">Tu evento quedó en revisión.</h2>
+      <p class="bajada">Te avisamos cuando esté publicado.</p>
+      <p class="nota-demo">Demostración: el evento no se guardó en ningún servidor.</p>
+      <div class="botones-exito">
+        <a href="/inicio" class="boton primario">Ir a mi inicio</a>
+        <button type="button" class="boton contorno" data-reiniciar>Publicar otra cosa</button>
+      </div>
+    </div>
+
+    {/* ---------- Camino B · 1. Elige el evento ---------- */}
+    <form class="paso" data-vista="b1" novalidate aria-labelledby="b1-titulo" hidden>
+      <div>
+        <h2 id="b1-titulo" tabindex="-1">¿Sobre qué evento?</h2>
+        <p class="bajada">Busca el plan en Fulleventos.</p>
+      </div>
+      <ResumenErrores />
+      <div class="buscador">
+        <label for="buscar-evento" class="rotulo">Busca por nombre, ciudad o lugar</label>
+        <div class="buscador-caja">
+          <Icono nombre="lupa" tamano={18} />
+          <input id="buscar-evento" type="search" autocomplete="off" placeholder="Ej. salsa, Medellín o El Campín" data-buscar-evento />
+        </div>
+        <p class="solo-lectores" aria-live="polite" data-anuncio-busqueda></p>
+      </div>
+
+      <fieldset class="lista-eventos" id="pub-evento">
+        <legend class="solo-lectores">Elige el evento</legend>
+        {
+          grupos.map((g) => (
+            <div class="grupo-eventos" data-grupo-eventos>
+              <h3 class="subtitulo">{g.titulo}</h3>
+              <ul>
+                {g.lista.map((e) => {
+                  const { dia, mes } = placaFecha(e.fecha);
+                  const estado = estadoPlan(e.id);
+                  return (
+                    <li data-item-evento data-busqueda={busqueda(e)}>
+                      <label class="opcion-evento">
+                        <input type="radio" name="pub-evento" value={e.id} />
+                        <span class="mini" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} aria-hidden="true">
+                          <b>{dia}</b>
+                          <span>{mes}</span>
+                        </span>
+                        <span class="mini-info">
+                          <b>{e.titulo}</b>
+                          <span>{lineaEvento(e)}</span>
+                          {estado && estado !== 'interesa' && <span class="estado">{estados[estado]}</span>}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
+        }
+      </fieldset>
+      <ErrorCampo id="pub-evento" />
+      <div class="sin-resultados" data-sin-resultados hidden>
+        <p>No encontramos eventos con «<span data-termino></span>».</p>
+        <p>¿Es un plan que todavía no está en Fulleventos?</p>
+        <button type="button" class="boton contorno" data-a-evento-nuevo>Publicar un evento nuevo</button>
+      </div>
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="inicio">Atrás</button>
+        <button type="submit" class="boton primario">Continuar</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino B · 2. Escribe ---------- */}
+    <form class="paso" data-vista="b2" novalidate aria-labelledby="b2-titulo" hidden>
+      <div>
+        <h2 id="b2-titulo" tabindex="-1">Escribe tu publicación</h2>
+        <p class="bajada">Se verá en la página del evento y en el inicio de tu gente.</p>
+      </div>
+      <ResumenErrores />
+      <div class="evento-elegido">
+        <p><span class="rotulo-chico">Evento</span> <b data-elegido-titulo></b> <span data-elegido-linea></span></p>
+        <button type="button" class="editar" data-ir="b1">Cambiar<span class="solo-lectores"> el evento</span></button>
+      </div>
+
+      <fieldset class="chips" id="pub-tipo">
+        <legend>Tipo de publicación <span class="marca">(obligatorio)</span></legend>
+        {
+          Object.entries(TIPOS).map(([valor, texto]) => (
+            <label class="chip">
+              <input type="radio" name="pub-tipo" value={valor} />
+              <span>{texto}</span>
+            </label>
+          ))
+        }
+      </fieldset>
+      <ErrorCampo id="pub-tipo" />
+
+      <Campo id="pub-titulo" etiqueta="Título" obligatorio maximo={MAX_TITULO} autocomplete="off" placeholder="Ej. ¿Quién se apunta el viernes?" />
+      <Campo id="pub-texto" etiqueta="Texto" obligatorio tipo="textarea" filas={6} maximo={MAX_TEXTO}>
+        <p class="contador" data-contador="pub-texto" data-maximo={MAX_TEXTO}>0 de {MAX_TEXTO.toLocaleString('es-CO')} caracteres</p>
+      </Campo>
+
+      <div class="campo-archivo">
+        <label for="pub-fotos" class="rotulo">Fotos <span class="marca">(opcional)</span></label>
+        <p id="pub-fotos-ayuda" class="ayuda">Hasta {MAX_FOTOS}, de hasta 10 MB cada una. En esta demostración se guardan solo en tu navegador.</p>
+        <input
+          id="pub-fotos"
+          name="pub-fotos"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          aria-describedby="pub-fotos-ayuda"
+          class="archivo"
+        />
+        <ErrorCampo id="pub-fotos" />
+        <ul class="fotos-elegidas" data-fotos-elegidas hidden></ul>
+      </div>
+
+      <fieldset class="opciones-medianas" id="pub-audiencia">
+        <legend>¿Quién la ve? <span class="marca">(obligatorio)</span></legend>
+        <label class="opcion-mediana">
+          <input type="radio" name="pub-audiencia" value="publica" checked />
+          <span class="opcion-texto"><b>Pública</b><span>Cualquiera que entre al evento.</span></span>
+        </label>
+        <label class="opcion-mediana">
+          <input type="radio" name="pub-audiencia" value="amigos" />
+          <span class="opcion-texto"><b>Solo mis amigos</b><span>La gente que te sigue y sigues.</span></span>
+        </label>
+        <label class="opcion-mediana" data-opcion-parche hidden>
+          <input type="radio" name="pub-audiencia" value="parche" />
+          <span class="opcion-texto"><b>Mi parche</b><span data-nombre-parche></span></span>
+        </label>
+      </fieldset>
+      <ErrorCampo id="pub-audiencia" />
+
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="b1">Atrás</button>
+        <button type="submit" class="boton primario">Ver vista previa</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino B · 3. Revisa y publica ---------- */}
+    <form class="paso" data-vista="b3" novalidate aria-labelledby="b3-titulo" hidden>
+      <div>
+        <h2 id="b3-titulo" tabindex="-1">Así se verá tu publicación</h2>
+        <p class="bajada">Revísala antes de publicarla.</p>
+      </div>
+      <div class="previa-publicacion" data-previa-publicacion></div>
+      <p class="error" role="alert" data-error-guardar hidden>
+        <Icono nombre="informacion" tamano={16} />
+        <span>Tu navegador no deja guardar la publicación (por ejemplo, en una ventana privada). Prueba en una ventana normal.</span>
+      </p>
+      <div class="acciones">
+        <button type="button" class="atras" data-ir="b2">Editar</button>
+        <button type="submit" class="boton primario">Publicar</button>
+      </div>
+    </form>
+
+    {/* ---------- Camino B · Publicada ---------- */}
+    <div class="paso exito" data-vista="b-listo" hidden>
+      <span class="exito-icono" aria-hidden="true"><Icono nombre="palomita" tamano={26} grosor={2.6} /></span>
+      <h2 id="b-listo-titulo" tabindex="-1">Publicaste en <span data-publicado-en></span></h2>
+      <p class="bajada" data-nota-fotos hidden>Las fotos no cupieron en el almacenamiento de tu navegador: la publicación se guardó sin ellas.</p>
+      <p class="nota-demo">Demostración: tu publicación se guardó solo en este navegador.</p>
+      <div class="botones-exito">
+        <a href="/inicio" class="boton primario" data-ver-en-evento>Ver en el evento</a>
+        <a href="/inicio" class="boton contorno">Ir a mi inicio</a>
+      </div>
+    </div>
+  </section>
+
+  {/* Región viva permanente para anunciar el cambio de paso (H49) */}
+  <p class="solo-lectores" role="status" data-anuncio></p>
+  <input type="hidden" value={HOY_DEMO} data-hoy />
+  <template data-plantilla-duplicado>
+    <li class="duplicado">
+      <span class="duplicado-info"><b data-dup-titulo></b><span data-dup-linea></span></span>
+      <span class="duplicado-botones">
+        <button type="button" class="boton-chico oscuro" data-dup-publicar>Publicar sobre este evento</button>
+        <a class="boton-chico contorno" target="_blank" rel="noopener" data-dup-ver>Ver evento<span class="solo-lectores"> (abre en otra pestaña)</span></a>
+      </span>
+    </li>
+  </template>
+  <template data-plantilla-foto>
+    <li class="foto-mini">
+      <img alt="" data-foto-img />
+      <button type="button" class="quitar" data-foto-quitar></button>
+    </li>
+  </template>
+</div>
+
+<style>
+  .flujo {
+    /* H52: bordes de campo e interruptor con al menos 3:1 */
+    --borde-opcion: #857870;
+    width: 100%;
+    max-width: 820px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Aviso de demostración, como el de Entrar y la compra (B3, H24) */
+  .nota-demo {
+    align-self: flex-start;
+    font-size: .84rem;
+    font-weight: 700;
+    background: var(--yellow);
+    border-radius: var(--radius-field);
+    padding: 8px 12px;
+  }
+
+  .tarjeta {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-2xl);
+    padding: clamp(20px, 4vw, 44px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .progreso {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .progreso[hidden] {
+    display: none;
+  }
+
+  .progreso-texto {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .riel {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+  }
+
+  .relleno {
+    display: block;
+    height: 100%;
+    width: 25%;
+    background: var(--brand);
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .relleno {
+      transition: width .2s ease;
+    }
+  }
+
+  .paso {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .paso[hidden] {
+    display: none;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.6rem, 4vw, 1.9rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  /* El foco llega al título por programa al cambiar de paso (H7); no necesita anillo */
+  h2:focus {
+    outline: none;
+  }
+
+  .bajada {
+    margin-top: 6px;
+    color: var(--muted);
+  }
+
+  .subtitulo {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .marca {
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .rotulo,
+  legend {
+    font-weight: 700;
+    font-size: .9rem;
+  }
+
+  .ayuda {
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  fieldset {
+    border: 0;
+    min-width: 0;
+  }
+
+  legend {
+    margin-bottom: 8px;
+  }
+
+  /* ---------- Opciones con radio (sección 3: borde tinta y fondo crema al elegir) ---------- */
+  .opciones-grandes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 12px;
+  }
+
+  .opcion-grande,
+  .opcion-mediana {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .opcion-grande {
+    padding: 18px;
+    flex-direction: column;
+  }
+
+  .opcion-mediana {
+    padding: 14px 16px;
+    align-items: center;
+  }
+
+  .opcion-grande:has(input:checked),
+  .opcion-mediana:has(input:checked) {
+    border-color: var(--ink);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  .opcion-grande:hover,
+  .opcion-mediana:hover {
+    border-color: var(--borde-opcion);
+  }
+
+  .opcion-grande input,
+  .opcion-mediana input,
+  .opcion-evento input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--ink);
+    cursor: pointer;
+  }
+
+  .opcion-grande input {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+  }
+
+  .opcion-icono {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--yellow);
+    display: grid;
+    place-items: center;
+  }
+
+  .opcion-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .opcion-grande .opcion-texto b {
+    font-size: 1.12rem;
+    padding-right: 28px;
+  }
+
+  .opcion-texto span {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  .opciones-medianas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  [data-opcion-parche][hidden] {
+    display: none;
+  }
+
+  /* Radios con aspecto de chip (H59), como las pestañas del feed */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chips legend {
+    width: 100%;
+  }
+
+  .chip {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .chip input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .chip span {
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 0 18px;
+    font-size: .92rem;
+    font-weight: 500;
+    border: 1px solid var(--borde-opcion);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .chip input:checked + span {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .chip input:focus-visible + span {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .chips:has([aria-invalid='true']) .chip span {
+    border-color: var(--brand);
+  }
+
+  .dos-columnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 18px;
+  }
+
+  .contador,
+  .ayuda-viva {
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  .ayuda-viva:empty {
+    display: none;
+  }
+
+  .contador {
+    text-align: right;
+  }
+
+  /* ---------- Antiduplicados ---------- */
+  .duplicados {
+    margin-top: 6px;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .duplicados[hidden] {
+    display: none;
+  }
+
+  .duplicados-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+  }
+
+  .duplicados-titulo :global(svg) {
+    flex-shrink: 0;
+  }
+
+  .duplicados-lista {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .duplicados-nota {
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .flujo :global(.duplicado) {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+  }
+
+  .flujo :global(.duplicado-info) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 220px;
+  }
+
+  .flujo :global(.duplicado-info span) {
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .flujo :global(.duplicado-botones) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .flujo :global(.boton-chico) {
+    height: 40px;
+    border-radius: var(--radius-pill);
+    padding: 0 14px;
+    font-size: .84rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .flujo :global(.boton-chico.oscuro),
+  .flujo :global(.boton-chico.oscuro:hover) {
+    border: 0;
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .flujo :global(.boton-chico.contorno) {
+    border: 1px solid var(--ink);
+    background: var(--surface);
+  }
+
+  /* ---------- Boletas ---------- */
+  .con-boleta {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+  }
+
+  .con-boleta[hidden] {
+    display: none;
+  }
+
+  .nota-venta,
+  .nota-revision {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .9rem;
+    font-weight: 500;
+  }
+
+  .nota-venta :global(svg),
+  .nota-revision :global(svg) {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ---------- Archivos ---------- */
+  .campo-archivo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .archivo {
+    max-width: 100%;
+    font-size: .9rem;
+    padding: 10px;
+    border: 1px dashed var(--borde-opcion);
+    border-radius: var(--radius-field);
+    background: var(--bg);
+    cursor: pointer;
+  }
+
+  .archivo[aria-invalid='true'] {
+    border: 2px solid var(--brand);
+  }
+
+  .archivo::file-selector-button {
+    height: 36px;
+    margin-right: 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    padding: 0 14px;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .foto-elegida {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .foto-elegida[hidden] {
+    display: none;
+  }
+
+  .foto-elegida img {
+    width: min(100%, 240px);
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+  }
+
+  .quitar {
+    height: 40px;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    padding: 0 14px;
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .fotos-elegidas {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .fotos-elegidas[hidden] {
+    display: none;
+  }
+
+  .flujo :global(.foto-mini) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .flujo :global(.foto-mini img) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ---------- Revisión del evento nuevo ---------- */
+  .revision {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+
+  .vista-previa,
+  .resumen-datos {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Imitación de TarjetaEvento (N15): mismos tamaños, sin guardar ni enlace */
+  .tarjeta-evento {
+    max-width: 340px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .te-imagen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: radial-gradient(circle at 70% 30%, var(--peach) 0, transparent 55%), var(--photo-dark);
+  }
+
+  .te-imagen img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .te-fecha {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px 4px;
+    text-align: center;
+    line-height: 1;
+    min-width: 46px;
+  }
+
+  .te-fecha b {
+    display: block;
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 900;
+  }
+
+  .te-fecha span {
+    font-size: .66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .te-cuerpo {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .te-categoria {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .te-titulo {
+    margin: 4px 0 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .te-lugar {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .te-lugar b {
+    color: var(--ink);
+  }
+
+  .te-compra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 14px;
+  }
+
+  .te-precio {
+    font-weight: 700;
+    font-size: .95rem;
+  }
+
+  .te-precio small {
+    display: block;
+    font-weight: 400;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .te-precio small[hidden] {
+    display: none;
+  }
+
+  .te-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    background: var(--brand);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 11px 15px;
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .grupo-datos {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grupo-cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  h4 {
+    font-size: .95rem;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: minmax(0, 7.5em) minmax(0, 1fr);
+    gap: 4px 12px;
+    font-size: .88rem;
+  }
+
+  dt {
+    color: var(--muted);
+  }
+
+  dd {
+    overflow-wrap: anywhere;
+  }
+
+  [data-dato-con-boleta][hidden] {
+    display: none;
+  }
+
+  .editar {
+    height: 40px;
+    border: 0;
+    background: transparent;
+    padding: 0 6px;
+    font-size: .86rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .editar:hover {
+    color: var(--brand);
+  }
+
+  /* ---------- Camino B ---------- */
+  .buscador {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .buscador-caja {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--radius-field);
+    background: var(--bg);
+    color: var(--muted);
+  }
+
+  .buscador-caja:focus-within {
+    border-color: var(--brand);
+    box-shadow: inset 0 0 0 1px var(--brand), 0 0 0 3px rgba(194, 58, 36, .25);
+  }
+
+  .buscador-caja input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+
+  .buscador-caja input:focus-visible {
+    outline: none;
+  }
+
+  .buscador-caja input::placeholder {
+    color: var(--placeholder);
+  }
+
+  .lista-eventos {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .grupo-eventos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grupo-eventos[hidden],
+  [data-item-evento][hidden] {
+    display: none;
+  }
+
+  .grupo-eventos ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .opcion-evento {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .opcion-evento:hover {
+    border-color: var(--borde-opcion);
+  }
+
+  .opcion-evento:has(input:checked) {
+    border-color: var(--ink);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  .mini {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-xs);
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 60%), var(--bg2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    color: var(--on-dark);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+  }
+
+  .mini b {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.1rem;
+  }
+
+  .mini span {
+    font-size: .62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .mini-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .mini-info span {
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  .mini-info .estado {
+    align-self: flex-start;
+    margin-top: 4px;
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 2px 10px;
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .sin-resultados {
+    text-align: center;
+    padding: 20px 16px;
+    border: 1px dashed var(--borde-opcion);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+  }
+
+  .sin-resultados[hidden] {
+    display: none;
+  }
+
+  .sin-resultados .boton {
+    margin-top: 6px;
+    color: var(--ink);
+  }
+
+  .evento-elegido {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+  }
+
+  .evento-elegido p {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.35;
+  }
+
+  .evento-elegido p > span:last-child {
+    font-size: .84rem;
+    color: var(--muted);
+  }
+
+  .rotulo-chico {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .previa-publicacion {
+    max-width: 640px;
+  }
+
+  .error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--brand);
+  }
+
+  .error[hidden] {
+    display: none;
+  }
+
+  /* ---------- Botones (N69) ---------- */
+  .acciones {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .boton {
+    height: 52px;
+    border-radius: var(--radius-pill);
+    padding: 0 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .primario,
+  .primario:hover {
+    border: 0;
+    background: var(--brand);
+    color: var(--on-dark);
+  }
+
+  .contorno {
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  /* "Atrás" de 13,33 px como en el Registro (detalle fino 5) */
+  .atras {
+    height: 48px;
+    border: 0;
+    background: transparent;
+    padding: 0 8px;
+    font-size: .8333rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ---------- Éxito ---------- */
+  .exito {
+    align-items: flex-start;
+  }
+
+  .exito-icono {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--lime);
+    border: 1.5px solid var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .botones-exito {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 479px) {
+    .acciones .boton {
+      flex: 1 1 auto;
+    }
+
+    .botones-exito,
+    .botones-exito .boton {
+      width: 100%;
+    }
+  }
+</style>

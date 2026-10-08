@@ -21,7 +21,7 @@ const paginas = (dir: string): string[] =>
 
 const rutas = paginas(raiz).map((r) => (r === '/' ? '/' : `${r}/`));
 
-const PIDEN_SESION = /^\/(inicio|mensajes|yo|perfil)(\/|$)/;
+const PIDEN_SESION = /^\/(inicio|mensajes|yo|perfil|crear-evento)(\/|$)/;
 const pideSesion = (ruta: string) => PIDEN_SESION.test(ruta);
 
 // Pasada con sesión: las públicas que cambian con ella, las que la piden, un evento y una noticia
@@ -31,6 +31,7 @@ const RUTAS_CON_SESION = [
   '/inicio/',
   '/mensajes/',
   '/yo/',
+  '/crear-evento/',
   '/evento/bogota/noche-de-salsa-y-boleros-en-vivo/',
   '/noticias/',
   '/noticias/cinco-planes-gratis-este-finde-en-colombia/',

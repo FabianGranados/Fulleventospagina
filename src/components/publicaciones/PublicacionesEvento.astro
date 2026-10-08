@@ -1,0 +1,69 @@
+---
+// Publicaciones de un evento sin ficha completa (decisión 2.26). En e1 van dentro del muro (ParchesMuro).
+// Todos ven la invitación a escribir; sin sesión, "Escribir una publicación" pide la cuenta (decisión 2.24).
+// Las publicaciones guardadas en el demo (lib/publicaciones.ts) solo se pintan con sesión.
+import Icono from '../ui/Icono.astro';
+import { rutaPublicar } from '../../lib/publicaciones';
+
+interface Props {
+  eventoId: string;
+}
+
+const { eventoId } = Astro.props;
+---
+
+<section id="publicaciones" class="seccion-evento publicaciones-evento" aria-labelledby="h-publicaciones" data-bloque-publicaciones>
+  <div class="cabecera">
+    <div>
+      <h2 id="h-publicaciones" class="titulo-seccion" tabindex="-1" data-foco-publicaciones>Publicaciones</h2>
+      <p class="sub">Cuenta algo de este plan: una invitación, una reseña o cómo llegar.</p>
+    </div>
+    <a class="escribir" href={rutaPublicar(eventoId)} data-requiere-cuenta="para escribir una publicación">
+      <Icono nombre="mas" tamano={16} grosor={2.2} />
+      Escribir una publicación
+    </a>
+  </div>
+  <div class="lista solo-sesion" data-publicaciones-demo data-evento={eventoId} data-nivel="3"></div>
+</section>
+
+<style>
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+
+  h2:focus {
+    outline: none;
+  }
+
+  .sub {
+    margin-top: 4px;
+    color: var(--muted);
+  }
+
+  .escribir {
+    height: 44px;
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    border-radius: var(--radius-pill);
+    padding: 0 16px;
+    font-weight: 700;
+    font-size: .86rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lista {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .lista:empty {
+    display: none;
+  }
+</style>

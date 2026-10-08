@@ -1,16 +1,19 @@
 ---
 // N9 · Compositor "Publicar un plan". Formulario real (detalle fino global 5).
-// "Armar parche" abre la ventana "Nuevo parche" de Mensajes (H38). Etiquetar evento, Foto, Reseña
-// y el envío no están diseñados (H38): avisan "Próximamente" sin inventar su flujo.
+// "Armar parche" abre la ventana "Nuevo parche" de Mensajes (H38). "Etiquetar evento", "Reseña" y "Publicar"
+// llevan al camino "Una publicación sobre un evento" de /crear-evento (decisión 2.26), con lo escrito en ?texto=.
+// "Foto" sigue sin diseño (H38) y avisa "Próximamente".
 import Icono from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
 import { rutaNuevoParche } from '../../data/mensajes';
+import { rutaPublicar } from '../../lib/publicaciones';
 
 const nombrePila = usuaria.nombre.split(' ')[0];
 ---
 
-<form class="compositor" aria-label="Publicar un plan" data-compositor>
+<form class="compositor" aria-label="Publicar un plan" action="/crear-evento" method="get" data-compositor>
+  <input type="hidden" name="modo" value="publicacion" />
   <div class="arriba">
     <Avatar color={usuaria.color} tamano={42} iniciales={usuaria.iniciales} class="avatar-compositor" />
     <label class="campo">
@@ -25,18 +28,18 @@ const nombrePila = usuaria.nombre.split(' ')[0];
     </label>
   </div>
   <div class="acciones">
-    <button type="button" class="secundario" data-proximamente="etiquetar eventos en tus publicaciones">
+    <a href={rutaPublicar()} class="secundario">
       <Icono nombre="agenda" tamano={16} />Etiquetar evento
-    </button>
+    </a>
     <a href={rutaNuevoParche()} class="secundario">
       <Icono nombre="armarParche" tamano={16} />Armar parche
     </a>
     <button type="button" class="secundario" data-proximamente="subir fotos">
       <Icono nombre="foto" tamano={16} />Foto
     </button>
-    <button type="button" class="secundario" data-proximamente="escribir reseñas">
+    <a href={`${rutaPublicar()}&tipo=resena`} class="secundario">
       <Icono nombre="estrella" tamano={16} />Reseña
-    </button>
+    </a>
     <button type="submit" class="publicar">Publicar</button>
   </div>
 </form>

@@ -1,0 +1,139 @@
+---
+// Publicar (decisión 2.26): crear un evento nuevo o escribir una publicación sobre uno que ya está.
+// Pide sesión (decisión 2.24). Entradas directas: ?modo=nuevo|publicacion, ?evento=<id>, ?tipo= y ?texto=.
+// DEMOSTRACIÓN sin backend: el evento nuevo no se guarda; la publicación se guarda solo en este navegador.
+import Base from '../layouts/Base.astro';
+import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import Pie from '../components/layout/Pie.astro';
+import FlujoPublicar from '../components/crear-evento/FlujoPublicar.astro';
+import TarjetaPublicacion from '../components/publicaciones/TarjetaPublicacion.astro';
+---
+
+<Base
+  titulo="Publicar · Fulleventos"
+  descripcion="Publica un evento nuevo en Fulleventos o cuenta algo de un plan que ya está: una invitación, una reseña o cómo llegar."
+  tamanoBase={15}
+  requiereSesion
+>
+  <EncabezadoApp variante="detalle" />
+  <main id="contenido" class="contenedor publicar">
+    <h1 class="antetitulo">Publicar en Fulleventos</h1>
+    <FlujoPublicar />
+  </main>
+  <TarjetaPublicacion />
+  <Pie />
+</Base>
+
+<script>
+  import { crearNavegacion, $, $$, crearValidador, elegido, type Vista } from '../components/crear-evento/flujo';
+  import { iniciarEventoNuevo } from '../components/crear-evento/evento-nuevo';
+  import { iniciarPublicacion } from '../components/crear-evento/publicacion';
+
+  const raiz = $<HTMLElement>('[data-flujo]');
+  const pasosA: string[] = JSON.parse(raiz.dataset.pasosA!);
+  const pasosB: string[] = JSON.parse(raiz.dataset.pasosB!);
+  const vistas: Vista[] = [
+    { id: 'inicio', nombre: '¿Qué quieres publicar?' },
+    ...pasosA.map((nombre, i) => ({ id: `a${i + 1}`, camino: 'a' as const, numero: i + 1, nombre })),
+    { id: 'a-listo', nombre: 'Tu evento quedó en revisión' },
+    ...pasosB.map((nombre, i) => ({ id: `b${i + 1}`, camino: 'b' as const, numero: i + 1, nombre })),
+    { id: 'b-listo', nombre: 'Publicación lista' },
+  ];
+
+  // La URL dice en qué camino se está (?modo=, ?evento=) para volver al mismo punto al recargar (H42)
+  const params = new URLSearchParams(location.search);
+  const actualizarUrl = (v: Vista) => {
+    const url = new URL(location.href);
+    ['tipo', 'texto'].forEach((p) => url.searchParams.delete(p));
+    if (v.id === 'inicio') {
+      url.searchParams.delete('modo');
+      url.searchParams.delete('evento');
+    } else if (v.camino === 'a' || v.id === 'a-listo') {
+      url.searchParams.set('modo', 'nuevo');
+      url.searchParams.delete('evento');
+    } else {
+      url.searchParams.set('modo', 'publicacion');
+      const evento = elegido('pub-evento');
+      if (evento) url.searchParams.set('evento', evento);
+    }
+    history.replaceState(null, '', url);
+  };
+
+  const navegacion = crearNavegacion(vistas, actualizarUrl);
+  const ir = (id: string) => navegacion.ir(id);
+  const hoy = $<HTMLInputElement>('[data-hoy]').value;
+
+  const publicacion = iniciarPublicacion({
+    ir,
+    aEventoNuevo: (nombre) => {
+      eventoNuevo.prellenarNombre(nombre);
+      ir('a1');
+    },
+    alElegirEvento: () => actualizarUrl(navegacion.actual()),
+  });
+
+  const eventoNuevo = iniciarEventoNuevo({
+    ir,
+    hoy,
+    // Antiduplicados: "Publicar sobre este evento" pasa al camino B con ese evento
+    publicarSobre: (evento) => {
+      publicacion.seleccionar(evento);
+      ir('b2');
+    },
+  });
+
+  // ---------- Paso 0 ----------
+  const inicio = $<HTMLFormElement>('form[data-vista="inicio"]');
+  const v0 = crearValidador(inicio, {
+    modo: () => (elegido('modo') ? '' : 'Elige si publicas un evento nuevo o una publicación sobre un evento.'),
+  });
+  inicio.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    if (v0.intentar()) ir(elegido('modo') === 'nuevo' ? 'a1' : 'b1');
+  });
+
+  $$<HTMLButtonElement>('[data-ir]').forEach((b) => b.addEventListener('click', () => ir(b.dataset.ir!)));
+
+  $<HTMLButtonElement>('[data-reiniciar]').addEventListener('click', () => {
+    eventoNuevo.reiniciar();
+    publicacion.reiniciar();
+    inicio.reset();
+    v0.limpiar();
+    ir('inicio');
+  });
+
+  // ---------- Entrada directa ----------
+  const modo = params.get('modo');
+  const evento = params.get('evento');
+  publicacion.prellenar(params.get('tipo'), params.get('texto'));
+  if (modo === 'nuevo') {
+    $<HTMLInputElement>('input[name="modo"][value="nuevo"]').checked = true;
+    navegacion.ir('a1', { enfocar: false });
+  } else if (modo === 'publicacion') {
+    $<HTMLInputElement>('input[name="modo"][value="publicacion"]').checked = true;
+    navegacion.ir(evento && publicacion.seleccionar(evento) ? 'b2' : 'b1', { enfocar: false });
+  } else {
+    navegacion.ir('inicio', { enfocar: false });
+  }
+</script>
+
+<style>
+  .publicar {
+    padding-top: 24px;
+    padding-bottom: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .antetitulo {
+    width: 100%;
+    max-width: 820px;
+    margin-inline: auto;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+</style>

@@ -1,0 +1,68 @@
+---
+// Resumen de errores de un paso de /crear-evento (H23), con el mismo aspecto del Registro.
+// flujo.ts lo llena con un enlace por error que lleva el foco al campo.
+import Icono from '../ui/Icono.astro';
+
+interface Props {
+  texto?: string;
+}
+
+const { texto = 'Revisa estos datos para continuar.' } = Astro.props;
+---
+
+<div class="resumen" role="alert" tabindex="-1" data-resumen hidden>
+  <p class="resumen-titulo"><Icono nombre="informacion" tamano={18} />{texto}</p>
+  <ul data-lista-errores></ul>
+</div>
+
+<style>
+  .resumen {
+    border: 2px solid var(--brand);
+    border-radius: var(--radius-field);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--surface);
+  }
+
+  .resumen[hidden] {
+    display: none;
+  }
+
+  .resumen:focus {
+    outline: none;
+  }
+
+  .resumen-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--brand);
+  }
+
+  .resumen-titulo :global(svg) {
+    flex-shrink: 0;
+  }
+
+  ul {
+    padding-left: 26px;
+    font-size: .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Objetivo de al menos 24 px por enlace (WCAG 2.5.8) */
+  .resumen :global(a),
+  .resumen :global(a:hover) {
+    display: inline-block;
+    min-height: 24px;
+    padding-block: 2px;
+    line-height: 1.4;
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+</style>

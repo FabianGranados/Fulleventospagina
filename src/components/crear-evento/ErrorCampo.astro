@@ -1,0 +1,37 @@
+---
+// Error de un grupo de opciones o de un campo de archivo (los campos de texto traen el suyo en Campo.astro).
+// Sección 3, "Error de formulario": texto #C23A24 con ícono. flujo.ts escribe el texto.
+import Icono from '../ui/Icono.astro';
+
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<p id={`${id}-error`} class="error" hidden>
+  <Icono nombre="informacion" tamano={16} />
+  <span data-texto-error></span>
+</p>
+
+<style>
+  .error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: .84rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--brand);
+  }
+
+  .error[hidden] {
+    display: none;
+  }
+
+  .error :global(svg) {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+</style>

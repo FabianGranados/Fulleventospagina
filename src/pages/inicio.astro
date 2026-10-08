@@ -9,6 +9,7 @@ import Historias from '../components/inicio/Historias.astro';
 import Compositor from '../components/inicio/Compositor.astro';
 import Publicacion from '../components/inicio/Publicacion.astro';
 import Descubre from '../components/inicio/Descubre.astro';
+import TarjetaPublicacion from '../components/publicaciones/TarjetaPublicacion.astro';
 import { pestanas, publicaciones } from '../data/inicio';
 import { ciudades } from '../data/ciudades';
 import { chatsSinLeer } from '../data/mensajes';
@@ -28,6 +29,13 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
       <Historias />
       <Compositor />
       <div class="aviso-lugar" data-aviso-compositor></div>
+
+      {/* Publicaciones de la usuaria sobre eventos (decisión 2.26), arriba del feed. En el demo están en este
+          navegador (lib/publicaciones.ts); el bloque aparece cuando hay alguna. No se filtran con las pestañas. */}
+      <section class="tus-publicaciones" aria-labelledby="h-tus-publicaciones" data-bloque-publicaciones data-ocultar-vacio hidden>
+        <h2 id="h-tus-publicaciones" class="antetitulo" tabindex="-1" data-foco-publicaciones>Tus publicaciones</h2>
+        <div class="lista-publicaciones" data-publicaciones-demo data-nivel="3"></div>
+      </section>
 
       <fieldset class="pestanas">
         <legend class="solo-lectores">Filtrar feed</legend>
@@ -77,6 +85,7 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
       <button type="button" class="aviso-cerrar" aria-label="Cerrar aviso"><Icono nombre="cerrar" tamano={16} grosor={2.4} /></button>
     </div>
   </template>
+  <TarjetaPublicacion />
 </Base>
 
 <script>
@@ -226,11 +235,7 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
     }),
   );
 
-  document.querySelector<HTMLFormElement>('[data-compositor]')?.addEventListener('submit', (ev) => {
-    ev.preventDefault();
-    const boton = (ev.currentTarget as HTMLFormElement).querySelector<HTMLButtonElement>('button[type="submit"]')!;
-    avisar(document.querySelector('[data-aviso-compositor]')!, 'Próximamente podrás publicar planes.', boton);
-  });
+  // El compositor es un formulario GET a /crear-evento?modo=publicacion&texto=… (decisión 2.26): no necesita script
 
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
@@ -305,6 +310,30 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
       display: flex;
       align-items: stretch;
     }
+  }
+
+  .tus-publicaciones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .antetitulo {
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .antetitulo:focus {
+    outline: none;
+  }
+
+  .lista-publicaciones {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
   /* Pestañas del feed: grupo de radios con aspecto de chip (H59) */
