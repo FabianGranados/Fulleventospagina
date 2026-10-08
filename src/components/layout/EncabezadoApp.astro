@@ -2,6 +2,7 @@
 // N1 · Encabezado con sesión: un solo componente con variantes (H41).
 // completo: Inicio, Agenda, Mapa, Mensajes · detalle: Evento · detalle-perfil: Perfil
 import Icono from '../ui/Icono.astro';
+import Logo from '../ui/Logo.astro';
 import { ciudades } from '../../data/ciudades';
 import { usuaria } from '../../data/personas';
 import { chatsSinLeer } from '../../data/mensajes';
@@ -41,7 +42,7 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
       )
     }
 
-    <a href="/inicio" class="logo">fulleventos</a>
+    <Logo href="/inicio" />
 
     {
       variante === 'completo' && (
@@ -136,16 +137,9 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
     gap: 12px 20px;
   }
 
-  .logo,
-  .logo:hover {
-    font-weight: 700;
-    font-size: 1.6rem;
-    letter-spacing: -0.03em;
-    color: var(--brand-logo);
-  }
 
-  .detalle .logo,
-  .detalle-perfil .logo {
+  .detalle :global(.logo),
+  .detalle-perfil :global(.logo) {
     margin-inline: auto;
   }
 
@@ -340,6 +334,7 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
   @media (max-width: 767px) {
     .encabezado {
       position: static;
+      --tope-logo: 40px;
     }
   }
 </style>

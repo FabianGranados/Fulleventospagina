@@ -319,7 +319,7 @@ Las 7 pantallas restantes se construyeron en paralelo, cada una por un agente di
 - Estados de carga, error y pago (H17).
 - "Mis boletas" (H20), pie legal (H5) y variantes de compra por modo (P1).
 - Carrusel de "Este finde" en celular (H44) y tarjeta compacta de Agenda en celular (H47).
-- Favicon: el del sitio anterior usa la paleta descartada.
+- Favicon: el del sitio anterior usa la paleta descartada. (Resuelto en 2.21.)
 
 ### 2.17 Correcciones de la auditoría del sitio implementado (7 de octubre de 2026)
 
@@ -373,3 +373,10 @@ El cliente pidió un héroe minimalista en computador, a partir de una referenci
 
 - **Qué:** el titular de computador lleva en las letras el degradado durazno → rosado de la marca, en tonos suaves (`--peach-suave #F8D3B6` y `--pink-suave #F4C0D8`). La segunda línea va al revés, como alterna el titular de bloques en celular.
 - **Por qué:** el cliente quiso conservar los colores de la marca, pero "no tan intensos". Los dos tonos superan 12:1 de contraste sobre el fondo oscuro del héroe.
+
+### 2.21 Logo e íconos de la marca (8 de octubre de 2026)
+
+- **Archivos:** el cliente entregó el logo (PNG con fondo transparente, hecho a partir de su tablero de marca). Están en `src/assets/marca/`: `logo-claro.png` ("eventos" en negro, para fondos claros), `logo-oscuro.png` ("eventos" en blanco), `simbolo.png` (el tiquete solo) e `icono-app.png` (el cuadrado con degradado).
+- **Dónde va:** el componente `components/ui/Logo.astro` reemplaza el logo de texto en los tres encabezados (visitante, app y registro). Los tres tienen fondo claro, así que usan `logo-claro`. La versión oscura queda lista para fondos oscuros (`<Logo fondo="oscuro">`). Mide 48 px de alto en computador y 40 px en celular, y se sirve en WebP a 1x, 2x y 3x.
+- **Favicon e ícono de app:** salen de `icono-app.png` y quedan en `public/`: `favicon.ico` (16, 32 y 48 px), `favicon-32.png`, `apple-touch-icon.png` (180 px) e `icono-192.png` / `icono-512.png` para `manifest.webmanifest`. Con esto se cierra el pendiente del favicon de la sección 2.16.
+- **Color del logo:** el rojo `#D9452F` ("solo para el logo") ya no se usa en los encabezados porque ahora el logo es la imagen. El token `--brand-logo` sigue existiendo para los degradados que lo usan.

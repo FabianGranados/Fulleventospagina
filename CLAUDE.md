@@ -42,6 +42,7 @@ Decidido por el cliente el 7 de octubre de 2026.
 - `layouts/Base.astro`: `titulo`, `descripcion` y `tamanoBase` (16 en pantallas públicas, 15 en las de sesión).
 - `components/layout/EncabezadoVisitante.astro` (N2) y `EncabezadoApp.astro` (N1, variantes `completo`, `detalle` y `detalle-perfil`, con `activa` y `noLeidos`), más `Pie.astro`.
 - `components/ui/`:
+  - `Logo` (imagen de la marca; `fondo="claro"` u `"oscuro"`; archivos en `src/assets/marca/`, favicon e íconos en `public/`);
   - `Icono` (agregar íconos ahí, con el trazo exacto del prototipo);
   - `Avatar`, `PilaAvatares`, `Etiqueta`, `Titular`, `Boton`, `EnlaceSubrayado` y `EncabezadoSeccion`;
   - `Modal` (N68, con `<dialog>`; se abre con `data-abrir-modal="id"`).

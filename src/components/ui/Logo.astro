@@ -1,0 +1,46 @@
+---
+// Logo de Fulleventos (decisión 2.21). "fondo" indica sobre qué fondo va: en el claro "eventos" es negro;
+// en el oscuro, blanco. Un contenedor puede limitar la altura con la variable --tope-logo (p. ej. en celular).
+import { Picture } from 'astro:assets';
+import logoClaro from '../../assets/marca/logo-claro.png';
+import logoOscuro from '../../assets/marca/logo-oscuro.png';
+
+interface Props {
+  href: string;
+  fondo?: 'claro' | 'oscuro';
+  alto?: number;
+  class?: string;
+}
+
+const { href, fondo = 'claro', alto = 48, class: clase } = Astro.props;
+const src = fondo === 'oscuro' ? logoOscuro : logoClaro;
+const ancho = Math.round((alto * src.width) / src.height);
+---
+
+<a href={href} class:list={['logo', clase]} style={`--alto-logo: ${alto}px`}>
+  <Picture
+    src={src}
+    alt="Fulleventos"
+    formats={['webp']}
+    widths={[ancho, ancho * 2, ancho * 3]}
+    sizes={`${ancho}px`}
+    width={ancho}
+    height={alto}
+    loading="eager"
+    class="logo-imagen"
+  />
+</a>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .logo :global(.logo-imagen) {
+    display: block;
+    width: auto;
+    height: min(var(--alto-logo), var(--tope-logo, 999px));
+  }
+</style>

@@ -2,10 +2,11 @@
 // N3 · Encabezado mínimo de registro: logo + "¿Ya tienes cuenta? Entrar". No es fijo.
 // "Entrar" va a la pantalla de inicio de sesión (H12, H33), como en el encabezado de visitante.
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import Logo from '../ui/Logo.astro';
 ---
 
 <header class="encabezado">
-  <a href="/" class="logo">fulleventos</a>
+  <Logo href="/" />
   <p class="ya">¿Ya tienes cuenta? <EnlaceSubrayado href="/entrar">Entrar</EnlaceSubrayado></p>
 </header>
 
@@ -22,13 +23,6 @@ import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
     gap: 12px;
   }
 
-  .logo,
-  .logo:hover {
-    font-weight: 700;
-    font-size: 1.6rem;
-    letter-spacing: -0.03em;
-    color: var(--brand-logo);
-  }
 
   .ya {
     font-size: .9rem;
