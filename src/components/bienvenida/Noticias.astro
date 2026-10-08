@@ -1,31 +1,48 @@
 ---
+// Noticias de la escena (4.3, bloque 5). Salen de la colección src/content/noticias (decisión 2.25): la destacada
+// y las 3 más recientes, cada una con enlace a su página. Reemplaza "noticias sin enlaces" de la decisión 2.14 (H36).
 import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
-import { destacada, lista } from '../../data/noticias';
+import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import { antetitulo, metaNoticia, noticiasOrdenadas, rutaNoticia, separarDestacada } from '../../lib/noticias';
+
+const { destacada, resto } = separarDestacada(await noticiasOrdenadas());
+const lista = resto.slice(0, 3);
 ---
 
 <section id="noticias" class="noticias" aria-labelledby="noticias-titulo">
   <EncabezadoSeccion antetitulo="Lo que se mueve" titulo="Noticias de la escena" id="noticias-titulo">
-    <span class="ejemplo" slot="aside">Contenido de ejemplo</span>
+    <div class="aside" slot="aside">
+      <span class="ejemplo">Contenido de ejemplo</span>
+      <EnlaceSubrayado href="/noticias" class="ver-todas">Ver todas las noticias</EnlaceSubrayado>
+    </div>
   </EncabezadoSeccion>
 
-  <!-- Sin enlaces hasta que exista la página de noticia (H36, decisión 2.14) -->
+  <!-- Toda la noticia abre su página: el enlace es el título y su área cubre la tarjeta (un solo enlace por noticia) -->
   <div class="cuerpo">
-    <article class="destacada">
-      <div class="imagen" aria-hidden="true"></div>
-      <div class="texto">
-        <p class="kicker">{destacada.antetitulo}</p>
-        <h3 class="titulo-destacada">{destacada.titulo}</h3>
-        <p class="bajada">{destacada.bajada}</p>
-        <p class="meta">{destacada.tiempo}</p>
-      </div>
-    </article>
+    {
+      destacada && (
+        <article class="destacada">
+          {destacada.data.imagen ? (
+            <img class="imagen" src={destacada.data.imagen.src} alt={destacada.data.imagen.alt} loading="lazy" decoding="async" />
+          ) : (
+            <div class="imagen" aria-hidden="true" />
+          )}
+          <div class="texto">
+            <p class="kicker">{antetitulo(destacada)}</p>
+            <h3 class="titulo-destacada"><a href={rutaNoticia(destacada)}>{destacada.data.titulo}</a></h3>
+            <p class="bajada">{destacada.data.bajada}</p>
+            <p class="meta"><time datetime={destacada.data.fecha}>{metaNoticia(destacada)}</time></p>
+          </div>
+        </article>
+      )
+    }
     <div class="lista">
       {
         lista.map((n) => (
           <article class="item">
-            <p class="kicker">{n.antetitulo}</p>
-            <h3 class="titulo-item">{n.titulo}</h3>
-            <p class="tiempo">{n.tiempo}</p>
+            <p class="kicker">{antetitulo(n)}</p>
+            <h3 class="titulo-item"><a href={rutaNoticia(n)}>{n.data.titulo}</a></h3>
+            <p class="tiempo"><time datetime={n.data.fecha}>{metaNoticia(n)}</time></p>
           </article>
         ))
       }
@@ -38,9 +55,49 @@ import { destacada, lista } from '../../data/noticias';
     padding-top: 72px;
   }
 
+  .aside {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+  }
+
   .ejemplo {
     font-size: .78rem;
     color: var(--muted);
+  }
+
+  .aside :global(.ver-todas) {
+    font-size: .9rem;
+  }
+
+  /* Tarjeta entera clicable: el área del enlace del título se estira sobre el artículo */
+  .destacada,
+  .item {
+    position: relative;
+  }
+
+  .destacada a::after,
+  .item a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .destacada a:focus-visible,
+  .item a:focus-visible {
+    outline: none;
+  }
+
+  .destacada:has(a:focus-visible),
+  .item:has(a:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .destacada:hover a,
+  .item:hover a {
+    color: var(--brand);
   }
 
   .cuerpo {
@@ -59,6 +116,9 @@ import { destacada, lista } from '../../data/noticias';
   }
 
   .imagen {
+    display: block;
+    width: 100%;
+    object-fit: cover;
     aspect-ratio: 16 / 9;
     background:
       radial-gradient(circle at 30% 35%, rgba(246, 220, 106, .85) 0, transparent 30%),

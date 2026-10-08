@@ -441,3 +441,38 @@ Un visitante sin cuenta que entraba a un evento desde la Bienvenida veía la pá
 - **Cerrar sesión.** Botón "Cerrar sesión" en Mi perfil (`/yo`), junto a "Guardados" y "Ajustes y privacidad". Cierra la sesión de demostración y lleva a la Bienvenida como visitante.
 - **Pruebas.** `tests/pantallas.spec.ts` hace dos pasadas. Sin sesión revisa todas las páginas, salvo las que piden sesión, de las que comprueba que lleven a `/entrar?volver=<ruta>`. Con sesión revisa `/agenda/`, `/mapa/`, `/inicio/`, `/mensajes/`, `/yo/` y un evento. Las comprobaciones son las mismas: sin scroll horizontal a 320, 390, 768 y 1280 px, y axe sin violaciones a 390 y 1280 px.
 - **En producción** la sesión la da el backend: una cookie de sesión segura y las páginas que piden sesión protegidas en el servidor, no en el navegador. La vista de cada evento, agenda y mapa se arma con los datos de quien entra. `lib/sesion.ts`, el script de Base y la nota "Demostración" se reemplazan entonces, pero las clases `solo-sesion` / `solo-visitante`, la ventana "Crea tu cuenta" y el parámetro `volver` siguen sirviendo.
+
+### 2.25 Centro de noticias (8 de octubre de 2026)
+
+El cliente pidió el centro de noticias: "va a ser nuestra principal manera de contenido, porque todo lo que saquemos de ahí se va a automatizar y será contenido". Hasta ahora las noticias eran un bloque fijo de la Bienvenida, sin enlaces (decisión 2.14). **Esta decisión reemplaza "noticias sin enlaces" de 2.14 y resuelve el destino de las noticias de H36:** cada noticia abre su propia página.
+
+- **Formato pensado para automatizar.**
+  - **Qué:** cada noticia es un archivo Markdown en `src/content/noticias/<slug>.md`, dentro de una colección de contenido de Astro (`src/content.config.ts`, loader `glob`). El nombre del archivo es la dirección: `/noticias/<slug>`.
+  - **Frontmatter validado:** `titulo`, `bajada` (1–2 frases), `fecha` (AAAA-MM-DD), `ciudad` (id de `src/data/ciudades.ts` o `nacional`), `tema` (lista cerrada: conciertos, rumba, deporte, teatro, comida, festivales y guías, en `src/data/noticias.ts`), `eventos` (ids de `src/data/eventos.ts`, puede ir vacío), `destacada`, y los opcionales `antetitulo`, `imagen` (`src` + `alt`) y `fuente` (`nombre` + `url`). El cuerpo es el texto en Markdown.
+  - **Por qué:** un sistema que escriba archivos con ese frontmatter publica noticias sin tocar código. Si un archivo trae un tema, una ciudad o un evento que no existen, o le falta un campo, la compilación falla y dice qué archivo y qué campo están mal: nunca se publica una noticia rota.
+  - **Guía para quien automatice:** `src/content/noticias/LEEME.md`, que la colección ignora. Explica cada campo, el cuerpo y las reglas de contenido.
+  - **Una sola fuente:** `src/data/noticias.ts` ya no tiene noticias, solo la lista de temas. La Bienvenida, `/noticias` y cada noticia leen la colección con `src/lib/noticias.ts`.
+  - **Descartado:** dejar las noticias en un archivo `.ts` (obliga a tocar código para publicar) y un CMS externo (dependencia nueva sin decidir).
+- **Página `/noticias` (pública).**
+  - Como Evento, Agenda y Mapa (decisión 2.24): los dos encabezados y solo uno visible. Antetítulo "Lo que se mueve", título "Noticias de la escena", una bajada y la nota "Contenido de ejemplo".
+  - La destacada va grande arriba (la más reciente marcada `destacada`; si no hay, la más reciente). Debajo, las demás en rejilla de la más nueva a la más vieja. En celular las tarjetas de la lista son compactas (miniatura a la izquierda y sin bajada) para que no ocupe una pantalla cada noticia.
+  - **Filtros por ciudad y por tema:** chips con `aria-pressed`, solo con las ciudades y los temas que tienen noticias, y en la URL (`?ciudad=&tema=`, H42). Una noticia "cae" en su ciudad y en las ciudades de sus eventos (la guía nacional de planes gratis aparece al filtrar por Pereira o Pasto). Con un filtro, la destacada entra en la lista en su orden. Estado vacío: "Todavía no hay noticias de {tema} en {ciudad}." con "Ver todas las noticias". El número de resultados se anuncia a los lectores de pantalla.
+  - **Sin JavaScript** se ven todas las noticias y los filtros no aparecen (no quedan controles que no hacen nada).
+- **Página de cada noticia `/noticias/:slug`.**
+  - Prerenderizada e indexable (H34), con "Contenido de ejemplo" y "Volver a noticias" arriba y abajo.
+  - Antetítulo ({Tema} · {Ciudad} o el `antetitulo` del archivo), título (h1), bajada, fecha larga ("6 de octubre de 2026"), tiempo de lectura (200 palabras por minuto) y la fuente si la hay.
+  - "Compartir" copia el enlace (o abre el menú de compartir del celular) con el aviso en `role="status"`, igual que el Evento. Funciona sin cuenta.
+  - La imagen del archivo o, si no hay, el degradado del sitio con los colores del primer evento relacionado o del tema.
+  - Cuerpo con tipografía de lectura: columna de 680 px (unos 65 caracteres por línea), 1,08 rem e interlineado 1,7.
+  - "Eventos de esta noticia" ("El evento de esta noticia" si es uno) con la tarjeta pública de evento (`TarjetaEvento`); su marcador queda local, como en la Bienvenida.
+  - "Más noticias": 3 relacionadas, con más peso si comparten tema, ciudad o eventos, y luego por fecha.
+  - JSON-LD `NewsArticle` sin URL absolutas mientras no haya `site` en `astro.config.mjs` (igual que el Evento). Título de página "{Título} · Fulleventos" y la bajada como descripción.
+- **Fechas absolutas.** Las listas dicen "6 de octubre · 1 min de lectura" en vez de "Hace 3 horas" (texto del prototipo). Las páginas son estáticas: una fecha relativa quedaría mal al día siguiente de compilar.
+- **Navegación.**
+  - **Bienvenida:** la destacada y las 3 noticias más recientes, cada una con enlace a su página (toda la tarjeta es clicable con un solo enlace por noticia), y "Ver todas las noticias" junto a "Contenido de ejemplo".
+  - **Visitante:** "Noticias" en el menú del encabezado (en computador y en el menú plegable de celular), después de "Agenda". Siempre lleva a `/noticias`, también desde la Bienvenida, como "Mapa".
+  - **Con sesión:** "Noticias" en el menú "Secciones" de Inicio, con un ícono nuevo de periódico (`noticias` en `Icono.astro`). **Descartado:** un ícono más en el encabezado de la app, porque a 320 px los íconos ya bajan a otra línea y el avatar queda solo en una tercera.
+- **Contenido de ejemplo.** 10 noticias: las 4 del handoff (con sus títulos, bajada y antetítulos literales; las 3 de la lista reciben una bajada nueva) y 6 nuevas, repartidas entre Bogotá, Medellín, Cali, Barranquilla, Cartagena y nacionales, en los 7 temas y enlazadas a eventos del demo cuando tiene sentido. Una es una guía: "Cinco planes gratis este finde en Colombia".
+  - **Cómo se escribieron:** solo con lo que dicen los datos del demo (lugar, ciudad, fecha, si es gratis). No hay cifras nuevas, citas ni declaraciones de personas o entidades reales, ni artistas confirmados. La hora de cada evento no se copia (H37): está en su tarjeta.
+  - **Marcadores que faltan (P8):** `[BOLETERA]`, `[ENLACE OFICIAL]`, `[NOMBRE DEL CLUB]` y `[DIRECCIÓN]`. Se reemplazan antes de publicar con datos reales.
+- **Pruebas.** `/noticias` y las 10 noticias entran solas en `npm test`. La pasada con sesión suma `/noticias/` y una noticia.

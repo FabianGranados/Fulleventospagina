@@ -1,0 +1,440 @@
+---
+// Página de cada noticia (decisión 2.25): pública, prerenderizada e indexable (H34), como el Evento.
+// El contenido sale de src/content/noticias/<slug>.md; la dirección es el nombre del archivo.
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import EncabezadoApp from '../../components/layout/EncabezadoApp.astro';
+import EncabezadoVisitante from '../../components/layout/EncabezadoVisitante.astro';
+import Pie from '../../components/layout/Pie.astro';
+import Icono from '../../components/ui/Icono.astro';
+import EnlaceSubrayado from '../../components/ui/EnlaceSubrayado.astro';
+import TarjetaEvento from '../../components/eventos/TarjetaEvento.astro';
+import TarjetaNoticia from '../../components/noticias/TarjetaNoticia.astro';
+import { TEMAS } from '../../data/noticias';
+import {
+  antetitulo,
+  eventosDe,
+  fechaLarga,
+  fondoNoticia,
+  minutosLectura,
+  nombreLugar,
+  noticiasOrdenadas,
+  relacionadas,
+  rutaNoticia,
+  type Noticia,
+} from '../../lib/noticias';
+
+export async function getStaticPaths() {
+  const todas = await noticiasOrdenadas();
+  return todas.map((noticia) => ({ params: { slug: noticia.id }, props: { noticia, todas } }));
+}
+
+interface Props {
+  noticia: Noticia;
+  todas: Noticia[];
+}
+
+const { noticia: n, todas } = Astro.props;
+const { Content } = await render(n);
+const d = n.data;
+const planes = eventosDe(n);
+const mas = relacionadas(n, todas);
+
+// schema.org/NewsArticle (H34). Las URL absolutas solo si hay dominio configurado (site en astro.config), igual
+// que el Evento; la imagen solo si es absoluta
+const ruta = rutaNoticia(n);
+const absoluta = (r: string) => (/^https:\/\//.test(r) ? r : Astro.site ? new URL(r, Astro.site).href : undefined);
+const imagenAbsoluta = d.imagen && absoluta(d.imagen.src);
+const urlPagina = Astro.site ? new URL(ruta, Astro.site).href : undefined;
+const esquema = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline: d.titulo,
+  description: d.bajada,
+  datePublished: `${d.fecha}T00:00:00-05:00`,
+  inLanguage: 'es-CO',
+  articleSection: TEMAS[d.tema],
+  contentLocation: { '@type': 'Place', name: nombreLugar(d.ciudad), address: { '@type': 'PostalAddress', addressCountry: 'CO' } },
+  publisher: { '@type': 'Organization', name: 'Fulleventos' },
+  ...(imagenAbsoluta && { image: [imagenAbsoluta] }),
+  ...(urlPagina && { mainEntityOfPage: urlPagina, url: urlPagina }),
+  ...(d.fuente?.url && { isBasedOn: d.fuente.url }),
+};
+---
+
+<Base titulo={`${d.titulo} · Fulleventos`} descripcion={d.bajada}>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
+  <EncabezadoVisitante class="solo-visitante" />
+  <EncabezadoApp variante="detalle" class="solo-sesion" />
+  <main id="contenido" class="contenedor principal">
+    <div class="arriba">
+      <a href="/noticias" class="volver"><Icono nombre="volver" tamano={18} />Volver a noticias</a>
+      <span class="ejemplo">Contenido de ejemplo</span>
+    </div>
+
+    <article class="noticia" aria-labelledby="noticia-titulo">
+      <header class="cabeza">
+        <p class="kicker">{antetitulo(n)}</p>
+        <h1 id="noticia-titulo">{d.titulo}</h1>
+        <p class="bajada">{d.bajada}</p>
+        <div class="linea">
+          <p class="meta">
+            <time datetime={d.fecha}>{fechaLarga(d.fecha)}</time> · {minutosLectura(n)} min de lectura
+            {
+              d.fuente && (
+                <>
+                  <br />
+                  Fuente:{' '}
+                  {d.fuente.url ? (
+                    <a href={d.fuente.url} rel="noopener" target="_blank">
+                      {d.fuente.nombre}
+                      <span class="solo-lectores"> (abre en otra pestaña)</span>
+                    </a>
+                  ) : (
+                    d.fuente.nombre
+                  )}
+                </>
+              )
+            }
+          </p>
+          <button type="button" class="compartir" data-compartir>
+            <Icono nombre="compartirEvento" tamano={18} />
+            Compartir
+          </button>
+        </div>
+        <p class="aviso" role="status" data-aviso-compartir></p>
+      </header>
+
+      {
+        d.imagen ? (
+          <img class="imagen" src={d.imagen.src} alt={d.imagen.alt} />
+        ) : (
+          <div class="imagen" style={fondoNoticia(n)} aria-hidden="true" />
+        )
+      }
+
+      <div class="prosa">
+        <Content />
+      </div>
+    </article>
+
+    {
+      planes.length > 0 && (
+        <section class="seccion" aria-labelledby="h-eventos">
+          <h2 id="h-eventos" class="titulo-seccion">{planes.length === 1 ? 'El evento de esta noticia' : 'Eventos de esta noticia'}</h2>
+          <ul class="rejilla">
+            {planes.map((e) => (
+              <li>
+                <TarjetaEvento evento={e} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      mas.length > 0 && (
+        <section class="seccion" aria-labelledby="h-mas">
+          <div class="cabecera-seccion">
+            <h2 id="h-mas" class="titulo-seccion">Más noticias</h2>
+            <EnlaceSubrayado href="/noticias" class="ver-todas">Ver todas las noticias</EnlaceSubrayado>
+          </div>
+          <ul class="rejilla mas">
+            {mas.map((o) => (
+              <li>
+                <TarjetaNoticia noticia={o} nivel={3} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <a href="/noticias" class="volver abajo"><Icono nombre="volver" tamano={18} />Volver a noticias</a>
+  </main>
+  <Pie />
+</Base>
+
+<script>
+  // "Compartir" copia el enlace de la noticia, como el del Evento (H34, H38); funciona sin cuenta
+  document.querySelector<HTMLButtonElement>('[data-compartir]')?.addEventListener('click', async () => {
+    const aviso = document.querySelector<HTMLElement>('[data-aviso-compartir]')!;
+    const url = location.href.split('#')[0];
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: document.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      aviso.textContent = 'Copiamos el enlace de la noticia para que la compartas.';
+    } catch {
+      aviso.textContent = `Comparte este enlace: ${url}`;
+    }
+  });
+
+  // El marcador de las tarjetas de evento queda local sin cuenta, como en la Bienvenida (decisión 2.24)
+  document.querySelectorAll<HTMLButtonElement>('.rejilla .guardar').forEach((b) =>
+    b.addEventListener('click', () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'))),
+  );
+</script>
+
+<style>
+  .principal {
+    padding-top: 20px;
+    padding-bottom: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .principal + :global(.pie) {
+    margin-top: 0;
+  }
+
+  .arriba {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: -16px;
+  }
+
+  .volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-weight: 700;
+    font-size: .92rem;
+  }
+
+  .abajo {
+    align-self: flex-start;
+    margin-top: -16px;
+  }
+
+  .ejemplo {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  /* Columna de lectura: ~65 caracteres por línea */
+  .noticia {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .cabeza,
+  .prosa {
+    width: 100%;
+    max-width: 680px;
+    margin-inline: auto;
+  }
+
+  .kicker {
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h1 {
+    margin: 8px 0 12px;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.9rem, 4.4vw, 3rem);
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+
+  .bajada {
+    font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .linea {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .meta {
+    font-size: .86rem;
+    color: var(--muted);
+  }
+
+  .meta a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .compartir {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .compartir:hover {
+    border-color: var(--ink);
+  }
+
+  .aviso:empty {
+    display: none;
+  }
+
+  .aviso {
+    margin-top: 10px;
+    font-size: .86rem;
+    color: var(--muted);
+  }
+
+  .imagen {
+    display: block;
+    width: 100%;
+    max-width: 960px;
+    margin-inline: auto;
+    aspect-ratio: 16 / 9;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at 30% 35%, rgba(246, 220, 106, .55) 0, transparent 30%),
+      radial-gradient(circle at 72% 40%, var(--bg1) 0, transparent 48%),
+      var(--bg2);
+  }
+
+  /* Tipografía de lectura del cuerpo en Markdown */
+  .prosa {
+    font-size: 1.08rem;
+    line-height: 1.7;
+    overflow-wrap: break-word;
+  }
+
+  .prosa > :global(* + *) {
+    margin-top: 1.1em;
+  }
+
+  .prosa :global(h2) {
+    margin-top: 1.8em;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .prosa :global(h3) {
+    margin-top: 1.5em;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .prosa :global(h2 + *),
+  .prosa :global(h3 + *) {
+    margin-top: .6em;
+  }
+
+  .prosa :global(ul),
+  .prosa :global(ol) {
+    padding-left: 1.3em;
+  }
+
+  .prosa :global(li + li) {
+    margin-top: .4em;
+  }
+
+  .prosa :global(li::marker) {
+    color: var(--brand);
+  }
+
+  .prosa :global(a) {
+    color: var(--brand);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prosa :global(a:hover) {
+    color: var(--ink);
+  }
+
+  .prosa :global(strong) {
+    font-weight: 700;
+  }
+
+  .prosa :global(blockquote) {
+    padding-left: 16px;
+    border-left: 3px solid var(--brand);
+    color: var(--muted);
+  }
+
+  .seccion {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 8px;
+  }
+
+  .cabecera-seccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+
+  .titulo-seccion {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .cabecera-seccion :global(.ver-todas) {
+    font-size: .9rem;
+  }
+
+  .rejilla {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: 20px;
+  }
+
+  /* "Más noticias" son 3 o menos: ocupan todo el ancho */
+  .mas {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  }
+
+  .rejilla > li {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rejilla > li > :global(*) {
+    flex: 1;
+  }
+</style>

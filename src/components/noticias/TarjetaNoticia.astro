@@ -1,0 +1,185 @@
+---
+// Tarjeta de noticia (decisión 2.25): /noticias y "Más noticias". Toda la tarjeta abre la noticia: el enlace es
+// el título y su área se estira sobre la tarjeta, así hay un solo enlace por noticia para el teclado.
+import { antetitulo, fondoNoticia, metaNoticia, rutaNoticia, type Noticia } from '../../lib/noticias';
+
+interface Props {
+  noticia: Noticia;
+  nivel?: 2 | 3;
+  // "grande": la destacada de /noticias, con la imagen al lado en computador
+  variante?: 'normal' | 'grande';
+  class?: string;
+  [atributo: `data-${string}`]: string | boolean | undefined;
+}
+
+const { noticia: n, nivel = 2, variante = 'normal', class: clase, ...datos } = Astro.props;
+const Titulo = `h${nivel}`;
+---
+
+<article class:list={['tarjeta', variante, clase]} {...datos}>
+  {
+    n.data.imagen ? (
+      <img class="imagen" src={n.data.imagen.src} alt={n.data.imagen.alt} loading="lazy" decoding="async" />
+    ) : (
+      <div class="imagen" style={fondoNoticia(n)} aria-hidden="true" />
+    )
+  }
+  <div class="texto">
+    <p class="kicker">{antetitulo(n)}</p>
+    <Titulo class="titulo"><a href={rutaNoticia(n)}>{n.data.titulo}</a></Titulo>
+    <p class="bajada">{n.data.bajada}</p>
+    <p class="meta"><time datetime={n.data.fecha}>{metaNoticia(n)}</time></p>
+  </div>
+</article>
+
+<style>
+  .tarjeta {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    transition: border-color .15s ease;
+  }
+
+  .tarjeta:hover {
+    border-color: var(--line-input);
+  }
+
+  /* El foco del enlace se dibuja en toda la tarjeta (H51) */
+  .tarjeta:has(a:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .titulo a:focus-visible {
+    outline: none;
+  }
+
+  .titulo a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .tarjeta:hover .titulo a {
+    color: var(--brand);
+  }
+
+  .imagen {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 55%), var(--bg2);
+  }
+
+  .texto {
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .kicker {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .titulo {
+    margin: 4px 0 8px;
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.28;
+    text-wrap: balance;
+  }
+
+  .bajada {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  .meta {
+    margin-top: auto;
+    padding-top: 12px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  /* En celular las tarjetas normales se compactan: miniatura a la izquierda y sin bajada, para que la lista
+     no sea una pantalla por noticia */
+  @media (max-width: 599px) {
+    .normal {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .normal .imagen {
+      flex: 0 0 96px;
+      width: 96px;
+      aspect-ratio: auto;
+      min-height: 112px;
+    }
+
+    .normal .texto {
+      padding: 12px 14px;
+    }
+
+    .normal .titulo {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .normal .bajada {
+      display: none;
+    }
+
+    .normal .meta {
+      padding-top: 6px;
+    }
+  }
+
+  /* Destacada: título en Archivo y, desde 820 px, imagen y texto lado a lado */
+  .grande {
+    border-radius: var(--radius-lg);
+  }
+
+  .grande .titulo {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(1.35rem, 2.6vw, 2rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .grande .bajada {
+    font-size: 1rem;
+  }
+
+  @media (min-width: 820px) {
+    .grande {
+      flex-direction: row;
+    }
+
+    .grande .imagen {
+      width: 58%;
+      aspect-ratio: auto;
+      min-height: 320px;
+    }
+
+    .grande .texto {
+      padding: 28px 30px;
+      justify-content: center;
+    }
+
+    .grande .meta {
+      margin-top: 0;
+    }
+  }
+</style>
