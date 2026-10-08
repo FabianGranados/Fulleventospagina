@@ -1,5 +1,6 @@
 ---
 import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
+import { VENTA_PROPIA } from '../../config';
 
 const pasos = [
   {
@@ -19,8 +20,11 @@ const pasos = [
     n: '3',
     color: 'var(--lilac)',
     titulo: 'Arma parche',
-    // H1: se quitó el absoluto "sin salir de Fulleventos" (depende del modo de compra, P1)
-    texto: 'Crea un grupo para ir juntos o únete a uno abierto, y compra tus boletas.',
+    // H1: se quitó el absoluto "sin salir de Fulleventos" (depende del modo de compra, P1).
+    // Sin venta propia (decisión 2.22) las boletas se compran en la boletera.
+    texto: VENTA_PROPIA
+      ? 'Crea un grupo para ir juntos o únete a uno abierto, y compra tus boletas.'
+      : 'Crea un grupo para ir juntos o únete a uno abierto, y mira dónde comprar las boletas.',
   },
 ];
 ---

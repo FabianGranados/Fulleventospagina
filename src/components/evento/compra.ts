@@ -1,4 +1,6 @@
 // Estado y comportamiento de la compra en la página de evento (N30, N35–N46).
+// FASE 2: solo se carga con VENTA_PROPIA = true (src/config.ts, decisión 2.22). "Voy" y "Me interesa"
+// están en asistencia.ts porque funcionan en los dos modos.
 // DEMOSTRACIÓN SIN BACKEND: no hay pasarela, no se cobra y no se emiten boletas reales (P1–P4).
 // En producción los cupos, precios, cargo, reservas y órdenes salen del servidor (H2, H3).
 
@@ -636,40 +638,4 @@ export const iniciarCompra = (datos: DatosCompra, marcarVoy: (va: boolean) => vo
 
   pintarPaso();
   pintar();
-};
-
-// "Voy" / "Vas a ir" y "Me interesa" con sus conteos (también en eventos gratis, sin compra)
-export const iniciarAsistencia = () => {
-  const $ = (sel: string) => document.querySelector<HTMLElement>(sel);
-  const $$ = (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)];
-  // Arrancan como los dejó la usuaria (asistencia.ts): el servidor pinta aria-pressed (H37)
-  const estado = {
-    va: $('[data-voy]')?.getAttribute('aria-pressed') === 'true',
-    interes: $('[data-interes]')?.getAttribute('aria-pressed') === 'true',
-  };
-  const conteos = () => {
-    $$('[data-conteo-van]').forEach((s) => {
-      const n = (Number(s.dataset.base) + (estado.va ? 1 : 0)).toLocaleString('es-CO');
-      s.textContent = s.hasAttribute('data-solo-numero') ? n : `${n} van`;
-    });
-    // H26: "Me interesa" suma al contador de interesados
-    $$('[data-conteo-interes]').forEach(
-      (s) => (s.textContent = (Number(s.dataset.base) + (estado.interes ? 1 : 0)).toLocaleString('es-CO')),
-    );
-  };
-  const marcarVoy = (va: boolean) => {
-    estado.va = va;
-    const b = $('[data-voy]');
-    b?.setAttribute('aria-pressed', String(va));
-    $('[data-texto-voy]')!.textContent = va ? 'Vas a ir' : 'Voy';
-    conteos();
-  };
-  $('[data-voy]')?.addEventListener('click', () => marcarVoy(!estado.va));
-  $('[data-interes]')?.addEventListener('click', (ev) => {
-    estado.interes = !estado.interes;
-    (ev.currentTarget as HTMLElement).setAttribute('aria-pressed', String(estado.interes));
-    conteos();
-  });
-
-  return marcarVoy;
 };

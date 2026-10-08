@@ -1,7 +1,9 @@
 ---
 // 4.8 · Evento y compra. Una página por evento (H36), generada en el servidor e indexable (H34).
 // e1 tiene todo el detalle del prototipo; los demás usan la misma plantilla con los datos que existen.
-// La compra es una DEMOSTRACIÓN sin backend: P1 (modo de compra), P3 (pasarela), P4 (cargo), P7 y P8 siguen pendientes.
+// Primer lanzamiento sin venta propia (decisión 2.22): precios, localidades y el botón a la boletera.
+// Con VENTA_PROPIA = true vuelve la compra dentro de Fulleventos, que es una DEMOSTRACIÓN sin backend
+// (P3 pasarela, P4 cargo, P7 y P8 siguen pendientes para la fase 2).
 import Base from '../../../layouts/Base.astro';
 import EncabezadoApp from '../../../components/layout/EncabezadoApp.astro';
 import Pie from '../../../components/layout/Pie.astro';
@@ -26,7 +28,8 @@ import { eventos, type Evento } from '../../../data/eventos';
 import { persona } from '../../../data/personas';
 import { CARGO_DEMO } from '../../../data/evento';
 import { sinBoleta } from '../../../data/asistencia';
-import { slug, pesos } from '../../../lib/formato';
+import { slug } from '../../../lib/formato';
+import { VENTA_PROPIA } from '../../../config';
 
 export function getStaticPaths() {
   return eventos.map((evento) => ({
@@ -58,8 +61,9 @@ const atajos = [
 ].filter(Boolean) as { href: string; texto: string }[];
 
 // schema.org/Event (H34): fecha con zona -05:00 cuando hay hora; precio en COP.
-// La url de la oferta debe ser absoluta: solo se incluye si hay dominio configurado (site en astro.config)
-const urlOferta = Astro.site ? new URL(m.url, Astro.site).href : undefined;
+// La url de la oferta debe ser absoluta: la de venta oficial (urlVenta, decisión 2.22) o, si no hay, la de la
+// página del evento cuando hay dominio configurado (site en astro.config)
+const urlOferta = e.urlVenta ?? (Astro.site ? new URL(m.url, Astro.site).href : undefined);
 const esquema = {
   '@context': 'https://schema.org',
   '@type': 'Event',
@@ -101,7 +105,8 @@ const colorDe: Record<string, string> = {
   c6: '#8FD3D0',
 };
 
-const datosCompra = {
+// Solo para la compra propia (VENTA_PROPIA); con false no se envía a la página
+const datosCompra = VENTA_PROPIA && {
   titulo: e.titulo,
   localidades: m.localidades.map(({ id, nombre, completo, corto, precio, maximo, puestos }) => ({
     id,
@@ -135,9 +140,9 @@ const datosCompra = {
 ---
 
 <Base titulo={titulo} descripcion={descripcion} tamanoBase={15}>
-  {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>Ir a comprar boletas</a>}
+  {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>{VENTA_PROPIA ? 'Ir a comprar boletas' : 'Ir a las boletas'}</a>}
   <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
-  <div class:list={['pagina-evento', { 'con-barra': vende }]}>
+  <div class:list={['pagina-evento', { 'con-barra': vende, 'barra-con-nota': vende && !VENTA_PROPIA && !e.urlVenta }]}>
     <EncabezadoApp variante="detalle" />
     <main id="contenido" class="contenedor principal">
       <!-- Los datos del evento todavía tienen marcadores [ASÍ] del prototipo (P8): se rotulan como ejemplo,
@@ -152,7 +157,7 @@ const datosCompra = {
           {atajos.length > 1 && <AtajosSeccion atajos={atajos} />}
           {d && <SobreEvento d={d} />}
           {d && <Programacion momentos={d.programacion} />}
-          {d && <Localidades localidades={d.localidades} />}
+          {d && <Localidades localidades={d.localidades} vende={e.vende} />}
           {d && <ParchesMuro d={d} eventoId={e.id} />}
           {d && <LoQueDebesSaber politicas={d.politicas} />}
           <UbicacionOrganizador m={m} />
@@ -165,7 +170,7 @@ const datosCompra = {
     <Pie />
     {vende && <BarraCompra m={m} />}
     {
-      vende && (
+      vende && VENTA_PROPIA && (
         <>
           <VentanaCompra m={m} />
           <BoletaDigital m={m} />
@@ -181,11 +186,16 @@ const datosCompra = {
 </Base>
 
 <script>
-  import { iniciarAsistencia, iniciarCompra, type DatosCompra } from '../../../components/evento/compra';
+  import { iniciarAsistencia } from '../../../components/evento/asistencia';
+  import { iniciarCompra, type DatosCompra } from '../../../components/evento/compra';
+  import { VENTA_PROPIA } from '../../../config';
 
   const marcarVoy = iniciarAsistencia();
-  const datos = document.getElementById('datos-compra');
-  if (datos) iniciarCompra(JSON.parse(datos.textContent!) as DatosCompra, marcarVoy);
+  // Compra propia (fase 2): con VENTA_PROPIA = false este bloque y compra.ts se eliminan al compilar
+  if (VENTA_PROPIA) {
+    const datos = document.getElementById('datos-compra');
+    if (datos) iniciarCompra(JSON.parse(datos.textContent!) as DatosCompra, marcarVoy);
+  }
 
   // "Invitar amigos" y "Compartir" comparten la URL del evento (H34, H38)
   document.querySelectorAll<HTMLButtonElement>('[data-compartir]').forEach((b) =>
@@ -205,9 +215,9 @@ const datosCompra = {
     }),
   );
 
-  // "Ir a comprar boletas" (H59): lleva el foco al botón de compra visible
+  // "Ir a las boletas" (H59): lleva el foco al botón de compra (o de la boletera) visible
   document.querySelector('[data-ir-comprar]')?.addEventListener('click', (ev) => {
-    const botones = [...document.querySelectorAll<HTMLElement>('[data-abrir-compra]')];
+    const botones = [...document.querySelectorAll<HTMLElement>('[data-abrir-compra], [data-boton-boletera]')];
     const visible = botones.find((b) => b.offsetParent !== null);
     if (visible) {
       ev.preventDefault();
@@ -242,6 +252,11 @@ const datosCompra = {
   @media (max-width: 979px) {
     .con-barra {
       padding-bottom: 84px;
+    }
+
+    /* La barra con la nota de demostración del BotonBoletera mide hasta 108 px a 320 px */
+    .barra-con-nota {
+      padding-bottom: 116px;
     }
   }
 

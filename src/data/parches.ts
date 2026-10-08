@@ -22,7 +22,8 @@ export interface Parche {
   otrosMiembros?: number;
   // Cupo máximo; sin cupo, el parche no tiene tope (detalle fino 48 de Inicio)
   cupos?: number;
-  // Quiénes ya tienen boleta del evento, sin contar a la usuaria del demo (su boleta va en asistencia.ts)
+  // Quiénes ya tienen boleta del evento, sin contar a la usuaria del demo (su boleta va en asistencia.ts).
+  // Sin venta propia (decisión 2.22) son quienes marcaron "Ya tengo boleta"; la compra es en la boletera.
   conBoleta: string[];
   // Texto público del parche en la página del evento. El punto de encuentro solo debería verlo un miembro
   // aprobado (H30): queda como en el prototipo hasta diseñar los tipos de parche.

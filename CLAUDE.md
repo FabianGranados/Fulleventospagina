@@ -46,7 +46,8 @@ Decidido por el cliente el 7 de octubre de 2026.
   - `Icono` (agregar íconos ahí, con el trazo exacto del prototipo);
   - `Avatar`, `PilaAvatares`, `Etiqueta`, `Titular`, `Boton`, `EnlaceSubrayado` y `EncabezadoSeccion`;
   - `Modal` (N68, con `<dialog>`; se abre con `data-abrir-modal="id"`).
-- `components/eventos/TarjetaEvento.astro` (N15, variante pública) y `components/eventos/VentanaRepost.astro` (N16, Agenda y Mapa).
+- `components/eventos/TarjetaEvento.astro` (N15, variante pública), `components/eventos/VentanaRepost.astro` (N16, Agenda y Mapa) y `components/eventos/BotonBoletera.astro` ("Comprar en {vende} ↗" hacia la boletera; inactivo con nota de demostración si el evento no tiene `urlVenta`).
+- `src/config.ts`: interruptor `VENTA_PROPIA` (decisión 2.22). En `false` (primer lanzamiento) Fulleventos no vende boletas y no se renderiza ni carga la compra propia (VentanaCompra, BoletaDigital, Cantidad, `compra.ts`, "Mis boletas", pago dividido); en `true` vuelve la compra de la fase 2.
 - Datos semilla en `src/data/`: `ciudades`, `eventos` (con `conteoCiudad`), `noticias`, `personas` (la usuaria del demo es Camila Vargas) `demo` (`HOY_DEMO`, el único "hoy" del demo), `parches` (miembros, cupos y quién tiene boleta) y `asistencia` (a qué va la usuaria del demo, sus boletas y sus amigos). La hora de cada evento está en `eventos.ts`: no la copies en otros archivos (H37). Cada pantalla tiene además su propio archivo de datos (`agenda`, `mapa`, `inicio`, `evento`, `mensajes`, `perfil`, `registro`). Formatos en `src/lib/formato.ts`: `cifra`, `pesos`, `planes`, `placaFecha`, `slug` y `rutaEvento`.
 - Rutas: `/`, `/registro`, `/inicio`, `/agenda`, `/mapa`, `/evento/:ciudad/:slug`, `/mensajes`, `/perfil/:usuario` y `/yo`.
 
@@ -79,9 +80,9 @@ Decidido por el cliente el 7 de octubre de 2026.
 
 No implementes estas partes sin confirmarlas con el usuario. El detalle está en `docs/handoff/02-decisiones.md`, sección 2.12.
 
-- **P1. Modo de compra por evento:** gratis / boletera externa / venta propia.
+- **P1. Modo de compra por evento:** gratis / boletera externa / venta propia. *Primer lanzamiento: sin venta propia, la compra es en la boletera (decisión 2.22).*
 - **P2. Operador de boletería** (MinCultura, PULEP).
-- **P3. Pasarela de pagos.**
+- **P3. Pasarela de pagos.** *Queda para la fase 2: el primer lanzamiento es sin venta propia (decisión 2.22).*
 - **P4. Cargo por servicio.**
 - **P5. Proveedor del mapa.**
 - **P6. Si el chat sale en el MVP.**

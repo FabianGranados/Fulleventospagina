@@ -72,8 +72,8 @@ const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-
         {e.precio > 0 && <small>+ cargo por servicio</small>}
         <small>{e.vende}</small>
       </span>
-      <a class="cta" href={href} aria-label={e.precio ? `Comprar boletas para ${e.titulo}` : `Ver plan: ${e.titulo}`}>
-        {e.precio ? 'Comprar' : 'Ver plan'}
+      <a class="cta" href={href} aria-label={e.precio ? `Ver boletas de ${e.titulo}` : `Ver plan: ${e.titulo}`}>
+        {e.precio ? 'Ver boletas' : 'Ver plan'}
       </a>
     </div>
     <div class="acciones">

@@ -467,6 +467,7 @@ export const iniciar = () => {
         break;
       }
       case 'dividir':
+        // Solo existe con VENTA_PROPIA = true (fase 2, decisión 2.22): con false el botón no se pinta
         // Demo: en producción el pago dividido sale solo de una compra real, con monto, plazo y
         // una solicitud de pago del sistema (H18, H29; pendientes P3 y P4)
         e.dividido[c.id] = !e.dividido[c.id];

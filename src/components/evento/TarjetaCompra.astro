@@ -1,8 +1,12 @@
 ---
 // N35 · Tarjeta de compra fija (desde 980 px). Precio con "+ cargo por servicio" (H21, decisión 2.14).
 // "Ver boleta" abre un visor aparte que no toca el checkout (H26).
+// Con VENTA_PROPIA = false (decisión 2.22) es solo lista de precios: cada localidad con su precio y
+// disponibilidad, sin cantidad ni subtotal, y el botón a la boletera (BotonBoletera).
 import Icono from '../ui/Icono.astro';
 import Cantidad from './Cantidad.astro';
+import BotonBoletera from '../eventos/BotonBoletera.astro';
+import { VENTA_PROPIA } from '../../config';
 import { pesos } from '../../lib/formato';
 import type { ModeloEvento } from './modelo';
 
@@ -15,7 +19,7 @@ const { localidades } = m;
 const inicial = localidades[0];
 ---
 
-<aside id="comprar-boletas" class="lateral" aria-label="Comprar boletas">
+<aside id="comprar-boletas" class="lateral" aria-label={VENTA_PROPIA ? 'Comprar boletas' : 'Boletas'}>
   <div class="tarjeta">
     <div class="cabeza">
       <div>
@@ -26,47 +30,78 @@ const inicial = localidades[0];
       <span class="en-venta">En venta</span>
     </div>
 
-    <div role="status" class="estado" data-estado-compra hidden>
-      <span class="visto" aria-hidden="true"><Icono nombre="visto" tamano={16} grosor={3} /></span>
-      <span class="estado-texto">
-        <b data-estado-titulo></b>
-        <span data-estado-sub></span>
-      </span>
-      <button type="button" class="ver-boleta" data-ver-boleta data-abrir-modal="visor-boleta">Ver boleta</button>
-    </div>
-
-    <fieldset class="grupo">
-      <legend class="rotulo">Localidad</legend>
-      {
-        localidades.map((l) => (
-          <label class="opcion" style={`--tinte: ${l.tinte}`} data-loc-opcion={l.id} data-elegida={l.id === inicial.id ? '' : undefined}>
-            <input type="radio" name="loc-tarjeta" value={l.id} data-loc checked={l.id === inicial.id} />
-            <span class="texto">
-              <b>{l.nombre}</b>
-              {l.disponibilidad && <span class:list={['stock', { caliente: l.caliente }]}>{l.disponibilidad}</span>}
+    {
+      VENTA_PROPIA ? (
+        <>
+          <div role="status" class="estado" data-estado-compra hidden>
+            <span class="visto" aria-hidden="true"><Icono nombre="visto" tamano={16} grosor={3} /></span>
+            <span class="estado-texto">
+              <b data-estado-titulo></b>
+              <span data-estado-sub></span>
             </span>
-            <b class="precio">{pesos(l.precio)}</b>
-          </label>
-        ))
-      }
-    </fieldset>
+            <button type="button" class="ver-boleta" data-ver-boleta data-abrir-modal="visor-boleta">Ver boleta</button>
+          </div>
 
-    <Cantidad id="tarjeta-cantidad" variante="tarjeta" />
+          <fieldset class="grupo">
+            <legend class="rotulo">Localidad</legend>
+            {
+              localidades.map((l) => (
+                <label class="opcion" style={`--tinte: ${l.tinte}`} data-loc-opcion={l.id} data-elegida={l.id === inicial.id ? '' : undefined}>
+                  <input type="radio" name="loc-tarjeta" value={l.id} data-loc checked={l.id === inicial.id} />
+                  <span class="texto">
+                    <b>{l.nombre}</b>
+                    {l.disponibilidad && <span class:list={['stock', { caliente: l.caliente }]}>{l.disponibilidad}</span>}
+                  </span>
+                  <b class="precio">{pesos(l.precio)}</b>
+                </label>
+              ))
+            }
+          </fieldset>
 
-    <p class="subtotal">
-      <span data-linea-subtotal>Subtotal · 1 boleta × {pesos(inicial.precio)}</span>
-      <b data-subtotal>{pesos(inicial.precio)}</b>
-    </p>
+          <Cantidad id="tarjeta-cantidad" variante="tarjeta" />
 
-    <button type="button" class="comprar" data-abrir-compra>
-      <Icono nombre="boleta" tamano={18} />
-      <span data-texto-comprar>Comprar boletas</span>
-    </button>
+          <p class="subtotal">
+            <span data-linea-subtotal>Subtotal · 1 boleta × {pesos(inicial.precio)}</span>
+            <b data-subtotal>{pesos(inicial.precio)}</b>
+          </p>
 
-    <p class="seguro">
-      <Icono nombre="candado" tamano={16} />
-      <span>Pago seguro · Boleta oficial emitida por [BOLETERA].</span>
-    </p>
+          <button type="button" class="comprar" data-abrir-compra>
+            <Icono nombre="boleta" tamano={18} />
+            <span data-texto-comprar>Comprar boletas</span>
+          </button>
+
+          <p class="seguro">
+            <Icono nombre="candado" tamano={16} />
+            <span>Pago seguro · Boleta oficial emitida por [BOLETERA].</span>
+          </p>
+        </>
+      ) : (
+        <>
+          <ul class="precios" aria-label="Precios por localidad">
+            {localidades.map((l) => (
+              <li class="fila-precio">
+                <span class="muestra" style={`--color: ${l.color}`} aria-hidden="true" />
+                <span class="texto">
+                  <b>{l.nombre}</b>
+                  {l.disponibilidad && <span class:list={['stock', { caliente: l.caliente }]}>{l.disponibilidad}</span>}
+                </span>
+                <span class="precio">
+                  <b>{pesos(l.precio)}</b>
+                  <span class="unidad">{l.unidad}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <BotonBoletera evento={m.evento} id="tarjeta-boletera" />
+
+          <p class="seguro">
+            <Icono nombre="informacion" tamano={16} />
+            <span>La compra se hace en el sitio de {m.evento.vende}. Fulleventos no vende boletas ni recibe pagos.</span>
+          </p>
+        </>
+      )
+    }
   </div>
 </aside>
 
@@ -286,6 +321,45 @@ const inicial = localidades[0];
     font-size: 1.1rem;
     color: var(--ink);
     white-space: nowrap;
+  }
+
+  .precios {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fila-precio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+  }
+
+  .muestra {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1.5px solid var(--ink);
+    background: var(--color);
+  }
+
+  .precio {
+    flex-shrink: 0;
+    text-align: right;
+    line-height: 1.2;
+  }
+
+  .unidad {
+    display: block;
+    font-size: .72rem;
+    color: var(--muted);
   }
 
   .comprar {

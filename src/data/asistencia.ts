@@ -12,7 +12,8 @@ export const asistencia = {
   voy: ['e1', 'e2', 'e4'],
   // Eventos que le interesan ("Me interesa")
   interesa: ['e3', 'e8'],
-  // Eventos de los que ya tiene boleta ("7 de 12 con boleta" en Salseros no la incluye; en el clásico sí)
+  // Eventos de los que ya tiene boleta ("7 de 12 con boleta" en Salseros no la incluye; en el clásico sí).
+  // Sin venta propia (decisión 2.22) significa que marcó "Ya tengo boleta" en el evento.
   boletas: ['e4'],
 };
 

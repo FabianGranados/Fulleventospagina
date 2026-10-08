@@ -3,7 +3,8 @@
 import Icono from '../ui/Icono.astro';
 import { cifra } from '../../lib/formato';
 import type { ModeloEvento } from './modelo';
-import { leInteresa } from '../../data/asistencia';
+import { leInteresa, tieneBoleta } from '../../data/asistencia';
+import { VENTA_PROPIA } from '../../config';
 
 interface Props {
   m: ModeloEvento;
@@ -13,6 +14,9 @@ const { m } = Astro.props;
 const { evento: e, detalle: d } = m;
 // "Voy" y "Me interesa" arrancan como los dejó la usuaria (asistencia.ts, H37); los conteos ya la incluyen
 const interesa = leInteresa(e.id);
+// "Ya tengo boleta" (decisión 2.22): sin venta propia cada quien lo marca a mano, solo en eventos de pago
+const marcaBoleta = !VENTA_PROPIA && !m.gratis;
+const tengoBoleta = tieneBoleta(e.id);
 const vanBase = e.van - (m.voy ? 1 : 0);
 // Quién va: amigos calculados de los parches del evento, no un texto fijo (H37)
 const colorDe: Record<string, string> = {
@@ -46,6 +50,14 @@ const mas = amigos.length - avatares.length;
       <Icono nombre="estrella" tamano={18} />
       Me interesa
     </button>
+    {
+      marcaBoleta && (
+        <button type="button" class="boton claro tengo" aria-pressed={tengoBoleta ? 'true' : 'false'} data-tengo-boleta>
+          <Icono nombre="boleta" tamano={18} />
+          Ya tengo boleta
+        </button>
+      )
+    }
     <button type="button" class="boton claro" data-compartir="invitar">
       <Icono nombre="avion" tamano={18} />
       Invitar amigos
@@ -124,6 +136,11 @@ const mas = amigos.length - avatares.length;
 
   .interes[aria-pressed='true'] :global(svg) {
     fill: currentColor;
+  }
+
+  .tengo[aria-pressed='true'] {
+    background: var(--lime);
+    border-color: var(--ink);
   }
 
   .circulo {

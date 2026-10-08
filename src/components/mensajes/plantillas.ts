@@ -3,6 +3,7 @@
 // Los estilos están en BandejaMensajes.astro (selectores :global bajo .app-mensajes).
 import { YO, type Conversacion, type Mensaje } from '../../data/mensajes';
 import { icono, verificado } from './iconos';
+import { VENTA_PROPIA } from '../../config';
 import {
   abiertaId,
   avatarConv,
@@ -110,9 +111,12 @@ export const planHTML = (e: Estado) => {
   const ev = eventoDe(c.evento);
   const { total, conBoleta, yoTengo } = datosParche(c);
   const pct = total ? Math.round((conBoleta / total) * 100) : 0;
+  // Sin venta propia (decisión 2.22) el botón lleva a las boletas del evento, donde está el enlace a la boletera
+  const textoAccion = VENTA_PROPIA ? 'Comprar mi boleta' : 'Ver boletas';
+  const etiquetaAccion = VENTA_PROPIA ? '' : ` aria-label="Ver boletas de ${esc(ev.titulo)}"`;
   const accion = yoTengo
     ? `<a href="${esc(ev.ruta)}" class="ya-tienes"><span class="ya-tienes-circulo">${icono('palomita', 14, 3)}</span>Ya tienes boleta</a>`
-    : `<div class="comprar"><a href="${esc(ev.ruta)}" class="boton-comprar">${icono('boleta', 17, 2.2)}Comprar mi boleta</a><span class="comprar-precio">${esc(textoPrecio(ev.precio))}<br>+ cargo por servicio</span></div>`;
+    : `<div class="comprar"><a href="${esc(ev.ruta)}" class="boton-comprar"${etiquetaAccion}>${icono('boleta', 17, 2.2)}${textoAccion}</a><span class="comprar-precio">${esc(textoPrecio(ev.precio))}<br>+ cargo por servicio</span></div>`;
   return `<div class="plan-envoltura"><section class="plan" aria-label="Plan fijado del parche">
   <span class="plan-foto" role="img" aria-label="[Foto del evento]" style="${fondoFoto(ev.bg1, ev.bg2)}"><span class="placa placa-plan" aria-hidden="true"><b>${esc(ev.d)}</b><span>${esc(ev.mes)}</span></span></span>
   <div class="plan-texto">
@@ -276,7 +280,8 @@ export const infoHTML = (e: Estado) => {
       : '';
 
   const dividido = !!e.dividido[c.id];
-  const dividir = ev
+  // El pago dividido es de la compra propia (fase 2): con VENTA_PROPIA = false no se muestra
+  const dividir = ev && VENTA_PROPIA
     ? `<div class="info-bloque"><button type="button" class="boton-dividir${dividido ? ' marcada' : ''}" data-accion="dividir" data-foco="dividir" aria-pressed="${dividido}">${icono('pesos', 17, 2.2)}${dividido ? 'Pago dividido activo' : 'Dividir pago del parche'}</button>
       <p class="nota-dividir">Cada uno paga su parte de la boleta desde su cuenta: nadie tiene que adelantar la plata de todos.</p></div>`
     : '';

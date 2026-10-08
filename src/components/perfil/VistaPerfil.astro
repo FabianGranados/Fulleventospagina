@@ -10,6 +10,7 @@ import TarjetaPlan from './TarjetaPlan.astro';
 import MosaicoRecuerdo from './MosaicoRecuerdo.astro';
 import TarjetaResena from './TarjetaResena.astro';
 import { usuaria, type Persona } from '../../data/personas';
+import { VENTA_PROPIA } from '../../config';
 import { eventos } from '../../data/eventos';
 import { perfil as buscarPerfil } from '../../data/perfil';
 import { planesDeUsuaria, type EstadoPlan } from '../../data/asistencia';
@@ -54,8 +55,9 @@ const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulle
     {
       propio && (
         // Accesos de Mi perfil que pide H46. Sus pantallas aún no están diseñadas (N70).
+        // "Mis boletas" es de la compra propia (fase 2, decisión 2.22)
         <nav class="cuenta" aria-label="Tu cuenta">
-          <a href="/mis-boletas">Mis boletas</a>
+          {VENTA_PROPIA && <a href="/mis-boletas">Mis boletas</a>}
           <a href="/guardados">Guardados</a>
           <a href="/ajustes">Ajustes y privacidad</a>
         </nav>

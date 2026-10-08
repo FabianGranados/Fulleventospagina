@@ -12,6 +12,9 @@ export interface Evento {
   lugar: string;
   precio: number; // COP; 0 = gratis
   vende: string;
+  // URL oficial de venta (boletera o sitio del organizador). El botón "Comprar en {vende}" lleva ahí
+  // (decisión 2.22). En el demo no hay ninguna porque las boleteras son [BOLETERA] (P8, H1): no se inventan.
+  urlVenta?: string;
   bg1: string;
   bg2: string;
   van: number;

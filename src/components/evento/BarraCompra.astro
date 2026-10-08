@@ -1,6 +1,9 @@
 ---
 // N37 · Barra de compra fija por debajo de 980 px.
+// Con VENTA_PROPIA = false (decisión 2.22): precio desde y el botón compacto a la boletera.
 import type { ModeloEvento } from './modelo';
+import BotonBoletera from '../eventos/BotonBoletera.astro';
+import { VENTA_PROPIA } from '../../config';
 import { pesos } from '../../lib/formato';
 
 interface Props {
@@ -11,14 +14,22 @@ const { m } = Astro.props;
 const inicial = m.localidades[0];
 ---
 
-<div class="barra" role="region" aria-label="Comprar boletas" data-barra-compra>
+<div class="barra" role="region" aria-label={VENTA_PROPIA ? 'Comprar boletas' : 'Boletas'} data-barra-compra>
   <div class="texto">
     <b>{m.precioDesde}</b>
     <span class="cargo">+ cargo por servicio</span>
-    <span class="sub" data-barra-sub>{inicial.nombre} · 1 boleta · {pesos(inicial.precio)}</span>
+    {VENTA_PROPIA && <span class="sub" data-barra-sub>{inicial.nombre} · 1 boleta · {pesos(inicial.precio)}</span>}
   </div>
-  <button type="button" class="ver" data-ver-boleta data-abrir-modal="visor-boleta" hidden>Ver boleta</button>
-  <button type="button" class="comprar" data-abrir-compra>Comprar</button>
+  {
+    VENTA_PROPIA ? (
+      <>
+        <button type="button" class="ver" data-ver-boleta data-abrir-modal="visor-boleta" hidden>Ver boleta</button>
+        <button type="button" class="comprar" data-abrir-compra>Comprar</button>
+      </>
+    ) : (
+      <BotonBoletera evento={m.evento} id="barra-boletera" compacto />
+    )
+  }
 </div>
 
 <style>
@@ -38,6 +49,7 @@ const inicial = m.localidades[0];
       box-shadow: 0 -10px 30px rgba(23, 18, 15, .08);
       padding: 10px var(--margen-lateral) calc(10px + env(safe-area-inset-bottom, 0px));
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 12px;
     }

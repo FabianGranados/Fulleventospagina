@@ -1,15 +1,24 @@
 ---
 // N30 · Plano de localidades y lista de precios. H59: grupos de radio nativos; el nombre accesible
 // de cada zona empieza por su texto visible. La localidad es una sola en toda la página (script de compra).
+// Con VENTA_PROPIA = false (decisión 2.22) elegir zona solo servía para comprar: el plano y la lista quedan
+// como información, sin radios ni selección.
 import Icono from '../ui/Icono.astro';
 import type { Localidad } from '../../data/evento';
+import { VENTA_PROPIA } from '../../config';
 import { pesos } from '../../lib/formato';
 
 interface Props {
   localidades: Localidad[];
+  // Boletera o sitio oficial que cobra el cargo por servicio (eventos.ts)
+  vende: string;
 }
 
-const { localidades } = Astro.props;
+const { localidades, vende } = Astro.props;
+const elegir = VENTA_PROPIA;
+// Con selección: fieldset + label + radio. Sin selección: contenedores de solo lectura
+const Grupo = elegir ? 'fieldset' : 'div';
+const Zona = elegir ? 'label' : 'div';
 const loc = (id: string) => localidades.find((l) => l.id === id)!;
 const vip = loc('vip');
 const pref = loc('pref');
@@ -20,54 +29,54 @@ const precio = (l: Localidad) => `${pesos(l.precio)} ${l.unidad}`;
 <section id="localidades" class="seccion-evento" aria-labelledby="h-loc">
   <div class="cabecera">
     <h2 id="h-loc" class="titulo-seccion">Localidades</h2>
-    <p class="ayuda">Toca una zona del plano o de la lista para elegirla.</p>
+    {elegir && <p class="ayuda">Toca una zona del plano o de la lista para elegirla.</p>}
   </div>
   <div class="cuerpo">
     <div class="plano-caja">
-      <fieldset class="plano">
-        <legend class="solo-lectores">Plano del lugar: elige una zona</legend>
+      <Grupo class="plano" role={elegir ? undefined : 'group'} aria-label={elegir ? undefined : 'Plano del lugar'}>
+        {elegir && <legend class="solo-lectores">Plano del lugar: elige una zona</legend>}
         <div class="escenario" aria-hidden="true">Escenario</div>
         {
           ['izquierdo', 'derecho'].map((lado) => (
-            <label class:list={['zona', 'zona-vip', lado]} style={`--color: ${vip.color}; --tinte: ${vip.tinte}`} data-loc-opcion="vip">
-              <input type="radio" name="loc-plano" value="vip" class="radio-oculto" data-loc />
+            <Zona class:list={['zona', 'zona-vip', lado]} style={`--color: ${vip.color}; --tinte: ${vip.tinte}`} data-loc-opcion={elegir ? 'vip' : undefined}>
+              {elegir && <input type="radio" name="loc-plano" value="vip" class="radio-oculto" data-loc />}
               <span class="mesas" aria-hidden="true"><i /><i /><i /><i /></span>
               <span class="rotulo-vip">Mesas VIP</span>
               <span class="solo-lectores">, lado {lado} del escenario · {precio(vip)}</span>
               <span class="marca" aria-hidden="true"><Icono nombre="visto" tamano={12} grosor={3} /></span>
-            </label>
+            </Zona>
           ))
         }
         <div class="pista" aria-hidden="true">
           <b>Pista</b>
           <span>Para bailar con cualquier boleta</span>
         </div>
-        <label class="zona zona-pref" style={`--color: ${pref.color}; --tinte: ${pref.tinte}`} data-loc-opcion="pref">
-          <input type="radio" name="loc-plano" value="pref" class="radio-oculto" data-loc />
+        <Zona class="zona zona-pref" style={`--color: ${pref.color}; --tinte: ${pref.tinte}`} data-loc-opcion={elegir ? 'pref' : undefined}>
+          {elegir && <input type="radio" name="loc-plano" value="pref" class="radio-oculto" data-loc />}
           <span class="sillas" aria-hidden="true">{Array.from({ length: 8 }, () => <i />)}</span>
           <span class="rotulo-pref">Zona preferencial · mesas compartidas</span>
           <span class="solo-lectores"> · {precio(pref)}</span>
           <span class="marca" aria-hidden="true"><Icono nombre="visto" tamano={12} grosor={3} /></span>
-        </label>
-        <label class="zona zona-general" style={`--color: ${general.color}; --tinte: ${general.tinte}`} data-loc-opcion="general" data-elegida>
-          <input type="radio" name="loc-plano" value="general" class="radio-oculto" data-loc checked />
+        </Zona>
+        <Zona class="zona zona-general" style={`--color: ${general.color}; --tinte: ${general.tinte}`} data-loc-opcion={elegir ? 'general' : undefined} data-elegida={elegir ? '' : undefined}>
+          {elegir && <input type="radio" name="loc-plano" value="general" class="radio-oculto" data-loc checked />}
           <span class="rotulo-general">Zona general · de pie</span>
           <span class="sub">Acceso a pista y barra</span>
           <span class="solo-lectores"> · {precio(general)}</span>
           <span class="marca" aria-hidden="true"><Icono nombre="visto" tamano={12} grosor={3} /></span>
-        </label>
+        </Zona>
         <div class="entrada" aria-hidden="true"><Icono nombre="flecha-arriba" tamano={14} grosor={2.4} />Entrada</div>
-      </fieldset>
+      </Grupo>
       <p class="nota">Plano ilustrativo · [CONFIRMAR DISTRIBUCIÓN CON EL ORGANIZADOR]</p>
     </div>
 
     <div class="lista-caja">
-      <fieldset class="lista">
-        <legend class="solo-lectores">Precios por localidad</legend>
+      <Grupo class="lista" role={elegir ? undefined : 'list'} aria-label={elegir ? undefined : 'Precios por localidad'}>
+        {elegir && <legend class="solo-lectores">Precios por localidad</legend>}
         {
           localidades.map((l) => (
-            <label class="opcion" style={`--color: ${l.color}; --tinte: ${l.tinte}`} data-loc-opcion={l.id} data-elegida={l.id === 'general' ? '' : undefined}>
-              <input type="radio" name="loc-lista" value={l.id} class="radio-oculto" data-loc checked={l.id === 'general'} />
+            <Zona class="opcion" role={elegir ? undefined : 'listitem'} style={`--color: ${l.color}; --tinte: ${l.tinte}`} data-loc-opcion={elegir ? l.id : undefined} data-elegida={elegir && l.id === 'general' ? '' : undefined}>
+              {elegir && <input type="radio" name="loc-lista" value={l.id} class="radio-oculto" data-loc checked={l.id === 'general'} />}
               <span class="muestra" aria-hidden="true" />
               <span class="texto">
                 <b>{l.completo}</b>
@@ -78,11 +87,13 @@ const precio = (l: Localidad) => `${pesos(l.precio)} ${l.unidad}`;
                 <b>{pesos(l.precio)}</b>
                 <span>{l.unidad}</span>
               </span>
-            </label>
+            </Zona>
           ))
         }
-      </fieldset>
-      <p class="nota">Precios en pesos colombianos. El cargo por servicio lo ves antes de pagar.</p>
+      </Grupo>
+      <p class="nota">
+        {elegir ? 'Precios en pesos colombianos. El cargo por servicio lo ves antes de pagar.' : `Precios en pesos colombianos. El cargo por servicio lo cobra ${vende} al comprar.`}
+      </p>
     </div>
   </div>
 </section>
@@ -165,6 +176,10 @@ const precio = (l: Localidad) => `${pesos(l.precio)} ${l.unidad}`;
     justify-content: center;
     text-align: center;
     color: var(--ink);
+  }
+
+  label.zona,
+  label.opcion {
     cursor: pointer;
   }
 
@@ -359,7 +374,6 @@ const precio = (l: Localidad) => `${pesos(l.precio)} ${l.unidad}`;
     border: 1.5px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    cursor: pointer;
   }
 
   .opcion[data-elegida] {

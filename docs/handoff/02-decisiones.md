@@ -380,3 +380,23 @@ El cliente pidió un héroe minimalista en computador, a partir de una referenci
 - **Dónde va:** el componente `components/ui/Logo.astro` reemplaza el logo de texto en los tres encabezados (visitante, app y registro). Los tres tienen fondo claro, así que usan `logo-claro`. La versión oscura queda lista para fondos oscuros (`<Logo fondo="oscuro">`). Mide 48 px de alto en computador y 40 px en celular, y se sirve en WebP a 1x, 2x y 3x.
 - **Favicon e ícono de app:** salen de `icono-app.png` y quedan en `public/`: `favicon.ico` (16, 32 y 48 px), `favicon-32.png`, `apple-touch-icon.png` (180 px) e `icono-192.png` / `icono-512.png` para `manifest.webmanifest`. Con esto se cierra el pendiente del favicon de la sección 2.16.
 - **Color del logo:** el rojo `#D9452F` ("solo para el logo") ya no se usa en los encabezados porque ahora el logo es la imagen. El token `--brand-logo` sigue existiendo para los degradados que lo usan.
+
+### 2.22 Primer lanzamiento sin venta propia (8 de octubre de 2026)
+
+El cliente decidió que en el primer lanzamiento no habrá pasarela de pagos: **Fulleventos no vende boletas**. El evento se muestra completo, con precios y localidades, pero la compra se hace en la boletera o el sitio oficial. Esto resuelve P1 para el primer lanzamiento con el modo "boletera externa". P3 (pasarela) y P4 (cargo por servicio) quedan para la fase 2.
+
+- **Botón de compra.**
+  - **Qué:** "Comprar en {vende} ↗" lleva a la boletera en otra pestaña (`target="_blank" rel="noopener"`), con un texto solo para lectores de pantalla: "(abre en otra pestaña)". Es el componente `components/eventos/BotonBoletera.astro`, que usan la tarjeta lateral y la barra de celular (en la barra, compacto: "Comprar ↗", con la boletera en el nombre accesible).
+  - **Sin enlace:** si un evento de pago no tiene `urlVenta`, el botón se ve igual pero inactivo (`aria-disabled="true"`, sin enlace) y debajo dice "Demostración: falta el enlace oficial de venta de este evento.". Así está todo el demo, porque las boleteras son `[BOLETERA]` (P8, H1) y no se inventan URLs.
+  - **Eventos gratis:** siguen sin botón de compra.
+- **Tarjeta lateral: solo lista de precios.**
+  - **Qué:** "Boletas", "Desde $45.000", "+ cargo por servicio", la insignia "En venta", cada localidad con su precio y disponibilidad (por ejemplo "Últimas 12"), el botón a la boletera y la nota "La compra se hace en el sitio de {vende}. Fulleventos no vende boletas ni recibe pagos.". Sin cantidad ni subtotal.
+  - **Localidades:** el plano y la lista quedan como información, sin elegir zona (elegirla solo servía para comprar). La nota pasa a "Precios en pesos colombianos. El cargo por servicio lo cobra {vende} al comprar.".
+- **"Ya tengo boleta" marcado a mano.**
+  - **Qué:** en los eventos de pago, junto a "Voy" y "Me interesa", un botón "Ya tengo boleta" que alterna con `aria-pressed`. En el demo el estado es local, como los otros dos.
+  - **Por qué:** sin venta propia Fulleventos no sabe quién compró. Los parches siguen mostrando quién ya tiene boleta: los datos de `parches.ts` y `asistencia.ts` pasan a significar "lo marcó", con las mismas cifras.
+- **Qué se quitó de la interfaz:** "Mis boletas" del perfil, el visor "Tus boletas" con QR, la ventana de compra con "Para mi parche" (comprar para otros) y "Dividir el pago" del chat. "Comprar mi boleta" del chat pasa a "Ver boletas" (lleva a la página del evento). El CTA de las tarjetas de evento pasa de "Comprar" a "Ver boletas" (los gratis siguen con "Ver plan"). Los textos legales y el paso 3 de "Cómo funciona" ya no prometen la compra dentro de Fulleventos.
+- **Interruptor `VENTA_PROPIA` (`src/config.ts`).**
+  - **Qué:** con `false` (primer lanzamiento) no se renderizan VentanaCompra, BoletaDigital, Cantidad ni el visor, y `compra.ts` no se incluye en el JavaScript. Con `true` vuelve la compra dentro de Fulleventos tal como estaba (demostración sin backend).
+  - **Por qué:** la compra propia y el pago dividido son la fase 2. Las reglas de Pagos de CLAUDE.md siguen aplicando cuando se encienda.
+- **Campo `urlVenta`.** `Evento` (en `src/data/eventos.ts`) tiene un campo opcional `urlVenta`, con la URL oficial de venta. Si existe, también es la `url` de las ofertas del JSON-LD (schema.org).

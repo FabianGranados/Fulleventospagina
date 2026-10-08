@@ -1,5 +1,7 @@
 ---
 // Texto del prototipo. El pie legal (H5) se hace con los datos reales (P8) y el modo de compra (P1).
+// Primer lanzamiento sin venta propia (decisión 2.22): el texto no promete compra dentro de Fulleventos.
+import { VENTA_PROPIA } from '../../config';
 const anio = new Date().getFullYear();
 ---
 
@@ -7,8 +9,11 @@ const anio = new Date().getFullYear();
   <div class="fila">
     <span>© {anio} Fulleventos · Colombia</span>
     <span>
-      Compra segura dentro de Fulleventos. Las boletas las emite la boletera oficial del evento o el
-      organizador.
+      {
+        VENTA_PROPIA
+          ? 'Compra segura dentro de Fulleventos. Las boletas las emite la boletera oficial del evento o el organizador.'
+          : 'Fulleventos no vende boletas: se compran en la boletera oficial del evento o con el organizador.'
+      }
     </span>
   </div>
 </footer>

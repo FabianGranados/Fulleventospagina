@@ -4,6 +4,7 @@
 // La hora (eventos.ts), los parches (parches.ts) y quién va (asistencia.ts) no se copian aquí (H37).
 // Los marcadores [ASÍ] se conservan: el dato real lo entrega el negocio.
 import type { NombreIcono } from '../components/ui/Icono.astro';
+import { VENTA_PROPIA } from '../config';
 
 export interface Localidad {
   id: 'general' | 'pref' | 'vip';
@@ -104,8 +105,16 @@ export const detalles: Record<string, DetalleEvento> = {
       { titulo: 'No hay reingreso', texto: 'Si sales del lugar, la boleta ya no te deja volver a entrar.', color: '#EE93BC', icono: 'prohibido' },
       { titulo: 'Parqueadero', texto: '[CONFIRMAR CON EL ORGANIZADOR]. Si puedes, ven en transporte público o comparte carro con tu parche.', color: '#8FD3D0', icono: 'parqueadero' },
       { titulo: 'Accesibilidad', texto: 'Acceso para silla de ruedas y baños accesibles: [CONFIRMAR CON EL ORGANIZADOR].', color: '#B9E07A', icono: 'accesibilidad' },
-      // H11: sin "o desde tu correo" (el correo solo confirma)
-      { titulo: 'Boleta digital', texto: 'Muestra el QR desde Fulleventos. No tienes que imprimir nada.', color: '#F6DC6A', icono: 'qr' },
+      // H11: sin "o desde tu correo" (el correo solo confirma). Sin venta propia (decisión 2.22) el QR no sale
+      // de Fulleventos sino de la boletera.
+      {
+        titulo: 'Boleta digital',
+        texto: VENTA_PROPIA
+          ? 'Muestra el QR desde Fulleventos. No tienes que imprimir nada.'
+          : 'Muestra en la entrada la boleta que te entrega la boletera al comprar.',
+        color: '#F6DC6A',
+        icono: 'qr',
+      },
       { titulo: 'Cambios y devoluciones', texto: 'Si el evento cambia de fecha o se cancela: [POLÍTICA DE LA BOLETERA].', color: '#F3B27E', icono: 'devoluciones' },
     ],
     direccion: '[DIRECCIÓN]',

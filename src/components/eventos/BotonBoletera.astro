@@ -1,0 +1,112 @@
+---
+// Botón "Comprar en {vende}" (decisión 2.22): la compra se hace en la boletera o el sitio oficial, en otra
+// pestaña. Fulleventos no vende boletas en el primer lanzamiento (VENTA_PROPIA = false, src/config.ts).
+// Sin `urlVenta` (todo el demo: las boleteras son [BOLETERA], P8, H1) el botón se ve igual, pero inactivo y
+// con una nota de demostración, para que el diseño quede completo sin inventar enlaces.
+import Icono from '../ui/Icono.astro';
+import type { Evento } from '../../data/eventos';
+
+interface Props {
+  evento: Evento;
+  // Prefijo de los id (la tarjeta lateral y la barra de celular están en la misma página)
+  id: string;
+  // Barra de celular: solo "Comprar ↗"; la boletera queda en el nombre accesible
+  compacto?: boolean;
+}
+
+const { evento: e, id, compacto = false } = Astro.props;
+const url = e.urlVenta;
+const idNota = `${id}-nota`;
+---
+
+<div class:list={['boton-boletera', { compacto }]}>
+  {
+    url ? (
+      <a class="boton" href={url} target="_blank" rel="noopener" data-boton-boletera>
+        {!compacto && <Icono nombre="boleta" tamano={18} />}
+        <span>
+          Comprar{compacto ? <span class="solo-lectores"> en {e.vende}</span> : ` en ${e.vende}`}
+        </span>
+        <span aria-hidden="true">↗</span>
+        <span class="solo-lectores">(abre en otra pestaña)</span>
+      </a>
+    ) : (
+      <button type="button" class="boton" aria-disabled="true" aria-describedby={idNota} data-boton-boletera>
+        {!compacto && <Icono nombre="boleta" tamano={18} />}
+        <span>
+          Comprar{compacto ? <span class="solo-lectores"> en {e.vende}</span> : ` en ${e.vende}`}
+        </span>
+        <span aria-hidden="true">↗</span>
+      </button>
+    )
+  }
+  {!url && <p id={idNota} class="nota">Demostración: falta el enlace oficial de venta de este evento.</p>}
+</div>
+
+<style>
+  .boton-boletera {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .boton {
+    height: 54px;
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-pill);
+    padding: 0 20px;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    text-align: center;
+  }
+
+  .boton:hover {
+    color: var(--on-dark);
+  }
+
+  .boton > span:first-of-type {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .boton[aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  .nota {
+    font-size: .74rem;
+    line-height: 1.35;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Compacto (barra de celular): el botón y la nota pasan a ser hijos directos de la barra, que los
+     acomoda en fila (botón a la derecha) y la nota abajo a todo el ancho */
+  .compacto {
+    display: contents;
+  }
+
+  .compacto .boton {
+    flex-shrink: 0;
+    width: auto;
+    height: 48px;
+    padding: 0 22px;
+    font-size: .95rem;
+  }
+
+  .compacto .nota {
+    flex: 1 0 100%;
+    order: 3;
+    margin-top: -4px;
+    font-size: .7rem;
+    text-align: left;
+  }
+</style>
