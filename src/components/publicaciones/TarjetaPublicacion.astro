@@ -1,0 +1,319 @@
+---
+// Tarjeta de publicación sobre un evento (decisión 2.26). Más formal que una entrada del muro: tipo, quién la ve,
+// título, autora, texto, fotos y el evento enlazado en una mini tarjeta.
+// Una sola plantilla para Inicio, el muro del evento y la vista previa de /crear-evento: este componente va una vez
+// por página y lib/publicaciones.ts la llena (crearTarjeta) y pinta cada [data-publicaciones-demo] (pintarListas).
+// En el demo solo hay publicaciones de la usuaria (Camila), guardadas en este navegador.
+import Avatar from '../ui/Avatar.astro';
+import Icono from '../ui/Icono.astro';
+import { usuaria } from '../../data/personas';
+---
+
+<template data-plantilla-publicacion>
+  <article class="tarjeta-publicacion" data-tarjeta-publicacion>
+    <div class="franja">
+      <span class="tipo" data-tipo></span>
+      <span class="audiencia">
+        <span data-icono-audiencia="publica"><Icono nombre="globo" tamano={15} /></span>
+        <span data-icono-audiencia="amigos"><Icono nombre="personas" tamano={15} /></span>
+        <span data-icono-audiencia="parche"><Icono nombre="parches" tamano={15} /></span>
+        <span class="solo-lectores">Quién la ve:</span>
+        <span data-audiencia></span>
+      </span>
+    </div>
+
+    <h2 class="titulo" data-titulo></h2>
+
+    <div class="autora">
+      <Avatar color={usuaria.color} tamano={36} iniciales={usuaria.iniciales} />
+      <p>
+        <a href="/yo" class="nombre">{usuaria.nombre}</a>
+        <span class="meta" data-meta></span>
+      </p>
+    </div>
+
+    <p class="texto" data-texto></p>
+
+    <div class="fotos" data-fotos hidden></div>
+
+    <a class="evento" data-evento-enlace>
+      <span class="miniatura" data-miniatura aria-hidden="true">
+        <span class="placa"><b data-dia></b><span data-mes></span></span>
+      </span>
+      <span class="evento-info">
+        <span class="categoria" data-categoria></span>
+        <span class="evento-titulo" data-evento-titulo></span>
+        <span class="donde" data-donde></span>
+      </span>
+    </a>
+
+    <div class="pie" data-pie>
+      <p class="demo">Demostración: esta publicación solo se ve en este navegador.</p>
+      <button type="button" class="eliminar" data-eliminar>
+        Eliminar<span class="solo-lectores" data-eliminar-sr></span>
+      </button>
+    </div>
+  </article>
+</template>
+<p class="solo-lectores" role="status" data-anuncio-publicaciones></p>
+
+<script>
+  import { borrarPublicacion, pintarListas } from '../../lib/publicaciones';
+
+  pintarListas();
+
+  // Eliminar la propia publicación. El foco vuelve al título del bloque (o al contenido si quedó vacío).
+  document.addEventListener('click', (ev) => {
+    const boton = (ev.target as Element | null)?.closest<HTMLButtonElement>('[data-eliminar]');
+    const tarjeta = boton?.closest<HTMLElement>('[data-tarjeta-publicacion]');
+    if (!boton || !tarjeta?.dataset.id) return;
+    const bloque = tarjeta.closest<HTMLElement>('[data-bloque-publicaciones]');
+    const anuncio = document.querySelector<HTMLElement>('[data-anuncio-publicaciones]')!;
+    if (!borrarPublicacion(tarjeta.dataset.id)) {
+      anuncio.textContent = 'No pudimos eliminarla: tu navegador no deja guardar cambios.';
+      return;
+    }
+    pintarListas();
+    anuncio.textContent = 'Eliminaste tu publicación.';
+    const foco = bloque?.matches('[data-foco-publicaciones]')
+      ? bloque
+      : bloque?.querySelector<HTMLElement>('[data-foco-publicaciones]');
+    const destino = (bloque && !bloque.hidden && foco) || document.querySelector<HTMLElement>('main');
+    if (destino) {
+      if (!destino.hasAttribute('tabindex')) destino.tabIndex = -1;
+      destino.focus();
+    }
+  });
+</script>
+
+<style>
+  .tarjeta-publicacion {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--ink);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .franja {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+  }
+
+  /* Tipo: insignia amarilla (atención/novedad, sección 3) */
+  .tipo {
+    background: var(--yellow);
+    color: var(--ink);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+
+  .audiencia {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .audiencia [data-icono-audiencia] {
+    display: inline-flex;
+  }
+
+  .audiencia [hidden] {
+    display: none;
+  }
+
+  .titulo {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+
+  .autora {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.3;
+  }
+
+  .autora p {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .nombre {
+    font-weight: 700;
+    font-size: .92rem;
+  }
+
+  .meta {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .texto {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    font-size: .97rem;
+  }
+
+  .fotos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .fotos[hidden] {
+    display: none;
+  }
+
+  .fotos[data-cantidad='1'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Las <img> las crea lib/publicaciones.ts (sin el atributo de alcance): :global */
+  .fotos[data-cantidad='3'] :global(img:first-child) {
+    grid-column: 1 / -1;
+  }
+
+  .fotos :global(img) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--surface-sunken);
+  }
+
+  .fotos[data-cantidad='1'] :global(img) {
+    aspect-ratio: 16 / 9;
+  }
+
+  /* Mini tarjeta del evento, enlazada */
+  .evento {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .evento[href]:hover .evento-titulo {
+    color: var(--brand);
+  }
+
+  .miniatura {
+    position: relative;
+    flex: 0 0 92px;
+    min-height: 88px;
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 58%), var(--bg2);
+  }
+
+  .placa {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    min-width: 40px;
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 4px 6px 3px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .placa b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.05rem;
+  }
+
+  .placa span {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .evento-info {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .categoria {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .evento-titulo {
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .donde {
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  .pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .demo {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .eliminar {
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    padding: 0 14px;
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .eliminar:hover {
+    border-color: var(--ink);
+  }
+
+  @media (max-width: 767px) {
+    .eliminar {
+      height: 44px;
+    }
+  }
+</style>

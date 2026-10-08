@@ -7,6 +7,7 @@ import type { DetalleEvento } from '../../data/evento';
 import { rutaNuevoParche } from '../../data/mensajes';
 import { parchesDelEvento, totalMiembros } from '../../data/parches';
 import { conVolver } from '../../lib/sesion';
+import { rutaPublicar } from '../../lib/publicaciones';
 
 interface Props {
   d: DetalleEvento;
@@ -38,10 +39,17 @@ const n = lista.length;
       <h2 id="h-parches" class="titulo-seccion">Parches para este evento</h2>
       <p class="sub">Únete a un grupo para llegar acompañado, o arma el tuyo.</p>
     </div>
-    <a class="armar" href={rutaNuevoParche(eventoId)} data-requiere-cuenta="para armar un parche">
-      <Icono nombre="mas" tamano={16} grosor={2.2} />
-      Armar parche
-    </a>
+    <div class="botones-cabecera">
+      <a class="armar" href={rutaNuevoParche(eventoId)} data-requiere-cuenta="para armar un parche">
+        <Icono nombre="mas" tamano={16} grosor={2.2} />
+        Armar parche
+      </a>
+      {/* Publicación formal sobre el evento (decisión 2.26): más completa que una entrada del muro */}
+      <a class="armar" href={rutaPublicar(eventoId)} data-requiere-cuenta="para escribir una publicación">
+        <Icono nombre="foto" tamano={16} />
+        Escribir una publicación
+      </a>
+    </div>
   </div>
 
   <div class="invitacion solo-visitante">
@@ -93,7 +101,16 @@ const n = lista.length;
     }
   </div>
 
-  <div role="tabpanel" id="panel-muro" aria-labelledby="pestana-muro" class="panel-muro" hidden>
+  <div
+    role="tabpanel"
+    id="panel-muro"
+    aria-labelledby="pestana-muro"
+    class="panel-muro"
+    tabindex="-1"
+    hidden
+    data-bloque-publicaciones
+    data-foco-publicaciones
+  >
     <form class="compositor" data-muro>
       <span class="av" style={`background: ${colorDe[usuaria.color]}`} aria-hidden="true">{usuaria.iniciales}</span>
       <label class="campo">
@@ -103,6 +120,8 @@ const n = lista.length;
       <button type="submit">Enviar</button>
     </form>
     <p class="aviso" role="status" data-aviso-muro></p>
+    {/* Publicaciones de la usuaria sobre este evento (decisión 2.26; en el demo, guardadas en este navegador) */}
+    <div id="publicaciones" class="publicaciones" data-publicaciones-demo data-evento={eventoId} data-nivel="3"></div>
     {
       d.muro.map((msj) => {
         const p = persona(msj.persona)!;
@@ -155,6 +174,15 @@ const n = lista.length;
     });
   });
 
+  // "Ver en el evento" después de publicar (/evento/...#publicaciones) abre la pestaña Muro
+  if (location.hash === '#publicaciones') {
+    const muro = document.getElementById('pestana-muro');
+    if (muro && muro.getClientRects().length) {
+      muro.click();
+      requestAnimationFrame(() => document.getElementById('publicaciones')?.scrollIntoView({ block: 'start' }));
+    }
+  }
+
   // "Unirme" ↔ "Estás dentro" con cupos. En producción es una solicitud que se acepta (H9, H30).
   document.querySelectorAll<HTMLElement>('[data-parche]').forEach((parche) => {
     const boton = parche.querySelector<HTMLButtonElement>('[data-unirme]')!;
@@ -192,6 +220,12 @@ const n = lista.length;
   .sub {
     margin-top: 4px;
     color: var(--muted);
+  }
+
+  .botones-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .armar {
@@ -372,6 +406,20 @@ const n = lista.length;
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+
+  .panel-muro:focus {
+    outline: none;
+  }
+
+  .publicaciones {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .publicaciones:empty {
+    display: none;
   }
 
   .compositor {

@@ -27,6 +27,8 @@ import TarjetaCompra from '../../../components/evento/TarjetaCompra.astro';
 import BarraCompra from '../../../components/evento/BarraCompra.astro';
 import VentanaCompra from '../../../components/evento/VentanaCompra.astro';
 import BoletaDigital from '../../../components/evento/BoletaDigital.astro';
+import TarjetaPublicacion from '../../../components/publicaciones/TarjetaPublicacion.astro';
+import PublicacionesEvento from '../../../components/publicaciones/PublicacionesEvento.astro';
 import { modeloEvento } from '../../../components/evento/modelo';
 import { eventos, type Evento } from '../../../data/eventos';
 import { persona } from '../../../data/personas';
@@ -60,6 +62,7 @@ const atajos = [
   d && { href: '#programacion', texto: 'Programación' },
   d && { href: '#localidades', texto: 'Localidades' },
   d && { href: '#parches', texto: 'Parches y muro' },
+  !d && { href: '#publicaciones', texto: 'Publicaciones' },
   d && { href: '#saber', texto: 'Lo que debes saber' },
   { href: '#ubicacion', texto: 'Ubicación' },
 ].filter(Boolean) as { href: string; texto: string }[];
@@ -163,7 +166,8 @@ const datosCompra = VENTA_PROPIA && {
           {d ? <SobreEvento parrafos={d.descripcion} etiquetas={d.etiquetas} /> : e.resumen && <SobreEvento parrafos={[e.resumen]} />}
           {d && <Programacion momentos={d.programacion} />}
           {d && <Localidades localidades={d.localidades} vende={e.vende} />}
-          {d && <ParchesMuro d={d} eventoId={e.id} />}
+          {/* Las publicaciones sobre el evento (decisión 2.26) van en el muro; sin muro, en su propia sección */}
+          {d ? <ParchesMuro d={d} eventoId={e.id} /> : <PublicacionesEvento eventoId={e.id} />}
           {d && <LoQueDebesSaber politicas={d.politicas} />}
           <UbicacionOrganizador m={m} />
         </div>
@@ -188,6 +192,7 @@ const datosCompra = VENTA_PROPIA && {
       )
     }
     <VentanaCuenta />
+    <TarjetaPublicacion />
   </div>
 </Base>
 

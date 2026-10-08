@@ -83,7 +83,12 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
           <button type="button" class="icono" aria-label="Notificaciones">
             <Icono nombre="campana" tamano={20} />
           </button>
-          {variante === 'completo' && <a href="/crear-evento" class="crear">Crear evento</a>}
+          {/* Antes "Crear evento": lleva a los dos caminos, un evento nuevo o una publicación sobre uno (decisión 2.26) */}
+          {variante === 'completo' && (
+            <a href="/crear-evento" class="crear">
+              <Icono nombre="mas" tamano={16} grosor={2.4} />Publicar
+            </a>
+          )}
           <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`}>{usuaria.iniciales}</a>
         </nav>
       )
@@ -302,8 +307,9 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
   .crear:hover {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     height: 44px;
-    padding: 0 18px;
+    padding: 0 18px 0 14px;
     margin-left: 6px;
     border-radius: var(--radius-pill);
     background: var(--ink);

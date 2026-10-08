@@ -36,3 +36,29 @@ export const isoConHora = (fecha: string, hora: string) => {
 
 // Hora con espacios de no separación, para que no se parta entre "p." y "m." (detalle fino 33 de Inicio)
 export const horaSinCorte = (hora: string) => hora.replace(/ /g, '\u00A0');
+
+// Texto sin tildes, en min\u00FAscula y con espacios simples, para comparar y buscar ("Bogot\u00E1" = "bogota")
+export const normalizar = (texto: string) =>
+  texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+// "2026-10-09" \u2192 "Vie 9 oct" (formato de publicaciones, chat y repost; secci\u00F3n 3, "Fechas")
+export const fechaCorta = (iso: string) => {
+  const fecha = new Date(`${iso}T12:00:00-05:00`);
+  const parte = (o: Intl.DateTimeFormatOptions) =>
+    fecha.toLocaleDateString('es-CO', { ...o, timeZone: 'America/Bogota' }).replace('.', '');
+  const dia = parte({ weekday: 'short' });
+  return `${dia.charAt(0).toUpperCase()}${dia.slice(1)} ${parte({ day: 'numeric' })} ${parte({ month: 'short' })}`;
+};
+
+// Hora de un <input type="time"> ("20:00") en formato colombiano: "8:00 p. m." (secci\u00F3n 3, "Horas")
+export const hora12 = (valor: string) => {
+  const m = valor.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'a. m.' : 'p. m.'}`;
+};
