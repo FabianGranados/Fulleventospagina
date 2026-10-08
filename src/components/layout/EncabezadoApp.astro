@@ -137,10 +137,36 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
     gap: 12px 20px;
   }
 
-
   .detalle :global(.logo),
   .detalle-perfil :global(.logo) {
     margin-inline: auto;
+  }
+
+  /* Variantes de detalle: tres columnas para que el logo quede centrado en la página y no entre
+     "Volver" y los íconos, que miden distinto. En celular los íconos bajan a su propia fila, centrados. */
+  .detalle .fila,
+  .detalle-perfil .fila {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .detalle .volver,
+  .detalle-perfil .volver {
+    justify-self: start;
+  }
+
+  .detalle .iconos,
+  .detalle-perfil .derecha {
+    justify-self: end;
+    margin-left: 0;
+  }
+
+  @media (max-width: 767px) {
+    .detalle .iconos,
+    .detalle-perfil .derecha {
+      grid-column: 1 / -1;
+      justify-self: center;
+    }
   }
 
   .volver {
