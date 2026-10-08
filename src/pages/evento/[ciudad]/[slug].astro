@@ -52,7 +52,7 @@ const descripcion =
   `${m.gratis ? 'Gratis' : `${m.precioDesde} + cargo por servicio`}. Mira quién va y arma parche en Fulleventos.`;
 
 const atajos = [
-  d && { href: '#sobre', texto: 'Sobre el evento' },
+  (d || e.resumen) && { href: '#sobre', texto: 'Sobre el evento' },
   d && { href: '#programacion', texto: 'Programación' },
   d && { href: '#localidades', texto: 'Localidades' },
   d && { href: '#parches', texto: 'Parches y muro' },
@@ -83,7 +83,7 @@ const esquema = {
     },
   },
   ...(d && { organizer: { '@type': 'Organization', name: d.organizador.nombre } }),
-  ...(d && { description: d.descripcion[0] }),
+  ...((d || e.resumen) && { description: d ? d.descripcion[0] : e.resumen }),
   offers: m.gratis
     ? { '@type': 'Offer', price: 0, priceCurrency: 'COP', availability: 'https://schema.org/InStock', ...(urlOferta && { url: urlOferta }) }
     : m.localidades.map((l) => ({
@@ -155,7 +155,7 @@ const datosCompra = VENTA_PROPIA && {
         <div class="contenido">
           <AccionesEvento m={m} />
           {atajos.length > 1 && <AtajosSeccion atajos={atajos} />}
-          {d && <SobreEvento d={d} />}
+          {d ? <SobreEvento parrafos={d.descripcion} etiquetas={d.etiquetas} /> : e.resumen && <SobreEvento parrafos={[e.resumen]} />}
           {d && <Programacion momentos={d.programacion} />}
           {d && <Localidades localidades={d.localidades} vende={e.vende} />}
           {d && <ParchesMuro d={d} eventoId={e.id} />}

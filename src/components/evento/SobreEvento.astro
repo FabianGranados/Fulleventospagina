@@ -1,22 +1,26 @@
 ---
-// N28 · "Sobre el evento" (solo con descripción del organizador)
-import type { DetalleEvento } from '../../data/evento';
-
+// N28 · "Sobre el evento": la descripción del organizador (ficha completa) o la descripción corta del
+// evento (`resumen`, decisión 2.23). Las etiquetas solo existen en la ficha completa.
 interface Props {
-  d: DetalleEvento;
+  parrafos: string[];
+  etiquetas?: string[];
 }
 
-const { d } = Astro.props;
+const { parrafos, etiquetas = [] } = Astro.props;
 ---
 
 <section id="sobre" class="seccion-evento" aria-labelledby="h-sobre">
   <h2 id="h-sobre" class="titulo-seccion">Sobre el evento</h2>
   <div class="texto">
-    {d.descripcion.map((p) => <p>{p}</p>)}
+    {parrafos.map((p) => <p>{p}</p>)}
   </div>
-  <ul class="etiquetas" aria-label="Etiquetas del evento">
-    {d.etiquetas.map((t) => <li>{t}</li>)}
-  </ul>
+  {
+    etiquetas.length > 0 && (
+      <ul class="etiquetas" aria-label="Etiquetas del evento">
+        {etiquetas.map((t) => <li>{t}</li>)}
+      </ul>
+    )
+  }
 </section>
 
 <style>

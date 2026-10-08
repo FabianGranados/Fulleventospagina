@@ -400,3 +400,9 @@ El cliente decidió que en el primer lanzamiento no habrá pasarela de pagos: **
   - **Qué:** con `false` (primer lanzamiento) no se renderizan VentanaCompra, BoletaDigital, Cantidad ni el visor, y `compra.ts` no se incluye en el JavaScript. Con `true` vuelve la compra dentro de Fulleventos tal como estaba (demostración sin backend).
   - **Por qué:** la compra propia y el pago dividido son la fase 2. Las reglas de Pagos de CLAUDE.md siguen aplicando cuando se encienda.
 - **Campo `urlVenta`.** `Evento` (en `src/data/eventos.ts`) tiene un campo opcional `urlVenta`, con la URL oficial de venta. Si existe, también es la `url` de las ofertas del JSON-LD (schema.org).
+
+### 2.23 Descripción corta de cada evento (8 de octubre de 2026)
+
+- **Qué:** los eventos sin ficha completa (todos menos e1) muestran la sección "Sobre el evento" con una descripción de una o dos frases (campo `resumen` en `src/data/eventos.ts`). También aparece en los atajos de la página y en la descripción del JSON-LD.
+- **Por qué:** el cliente pidió una descripción breve. Antes esos eventos pasaban de los datos clave directo a la ubicación.
+- **Cómo se escribió:** solo con lo que se sabe del evento (categoría, lugar, ciudad y si la entrada es libre). No se inventan artistas, horarios, servicios ni cifras. En producción el texto lo escribe el organizador.
