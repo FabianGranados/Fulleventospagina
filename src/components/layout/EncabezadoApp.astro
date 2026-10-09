@@ -7,7 +7,7 @@ import { ciudades } from '../../data/ciudades';
 import { usuaria } from '../../data/personas';
 import { chatsSinLeer } from '../../data/mensajes';
 
-type Pagina = 'inicio' | 'agenda' | 'mapa' | 'mensajes';
+type Pagina = 'inicio' | 'agenda' | 'mapa' | 'noticias' | 'mensajes';
 
 interface Props {
   variante?: 'completo' | 'detalle' | 'detalle-perfil';
@@ -20,10 +20,12 @@ interface Props {
 // Sin cifra propia de la página, la de los datos del chat (una sola fuente, H13)
 const { variante = 'completo', activa, noLeidos = chatsSinLeer, class: clase } = Astro.props;
 
-const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 'mensajes'; nombre: string }[] = [
+const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
   { id: 'inicio', href: '/inicio', icono: 'inicio', nombre: 'Inicio' },
   { id: 'agenda', href: '/agenda', icono: 'agenda', nombre: 'Agenda de eventos' },
   { id: 'mapa', href: '/mapa', icono: 'mapa', nombre: 'Mapa de eventos' },
+  // Noticias, la sección de contenido (decisión 2.25): también con sesión, no solo en "Secciones" de Inicio
+  { id: 'noticias', href: '/noticias', icono: 'noticias', nombre: 'Noticias' },
   {
     id: 'mensajes',
     href: '/mensajes',
@@ -67,7 +69,7 @@ const iconos: { id: Pagina; href: string; icono: 'inicio' | 'agenda' | 'mapa' | 
       variante === 'detalle-perfil' ? (
         <div class="derecha">
           <a href="/mapa" class="pildora"><Icono nombre="mapa" />Mapa</a>
-          <a href="/mensajes" class="circulo" aria-label={iconos[3].nombre}>
+          <a href="/mensajes" class="circulo" aria-label={iconos.find((i) => i.id === 'mensajes')!.nombre}>
             <Icono nombre="mensajes" tamano={20} />
             {noLeidos > 0 && <span class="insignia" aria-hidden="true">{noLeidos}</span>}
           </a>
