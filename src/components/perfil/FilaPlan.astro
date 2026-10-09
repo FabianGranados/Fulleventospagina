@@ -1,0 +1,157 @@
+---
+// Fila compacta de plan para celular (decisión 2.29, UX3/PF4): miniatura con la placa de fecha, categoría,
+// título, "Vie 9 oct · 8:00 p. m. · Bogotá" y el estado (en la línea de la categoría). Toda la fila es el enlace del título (::after).
+// La hora sale de eventos.ts (H37); si el evento no tiene hora, no se muestra.
+import type { Evento } from '../../data/eventos';
+import { nombreCiudad } from '../../data/ciudades';
+import { fechaCorta, placaFecha, rutaEvento } from '../../lib/formato';
+
+interface Props {
+  evento: Evento;
+  estado: string;
+}
+
+const { evento: e, estado } = Astro.props;
+const { dia, mes } = placaFecha(e.fecha);
+const cuando = [fechaCorta(e.fecha), e.hora, nombreCiudad(e.ciudad)].filter(Boolean).join(' · ');
+---
+
+<article class="fila-plan">
+  <div class="miniatura" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} aria-hidden="true">
+    <span class="placa"><b>{dia}</b><span>{mes}</span></span>
+  </div>
+  <div class="texto">
+    <div class="arriba">
+      <span class="categoria">{e.categoria}</span>
+      <span class="estado">{estado}</span>
+    </div>
+    <h3><a href={rutaEvento(e.ciudad, e.titulo)}>{e.titulo}</a></h3>
+    <p class="cuando"><time datetime={e.fecha}>{cuando}</time></p>
+  </div>
+</article>
+
+<style>
+  .fila-plan {
+    position: relative;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  .fila-plan:hover {
+    background: var(--light-hover);
+  }
+
+  .fila-plan:active {
+    transform: scale(.985);
+  }
+
+  /* El anillo de foco va en la fila entera, que es el área que se toca */
+  .fila-plan:has(a:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .fila-plan a:focus-visible {
+    outline: none;
+  }
+
+  /* Radio concéntrico: 14 px dentro de una caja de 16 px con 10 px de relleno se ve igual de redondo */
+  .miniatura {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-xs);
+    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 60%), var(--bg2);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+    display: grid;
+    place-items: center;
+  }
+
+  .placa {
+    min-width: 38px;
+    padding: 4px 6px 3px;
+    border-radius: 8px;
+    background: var(--surface);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .placa b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .placa span {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .texto {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .categoria {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-wrap: pretty;
+  }
+
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .cuando {
+    font-size: .82rem;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* El estado va en la línea de la categoría: así el título usa todo el ancho y no se parte de más */
+  .arriba {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 22px;
+  }
+
+  .estado {
+    white-space: nowrap;
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-pill);
+    padding: 3px 9px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+</style>

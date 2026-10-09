@@ -1,0 +1,440 @@
+---
+// Rueda de ajustes de Mi perfil (decisión 2.29, pedido del cliente: "una rueda de configuración con cosas como
+// cerrar sesión y cambiar cuenta"). Hoja del Modal compartido (id "ajustes"); la abre el botón de la rueda con
+// data-abrir-modal="ajustes" y /yo#ajustes al cargar.
+// - Vista principal: cuenta activa, grupos de opciones y "Cerrar sesión" aparte.
+// - Sub-vistas en el mismo diálogo: "Cambiar de cuenta" y la confirmación de "Cerrar sesión". Al cerrar el
+//   diálogo vuelve a la vista principal.
+// - Lo que no tiene pantalla diseñada dice "Próximamente" y lo anuncia (H38).
+// Sesión de demostración (decisión 2.24): cerrar sesión lleva a la Bienvenida como visitante; "Usar otra
+// cuenta" cierra la sesión y abre Entrar con volver=/yo.
+import Modal from '../ui/Modal.astro';
+import Avatar from '../ui/Avatar.astro';
+import Icono from '../ui/Icono.astro';
+import ListaOpciones, { type Opcion } from './ListaOpciones.astro';
+import AvisoHoja from './AvisoHoja.astro';
+import { usuaria } from '../../data/personas';
+import { perfil } from '../../data/perfil';
+import { nombreCiudad } from '../../data/ciudades';
+import { VENTA_PROPIA } from '../../config';
+
+const datos = perfil(usuaria.id);
+const gustos = datos?.gustos.length ?? 0;
+const ciudadYGustos = [
+  datos ? nombreCiudad(datos.ciudad) : undefined,
+  gustos ? `${gustos} ${gustos === 1 ? 'gusto' : 'gustos'}` : undefined,
+]
+  .filter(Boolean)
+  .join(' · ');
+
+const grupos: { id: string; titulo: string; opciones: Opcion[] }[] = [
+  {
+    id: 'cuenta',
+    titulo: 'Cuenta',
+    opciones: [
+      { texto: 'Cambiar de cuenta', icono: 'cambiarCuenta', ir: 'cuentas' },
+      // Compra propia: fase 2 (decisión 2.22)
+      ...(VENTA_PROPIA ? [{ texto: 'Mis boletas', icono: 'boleta', href: '/mis-boletas' } satisfies Opcion] : []),
+    ],
+  },
+  {
+    id: 'preferencias',
+    titulo: 'Preferencias',
+    opciones: [
+      { texto: 'Notificaciones', icono: 'campana', sub: 'Planes, parches y mensajes', proximamente: 'elegir qué avisos te llegan' },
+      { texto: 'Privacidad', icono: 'candado', sub: 'Quién ve tus planes y tu barrio', proximamente: 'elegir quién ve tus planes y tu barrio' },
+      { texto: 'Ciudad y gustos', icono: 'pin', sub: ciudadYGustos || undefined, proximamente: 'cambiar tu ciudad y tus gustos' },
+    ],
+  },
+  {
+    id: 'datos',
+    titulo: 'Tus datos',
+    opciones: [
+      {
+        texto: 'Privacidad y datos',
+        icono: 'escudo',
+        sub: 'Descarga, corrige o elimina tus datos (Ley 1581)',
+        proximamente: 'descargar, corregir o eliminar tus datos',
+      },
+    ],
+  },
+  {
+    id: 'ayuda',
+    titulo: 'Ayuda y legal',
+    opciones: [
+      { texto: 'Centro de ayuda', icono: 'ayuda', proximamente: 'consultar el centro de ayuda' },
+      { texto: 'Términos y condiciones', icono: 'hoja', proximamente: 'leer los términos y condiciones' },
+      { texto: 'Política de tratamiento de datos', icono: 'hoja', proximamente: 'leer la política de tratamiento de datos' },
+    ],
+  },
+];
+---
+
+<Modal id="ajustes" titulo="Ajustes" forma="hoja" ancho={440}>
+  <div class="ajustes" data-ajustes>
+    <div class="vista" data-vista="principal">
+      <div class="activa">
+        <span aria-hidden="true"><Avatar color={usuaria.color} tamano={48} iniciales={usuaria.iniciales} /></span>
+        <span class="quien">
+          <b>{usuaria.nombre}</b>
+          <span>@{usuaria.id}</span>
+        </span>
+      </div>
+
+      {
+        grupos.map((g) => (
+          <section class="grupo">
+            <h3 id={`ajustes-${g.id}`}>{g.titulo}</h3>
+            <ListaOpciones opciones={g.opciones} etiqueta={`ajustes-${g.id}`} />
+          </section>
+        ))
+      }
+
+      <ListaOpciones class="salir" opciones={[{ texto: 'Cerrar sesión', icono: 'salir', ir: 'cerrar', peligro: true, sinFlecha: true }]} />
+    </div>
+
+    <div class="vista" data-vista="cuentas" role="group" aria-labelledby="ajustes-cuentas" tabindex="-1" hidden>
+      <button type="button" class="atras" data-atras>
+        <Icono nombre="volver" tamano={18} />Ajustes
+      </button>
+      <h3 id="ajustes-cuentas" class="titulo-vista">Cuentas en este dispositivo</h3>
+      <ul class="cuentas">
+        <li class="cuenta">
+          <span aria-hidden="true"><Avatar color={usuaria.color} tamano={40} iniciales={usuaria.iniciales} /></span>
+          <span class="textos">
+            <span class="texto">{usuaria.nombre}</span>
+            <span class="sub">@{usuaria.id}</span>
+          </span>
+          <span class="estado-activa"><Icono nombre="check" tamano={16} grosor={2.4} />Activa</span>
+        </li>
+        <li>
+          <button type="button" class="otra" data-otra-cuenta>
+            <span class="icono" aria-hidden="true"><Icono nombre="personaMas" tamano={20} /></span>
+            <span class="textos"><span class="texto">Usar otra cuenta</span></span>
+            <span class="chevron" aria-hidden="true"><Icono nombre="siguiente" tamano={16} /></span>
+          </button>
+        </li>
+      </ul>
+      <p class="nota">En la demostración solo existe la cuenta de Camila.</p>
+    </div>
+
+    <div class="vista" data-vista="cerrar" role="group" aria-labelledby="ajustes-cerrar" tabindex="-1" hidden>
+      <h3 id="ajustes-cerrar" class="titulo-vista grande">¿Cerrar sesión en este dispositivo?</h3>
+      <p class="nota">Volverás a la página de bienvenida como visitante.</p>
+      <div class="botones">
+        <button type="button" class="principal" data-confirmar-salir>Cerrar sesión</button>
+        <button type="button" class="secundario" data-atras>Cancelar</button>
+      </div>
+    </div>
+
+    <AvisoHoja />
+  </div>
+</Modal>
+
+<script>
+  import { cerrarSesion } from '../../lib/sesion';
+  import { limpiarAviso } from './aviso-hoja';
+
+  const dialogo = document.getElementById('ajustes') as HTMLDialogElement | null;
+  const raiz = dialogo?.querySelector<HTMLElement>('[data-ajustes]');
+  if (dialogo && raiz) {
+    const vistas = [...raiz.querySelectorAll<HTMLElement>('[data-vista]')];
+    const aviso = raiz.querySelector<HTMLElement>('[data-aviso-hoja]');
+    let origen: HTMLElement | null = null;
+
+    const mostrar = (nombre: string, animar = true) => {
+      vistas.forEach((v) => {
+        const visible = v.dataset.vista === nombre;
+        v.hidden = !visible;
+        v.classList.toggle('entra', visible && animar);
+      });
+      if (aviso) limpiarAviso(aviso);
+    };
+
+    raiz.addEventListener('click', (ev) => {
+      const objetivo = ev.target as HTMLElement;
+
+      // Sub-vista: el foco va a su contenedor (role="group" con el título como nombre)
+      const ir = objetivo.closest<HTMLElement>('[data-ir]');
+      if (ir?.dataset.ir) {
+        origen = ir;
+        mostrar(ir.dataset.ir);
+        raiz.querySelector<HTMLElement>(`[data-vista="${ir.dataset.ir}"]`)?.focus();
+        return;
+      }
+
+      // "Ajustes" y "Cancelar": vuelven a la lista con el foco en la fila que abrió la sub-vista
+      if (objetivo.closest('[data-atras]')) {
+        mostrar('principal');
+        origen?.focus();
+        return;
+      }
+
+      if (objetivo.closest('[data-confirmar-salir]')) {
+        cerrarSesion();
+        location.assign('/');
+        return;
+      }
+
+      if (objetivo.closest('[data-otra-cuenta]')) {
+        cerrarSesion();
+        location.assign('/entrar?volver=/yo');
+      }
+    });
+
+    // Al cerrar (X, Escape o fuera) vuelve a la vista principal; el Modal devuelve el foco a la rueda
+    dialogo.addEventListener('close', () => {
+      mostrar('principal', false);
+      origen = null;
+    });
+
+    // /yo#ajustes abre la hoja al cargar, como si se tocara la rueda (así el foco vuelve a ella al cerrar)
+    if (location.hash === '#ajustes') {
+      document.querySelector<HTMLElement>('[data-abrir-modal="ajustes"]')?.click();
+    }
+  }
+</script>
+
+<style>
+  .ajustes {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vista {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .vista:focus {
+    outline: none;
+  }
+
+  .entra {
+    animation: aparecer 150ms ease-out;
+  }
+
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  .activa {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+  }
+
+  .activa > span:first-child,
+  .cuenta > span:first-child {
+    display: grid;
+  }
+
+  .quien,
+  .textos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .quien b {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .quien span {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .grupo h3 {
+    margin: 0 4px 6px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* "Cerrar sesión" en su propia caja, a 8 px del último grupo */
+  .ajustes :global(.salir) {
+    margin-top: -10px;
+  }
+
+  /* Sub-vistas */
+  .atras {
+    align-self: flex-start;
+    height: 44px;
+    margin: -8px 0 -6px -10px;
+    padding: 0 14px 0 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink);
+    font-size: .92rem;
+    font-weight: 700;
+    transition-property: background-color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .atras:hover {
+    background: var(--light-hover);
+  }
+
+  .titulo-vista {
+    font-size: 1rem;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  .titulo-vista.grande {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .cuentas {
+    list-style: none;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .cuentas li + li {
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .cuenta,
+  .otra {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 14px;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .otra {
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    text-align: left;
+    font-size: inherit;
+    transition-property: background-color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .otra:hover {
+    background: var(--light-hover);
+  }
+
+  .otra:active {
+    background: var(--surface-sunken);
+  }
+
+  .otra:focus-visible {
+    outline-offset: -3px;
+  }
+
+  .otra .icono {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px dashed var(--line-input);
+    display: grid;
+    place-items: center;
+  }
+
+  .texto {
+    font-size: .95rem;
+    font-weight: 500;
+  }
+
+  .cuenta .texto {
+    font-weight: 700;
+  }
+
+  .sub {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .chevron {
+    display: grid;
+    color: var(--muted);
+  }
+
+  .estado-activa {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--brand);
+  }
+
+  .nota {
+    margin-top: -8px;
+    font-size: .8rem;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  [data-vista='cerrar'] .nota {
+    margin-top: -10px;
+    font-size: .92rem;
+  }
+
+  .botones {
+    display: grid;
+    gap: 8px;
+  }
+
+  .principal,
+  .secundario {
+    height: 48px;
+    border-radius: var(--radius-pill);
+    font-size: .95rem;
+    font-weight: 700;
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  .principal {
+    border: 0;
+    background: var(--brand);
+    color: var(--on-dark);
+  }
+
+  .secundario {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .secundario:hover {
+    background: var(--light-hover);
+  }
+
+  .principal:active,
+  .secundario:active {
+    transform: scale(.97);
+  }
+</style>

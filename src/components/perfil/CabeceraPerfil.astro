@@ -1,197 +1,388 @@
 ---
-// N62 · Cabecera de perfil con estadísticas, en sus dos variantes (H46):
-// "Mi perfil" (propio: "Editar perfil", sin "Seguir" ni "Mensaje") y "Perfil de otra persona".
+// N62 · Tarjeta de perfil (handoff 4.10, rediseñada en la decisión 2.29): portada corta con el lenguaje del héroe
+// (--fondo-portada) teñida con el color de la persona (PF13), avatar montado, una sola fila de acciones,
+// cifras discretas calculadas de los datos (PF6) y gustos.
+// - Mi perfil: "Editar perfil" (Próximamente) y la rueda de ajustes (VentanaAjustes).
+// - Otra persona: "Seguir", "Mensaje" y "Más opciones" (VentanaOpcionesPerfil). Sin bio, gustos ni cifras
+//   inventadas: solo lo que dicen los datos, más los parches en común con la usuaria (PF1).
 import Avatar from '../ui/Avatar.astro';
+import Icono from '../ui/Icono.astro';
 import BotonSeguir from './BotonSeguir.astro';
 import type { Persona } from '../../data/personas';
-import { coloresGusto, type Perfil } from '../../data/perfil';
+import type { Parche } from '../../data/parches';
+import { coloresGusto, type CifrasPerfil, type Perfil } from '../../data/perfil';
 import { nombreCiudad } from '../../data/ciudades';
+import { ciudadDe, rutaChatCon } from '../../data/mensajes';
 import { cifra } from '../../lib/formato';
-import { rutaChatCon } from '../../data/mensajes';
 
 interface Props {
   persona: Persona;
   perfil?: Perfil;
+  cifras?: CifrasPerfil;
   propio: boolean;
+  // Parches de la usuaria en los que también está esta persona (solo en el perfil ajeno)
+  enComun?: Parche[];
 }
 
-const { persona, perfil, propio } = Astro.props;
+const { persona, perfil, cifras, propio, enComun = [] } = Astro.props;
 const nombreCorto = persona.nombre.split(' ')[0];
 
-// "@usuario · [barrio, ]ciudad". El barrio solo lo ve quien la persona autorice (H30):
-// en el demo, solo la propia persona en Mi perfil.
+// "@usuario · [barrio, ]ciudad". El barrio solo lo ve quien la persona autorice (H30): en el demo, solo la
+// propia persona en Mi perfil. Sin perfil, la ciudad sale de los datos del chat (la única que hay).
 const ubicacion = perfil
   ? [propio ? perfil.barrio : undefined, nombreCiudad(perfil.ciudad)].filter(Boolean).join(', ')
-  : '';
+  : ciudadDe[persona.id] ?? '';
 const linea = [`@${persona.id}`, ubicacion].filter(Boolean).join(' · ');
+
+const tinte: Record<Persona['color'], string> = {
+  c1: 'var(--peach)',
+  c2: 'var(--lilac)',
+  c3: 'var(--pink)',
+  c4: 'var(--lime)',
+  c5: 'var(--yellow)',
+  c6: 'var(--aqua)',
+};
+
+// Singular y plural de cada cifra; "Planes" y no "Eventos" (H37)
+const listaCifras = cifras
+  ? [
+      { valor: cifras.planes, uno: 'Plan', varios: 'Planes' },
+      { valor: cifras.ciudades, uno: 'Ciudad', varios: 'Ciudades' },
+      { valor: cifras.seguidores, uno: 'Seguidor', varios: 'Seguidores' },
+      { valor: cifras.siguiendo, uno: 'Siguiendo', varios: 'Siguiendo' },
+      { valor: cifras.parches, uno: 'Parche', varios: 'Parches' },
+    ]
+  : [];
+
+const hayDetalles = Boolean(perfil?.biografia || listaCifras.length || perfil?.gustos.length || enComun.length);
 ---
 
-<section class="cabecera" aria-label={propio ? 'Mi perfil' : 'Perfil'}>
+<section class="tarjeta" aria-labelledby="perfil-nombre">
   <!-- Portada por defecto mientras no haya foto (decorativa: el nombre ya está en el h1) -->
-  <div class="portada"></div>
+  <div class="portada" style={`--tinte: ${tinte[persona.color]}`}></div>
 
   <div class="identidad">
     <span class="avatar-xl" aria-hidden="true">
-      <Avatar color={persona.color} tamano={128} iniciales={persona.iniciales} />
+      <Avatar color={persona.color} tamano={96} iniciales={persona.iniciales} />
     </span>
     <div class="nombre">
-      <h1>{persona.nombre}</h1>
+      <h1 id="perfil-nombre">{persona.nombre}</h1>
       <p>{linea}</p>
     </div>
-    <div class="acciones">
+    <div class:list={['acciones', propio ? 'propias' : 'ajenas']}>
       {
         propio ? (
-          <a href="/yo/editar" class="secundario">Editar perfil</a>
+          <>
+            {/* La pantalla de edición no está diseñada (H38): anuncia "Próximamente" */}
+            <button type="button" class="secundario" data-editar-perfil>
+              <Icono nombre="lapiz" tamano={16} />
+              Editar perfil
+            </button>
+            <button
+              type="button"
+              class="redondo"
+              aria-label="Ajustes"
+              aria-haspopup="dialog"
+              aria-controls="ajustes"
+              data-abrir-modal="ajustes"
+            >
+              <Icono nombre="rueda" tamano={20} grosor={1.8} />
+            </button>
+          </>
         ) : (
           <>
-            <BotonSeguir nombre={nombreCorto} />
+            <BotonSeguir nombre={nombreCorto} id={persona.id} />
             {/* Abre la conversación con la persona o, si no existe, "Nuevo chat" con ella elegida (H42) */}
-            <a href={rutaChatCon(persona.id)} class="secundario">Mensaje<span class="solo-lectores"> a {nombreCorto}</span></a>
+            <a href={rutaChatCon(persona.id)} class="secundario">
+              Mensaje<span class="solo-lectores"> a {nombreCorto}</span>
+            </a>
+            <button
+              type="button"
+              class="redondo"
+              aria-label="Más opciones"
+              aria-haspopup="dialog"
+              aria-controls="opciones-perfil"
+              data-abrir-modal="opciones-perfil"
+            >
+              <Icono nombre="masOpciones" tamano={20} />
+            </button>
           </>
         )
       }
     </div>
+    {propio && <p class="aviso-editar" role="status" data-aviso-editar></p>}
   </div>
 
   {
-    perfil && (
-      <div class="bio-estadisticas">
-        <p class="bio">{perfil.biografia}</p>
-        <dl class="estadisticas">
-          {perfil.estadisticas.map((s) => (
-            <div>
-              <dt>{s.etiqueta}</dt>
-              <dd>{cifra(s.valor)}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    )
-  }
+    hayDetalles && (
+      <div class="detalles">
+        <div class="izquierda">
+          {perfil?.biografia && <p class="bio">{perfil.biografia}</p>}
 
-  {
-    perfil && perfil.gustos.length > 0 && (
-      <ul class="gustos" aria-label="Gustos">
-        {perfil.gustos.map((g, i) => (
-          <li style={`--fondo-gusto: ${coloresGusto[i % coloresGusto.length]}`}>{g}</li>
-        ))}
-      </ul>
+          {enComun.length > 0 && (
+            <p class="en-comun">
+              <Icono nombre="parches" tamano={16} />
+              <span>
+                {enComun.length === 1 ? '1 parche en común:' : `${enComun.length} parches en común:`}{' '}
+                {enComun.map((p, i) => (
+                  <>
+                    {i > 0 && (i === enComun.length - 1 ? ' y ' : ', ')}
+                    <a href={`/mensajes/${p.slug}`}>{p.nombre}</a>
+                  </>
+                ))}
+              </span>
+            </p>
+          )}
+
+          {perfil && perfil.gustos.length > 0 && (
+            <ul class="gustos" aria-label="Gustos">
+              {perfil.gustos.map((g, i) => (
+                <li style={`--fondo-gusto: ${coloresGusto[i % coloresGusto.length]}`}>{g}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {listaCifras.length > 0 && (
+          <dl class="cifras">
+            {listaCifras.map((c) => (
+              <div>
+                <dt>{c.valor === 1 ? c.uno : c.varios}</dt>
+                <dd>{cifra(c.valor)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
     )
   }
 </section>
 
+<script>
+  const boton = document.querySelector<HTMLButtonElement>('[data-editar-perfil]');
+  const aviso = document.querySelector<HTMLElement>('[data-aviso-editar]');
+  let temporizador = 0;
+  boton?.addEventListener('click', () => {
+    if (!aviso) return;
+    clearTimeout(temporizador);
+    aviso.textContent = '';
+    requestAnimationFrame(() => {
+      aviso.textContent = 'Próximamente podrás editar tu perfil.';
+    });
+    temporizador = window.setTimeout(() => (aviso.textContent = ''), 6000);
+  });
+</script>
+
 <style>
-  .cabecera {
+  .tarjeta {
+    margin-top: 16px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius-2xl);
+    border-radius: var(--radius-xl);
     overflow: hidden;
   }
 
+  /* --fondo-portada (decisión 2.29) con una mancha del color de la persona encima de la primera (PF13) */
   .portada {
-    height: 200px;
+    height: 112px;
     background:
-      radial-gradient(circle at 20% 40%, rgba(238, 147, 188, .7) 0, transparent 30%),
-      radial-gradient(circle at 80% 60%, rgba(246, 220, 106, .6) 0, transparent 28%),
-      var(--photo-dark);
-  }
-
-  .identidad,
-  .bio-estadisticas,
-  .gustos {
-    padding: 0 32px 28px;
+      radial-gradient(circle at 16% 30%, color-mix(in srgb, var(--tinte) 72%, transparent) 0, transparent 30%),
+      var(--fondo-portada);
   }
 
   .identidad {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 16px 24px;
+    position: relative;
+    padding: 0 16px;
   }
 
-  /* Se monta 64 px sobre la portada; position y z-index por si la portada pasa a ser imagen */
+  /* Se monta sobre la portada; position y z-index por si la portada pasa a ser imagen */
   .avatar-xl {
     position: relative;
     z-index: 1;
-    margin-top: -64px;
+    display: inline-flex;
+    margin-top: -48px;
+    border-radius: 50%;
     line-height: 1;
   }
 
   .avatar-xl :global(.avatar) {
-    border: 5px solid var(--surface);
+    border: 4px solid var(--surface);
     font-family: var(--display);
     font-weight: 900;
-    font-size: 2.4rem;
+    font-size: 1.9rem;
+    letter-spacing: -0.02em;
   }
 
   .nombre {
-    flex: 1 1 260px;
+    margin-top: 8px;
     min-width: 0;
-    padding-top: 12px;
   }
 
   h1 {
     font-family: var(--display);
     font-weight: 900;
-    font-size: 2rem;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
     overflow-wrap: anywhere;
   }
 
   .nombre p {
-    margin-top: 2px;
+    margin-top: 4px;
+    font-size: .9rem;
     color: var(--muted);
     overflow-wrap: anywhere;
   }
 
   .acciones {
-    display: flex;
-    gap: 10px;
+    margin-top: 14px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .propias {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
+  .ajenas {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+  }
+
+  .ajenas :global(.seguir) {
+    min-width: 0;
+    width: 100%;
+    padding: 0 12px;
   }
 
   /* Píldora secundaria (N69, contorno claro de 44 px) */
   .secundario {
     height: 44px;
     border-radius: var(--radius-pill);
-    padding: 0 20px;
+    padding: 0 18px;
     border: 1px solid var(--line);
     background: var(--surface);
+    color: var(--ink);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: 8px;
     font-size: .92rem;
     font-weight: 700;
     white-space: nowrap;
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
   }
 
-  .bio-estadisticas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px 40px;
-    align-items: flex-start;
+  .redondo {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
   }
 
-  .bio {
-    flex: 1 1 320px;
-    max-width: 56ch;
+  .secundario:hover,
+  .redondo:hover {
+    background: var(--light-hover);
+    color: var(--ink);
   }
 
-  .estadisticas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 28px;
+  .secundario:active,
+  .redondo:active {
+    transform: scale(.97);
   }
 
-  dt {
-    font-size: .78rem;
+  .aviso-editar {
+    font-size: .85rem;
+    font-weight: 500;
     color: var(--muted);
   }
 
+  .aviso-editar:not(:empty) {
+    margin-top: 8px;
+  }
+
+  /* En celular: bio, parches en común, cifras y gustos (la columna izquierda se "abre" con display: contents) */
+  .detalles {
+    padding: 14px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .izquierda {
+    display: contents;
+  }
+
+  .gustos {
+    order: 1;
+  }
+
+  .bio {
+    font-size: .95rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .en-comun {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: .92rem;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .en-comun :global(svg) {
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .en-comun a {
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-input);
+    text-underline-offset: 3px;
+  }
+
+  .en-comun a:hover {
+    color: var(--brand);
+  }
+
+  /* Cifras en línea en celular: "13 planes · 3 ciudades…" (el dt va antes en el código, como pide un dl) */
+  .cifras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+
+  .cifras div {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 4px;
+  }
+
   dd {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 1.6rem;
+    font-weight: 700;
+    font-size: 1rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  dt {
+    font-size: .875rem;
+    color: var(--muted);
+    text-transform: lowercase;
   }
 
   .gustos {
@@ -204,9 +395,164 @@ const linea = [`@${persona.id}`, ubicacion].filter(Boolean).join(' · ');
   /* N60 · Gustos estáticos: etiquetas de color, no botones */
   .gustos li {
     border-radius: var(--radius-pill);
-    padding: 6px 14px;
+    padding: 5px 12px;
     font-size: .84rem;
     font-weight: 500;
     background: var(--fondo-gusto);
+  }
+
+  @media (max-width: 359px) {
+    .identidad,
+    .detalles {
+      padding-inline: 16px;
+    }
+
+    .avatar-xl {
+      margin-top: -44px;
+    }
+
+    .avatar-xl :global(.avatar) {
+      width: 88px;
+      height: 88px;
+    }
+
+    h1 {
+      font-size: 1.45rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .tarjeta {
+      margin-top: 24px;
+      border-radius: var(--radius-2xl);
+    }
+
+    .portada {
+      height: 184px;
+    }
+
+    .identidad {
+      padding: 0 32px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 12px 24px;
+    }
+
+    .avatar-xl {
+      margin-top: -68px;
+    }
+
+    .avatar-xl :global(.avatar) {
+      width: 136px;
+      height: 136px;
+      border-width: 5px;
+      font-size: 2.6rem;
+    }
+
+    .nombre {
+      flex: 1 1 240px;
+      margin-top: 0;
+      padding-top: 16px;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    .nombre p {
+      font-size: 1rem;
+    }
+
+    .acciones {
+      margin-top: 0;
+      display: flex;
+      gap: 10px;
+    }
+
+    .ajenas :global(.seguir) {
+      min-width: 118px;
+      width: auto;
+      padding: 0 22px;
+    }
+
+    .secundario {
+      padding: 0 20px;
+    }
+
+    /* El aviso de "Editar perfil" baja a su propia línea, alineado a la derecha bajo los botones */
+    .aviso-editar {
+      flex-basis: 100%;
+      text-align: right;
+    }
+
+    .aviso-editar:not(:empty) {
+      margin-top: -4px;
+    }
+
+    .detalles {
+      padding: 20px 32px 32px;
+      gap: 16px;
+    }
+
+    .bio {
+      font-size: 1rem;
+      line-height: 1.55;
+      max-width: 60ch;
+    }
+  }
+
+  /* Computador: bio y gustos a la izquierda, cifras en baldosas a la derecha */
+  @media (min-width: 1024px) {
+    .detalles {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 48px;
+    }
+
+    .izquierda {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cifras {
+      display: grid;
+      grid-auto-flow: column;
+      gap: 0;
+    }
+
+    .cifras div {
+      flex-direction: column-reverse;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 0 20px;
+      border-left: 1px solid var(--line);
+    }
+
+    .cifras div:first-child {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .cifras div:last-child {
+      padding-right: 0;
+    }
+
+    dd {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: 1.75rem;
+      line-height: 1.1;
+    }
+
+    dt {
+      font-size: .8rem;
+      text-transform: none;
+    }
   }
 </style>

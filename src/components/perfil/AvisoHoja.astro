@@ -1,0 +1,38 @@
+---
+// Aviso de las hojas de opciones del Perfil (decisión 2.29). Va al final del contenido del diálogo y queda pegado
+// abajo, así se ve aunque la lista tenga scroll. Vacío no ocupa lugar, pero sigue en el árbol de accesibilidad
+// para que el lector de pantalla lo anuncie. Se llena con avisarEnHoja (aviso-hoja.ts).
+---
+
+<p class="aviso" role="status" data-aviso-hoja></p>
+
+<script>
+  import './aviso-hoja';
+</script>
+
+<style>
+  .aviso {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    font-size: .88rem;
+    font-weight: 700;
+  }
+
+  .aviso:not(:empty) {
+    margin-top: 4px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background: var(--ink);
+    color: var(--on-dark);
+    box-shadow: 0 8px 24px rgba(23, 18, 15, .25);
+    animation: aparecer-aviso 150ms ease-out;
+  }
+
+  @keyframes aparecer-aviso {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+</style>

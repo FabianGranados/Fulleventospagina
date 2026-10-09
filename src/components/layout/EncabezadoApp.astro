@@ -1,19 +1,20 @@
 ---
 // N1 · Encabezado con sesión: un solo componente con variantes (H41).
-// completo: Inicio, Agenda, Mapa, Mensajes · detalle: Evento · detalle-perfil: Perfil
+// completo: Inicio, Agenda, Mapa, Mensajes, Mi perfil (/yo) · detalle: Evento y perfil de otra persona
 // Por debajo de 768 px (decisión 2.27) es una sola fila: logo + lupa, "+" y avatar (completo) o flecha "Volver",
 // logo centrado y avatar (detalle). Los íconos de secciones pasan a la barra inferior (BarraNavegacion, N70).
-import Icono from '../ui/Icono.astro';
+import Icono, { type NombreIcono } from '../ui/Icono.astro';
 import Logo from '../ui/Logo.astro';
 import { ciudades } from '../../data/ciudades';
 import { usuaria } from '../../data/personas';
 import { chatsSinLeer } from '../../data/mensajes';
 import { nombreMensajes } from '../../lib/formato';
 
-type Pagina = 'inicio' | 'agenda' | 'mapa' | 'noticias' | 'mensajes';
+// 'yo': Mi perfil. Marca el avatar (aria-current y anillo), que es el enlace a /yo (decisión 2.29)
+type Pagina = 'inicio' | 'agenda' | 'mapa' | 'noticias' | 'mensajes' | 'yo';
 
 interface Props {
-  variante?: 'completo' | 'detalle' | 'detalle-perfil';
+  variante?: 'completo' | 'detalle';
   activa?: Pagina;
   noLeidos?: number;
   // En Evento, Agenda, Mapa y Bienvenida va junto al EncabezadoVisitante con class="solo-sesion" (decisión 2.24)
@@ -23,7 +24,7 @@ interface Props {
 // Sin cifra propia de la página, la de los datos del chat (una sola fuente, H13)
 const { variante = 'completo', activa, noLeidos = chatsSinLeer, class: clase } = Astro.props;
 
-const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
+const iconos: { id: Pagina; href: string; icono: NombreIcono; nombre: string }[] = [
   { id: 'inicio', href: '/inicio', icono: 'inicio', nombre: 'Inicio' },
   { id: 'agenda', href: '/agenda', icono: 'agenda', nombre: 'Agenda de eventos' },
   { id: 'mapa', href: '/mapa', icono: 'mapa', nombre: 'Mapa de eventos' },
@@ -69,36 +70,24 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
       )
     }
 
-    {
-      variante === 'detalle-perfil' ? (
-        <div class="derecha">
-          <a href="/mapa" class="pildora"><Icono nombre="mapa" />Mapa</a>
-          <a href="/mensajes" class="circulo" aria-label={iconos.find((i) => i.id === 'mensajes')!.nombre}>
-            <Icono nombre="mensajes" tamano={20} />
-            {noLeidos > 0 && <span class="insignia" aria-hidden="true">{noLeidos}</span>}
-          </a>
-        </div>
-      ) : (
-        <nav aria-label="Principal" class="iconos">
-          {iconos.map((i) => (
-            <a href={i.href} class="icono" aria-label={i.nombre} aria-current={activa === i.id ? 'page' : undefined}>
-              <Icono nombre={i.icono} tamano={20} />
-              {i.id === 'mensajes' && noLeidos > 0 && <span class="insignia" aria-hidden="true">{noLeidos}</span>}
-            </a>
-          ))}
-          <button type="button" class="icono" aria-label="Notificaciones">
-            <Icono nombre="campana" tamano={20} />
-          </button>
-          {/* Antes "Crear evento": lleva a los dos caminos, un evento nuevo o una publicación sobre uno (decisión 2.26) */}
-          {variante === 'completo' && (
-            <a href="/crear-evento" class="crear">
-              <Icono nombre="mas" tamano={16} grosor={2.4} />Publicar
-            </a>
-          )}
-          <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`}>{usuaria.iniciales}</a>
-        </nav>
-      )
-    }
+    <nav aria-label="Principal" class="iconos">
+      {iconos.map((i) => (
+        <a href={i.href} class="icono" aria-label={i.nombre} aria-current={activa === i.id ? 'page' : undefined}>
+          <Icono nombre={i.icono} tamano={20} />
+          {i.id === 'mensajes' && noLeidos > 0 && <span class="insignia" aria-hidden="true">{noLeidos}</span>}
+        </a>
+      ))}
+      <button type="button" class="icono" aria-label="Notificaciones">
+        <Icono nombre="campana" tamano={20} />
+      </button>
+      {/* Antes "Crear evento": lleva a los dos caminos, un evento nuevo o una publicación sobre uno (decisión 2.26) */}
+      {variante === 'completo' && (
+        <a href="/crear-evento" class="crear">
+          <Icono nombre="mas" tamano={16} grosor={2.4} />Publicar
+        </a>
+      )}
+      <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`} aria-current={activa === 'yo' ? 'page' : undefined}>{usuaria.iniciales}</a>
+    </nav>
 
     {/* Solo por debajo de 768 px (decisión 2.27). Fuera del nav: el nav "Principal" de celular es la barra inferior */}
     <div class="acciones-celular">
@@ -115,7 +104,7 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
           </>
         )
       }
-      <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`}>{usuaria.iniciales}</a>
+      <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`} aria-current={activa === 'yo' ? 'page' : undefined}>{usuaria.iniciales}</a>
     </div>
   </div>
 </header>
@@ -176,10 +165,6 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
     border-bottom: 1px solid var(--line);
   }
 
-  .detalle-perfil {
-    position: static;
-  }
-
   .fila {
     box-sizing: content-box;
     max-width: var(--ancho-max);
@@ -191,26 +176,22 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
     gap: 12px 20px;
   }
 
-  .detalle :global(.logo),
-  .detalle-perfil :global(.logo) {
+  .detalle :global(.logo) {
     margin-inline: auto;
   }
 
   /* Variantes de detalle: tres columnas para que el logo quede centrado en la página y no entre
      "Volver" y los íconos, que miden distinto. En celular la tercera columna es el avatar (decisión 2.27). */
-  .detalle .fila,
-  .detalle-perfil .fila {
+  .detalle .fila {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
   }
 
-  .detalle .volver,
-  .detalle-perfil .volver {
+  .detalle .volver {
     justify-self: start;
   }
 
-  .detalle .iconos,
-  .detalle-perfil .derecha {
+  .detalle .iconos {
     justify-self: end;
     margin-left: 0;
   }
@@ -368,39 +349,9 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
     font-size: .78rem;
   }
 
-  .derecha {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .pildora {
-    height: 44px;
-    border-radius: var(--radius-pill);
-    padding: 0 16px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .88rem;
-    font-weight: 700;
-  }
-
-  .circulo {
-    position: relative;
-    width: 44px;
-    height: 44px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-  }
-
-  .circulo .insignia {
-    top: -3px;
-    right: -3px;
+  /* Mi perfil (decisión 2.29): el avatar es la página actual. Anillo doble, no solo color */
+  .avatar[aria-current='page'] {
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink);
   }
 
   .acciones-celular {
@@ -421,8 +372,7 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
       gap: 8px;
     }
 
-    .iconos,
-    .derecha {
+    .iconos {
       display: none;
     }
 
@@ -433,8 +383,7 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
       margin-left: auto;
     }
 
-    .detalle .acciones-celular,
-    .detalle-perfil .acciones-celular {
+    .detalle .acciones-celular {
       justify-self: end;
       margin-left: 0;
     }

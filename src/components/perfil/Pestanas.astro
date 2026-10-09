@@ -5,7 +5,8 @@
 // para que "Recuerdos" del menú de Inicio pueda abrir directo esa pestaña.
 interface Props {
   etiqueta: string;
-  pestanas: { id: string; texto: string }[];
+  // conteo: cifra real de cada panel, al lado del nombre (decisión 2.29); sin conteo no se muestra
+  pestanas: { id: string; texto: string; conteo?: number }[];
 }
 
 const { etiqueta, pestanas } = Astro.props;
@@ -24,6 +25,7 @@ const { etiqueta, pestanas } = Astro.props;
         data-pestana={p.id}
       >
         {p.texto}
+        {p.conteo !== undefined && <span class="conteo">{p.conteo}</span>}
       </button>
     ))
   }
@@ -88,6 +90,9 @@ const { etiqueta, pestanas } = Astro.props;
 
   [role='tab'] {
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     white-space: nowrap;
     height: 48px;
     border: 0;
@@ -99,9 +104,20 @@ const { etiqueta, pestanas } = Astro.props;
     color: var(--muted);
   }
 
+  [role='tab']:hover {
+    color: var(--ink);
+  }
+
   [role='tab'][aria-selected='true'] {
     color: var(--ink);
     border-bottom-color: var(--brand);
+  }
+
+  .conteo {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
   }
 
   /* El overflow de la fila recorta el anillo exterior: se dibuja hacia dentro (H51) */
@@ -109,10 +125,20 @@ const { etiqueta, pestanas } = Astro.props;
     outline-offset: -3px;
   }
 
-  /* Las 3 pestañas caben desde 379 px (sugerencia de 8.2.8); por debajo queda el desplazamiento */
-  @media (max-width: 419px) {
+  /* En celular la fila se desliza y llega al borde de la pantalla: la pestaña siguiente se asoma (decisión 2.28) */
+  @media (max-width: 767px) {
+    .pestanas {
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
+      scrollbar-width: none;
+    }
+
+    .pestanas::-webkit-scrollbar {
+      display: none;
+    }
+
     [role='tab'] {
-      padding: 0 10px;
+      padding: 0 12px;
     }
   }
 </style>

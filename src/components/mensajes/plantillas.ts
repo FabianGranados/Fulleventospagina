@@ -250,9 +250,11 @@ export const infoHTML = (e: Estado) => {
     <span class="av av-72 ${avatarConv(c).clase}" aria-hidden="true">${esc(avatarConv(c).iniciales)}</span>
     <h2 class="info-nombre" id="info-nombre">${esc(nombreConv(c))}${si(c.tipo === 'organizador', verificado(17))}</h2>
     <span class="info-sub">${esc(subtituloInfo(c))}</span>
+    ${si(c.tipo === 'persona', `<a href="${perfilDe(c.con!)}" class="ver-perfil">Ver perfil</a>`)}
     ${si(
-      c.tipo !== 'parche',
-      `<a href="${perfilDe(c.con!)}" class="ver-perfil">${c.tipo === 'organizador' ? 'Ver perfil del organizador' : 'Ver perfil'}</a>`,
+      c.tipo === 'organizador',
+      // El perfil de organizador no existe todavía (PF2, H38): en vez de un enlace roto, "Próximamente"
+      '<span class="ver-perfil inactivo">Perfil del organizador <span class="pronto">Próximamente</span></span>',
     )}
   </div>`;
 

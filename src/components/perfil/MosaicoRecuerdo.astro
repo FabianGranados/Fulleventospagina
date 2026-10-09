@@ -21,7 +21,7 @@ const { recuerdo: r } = Astro.props;
 <style>
   .recuerdo {
     aspect-ratio: 1;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     overflow: hidden;
     display: flex;
     align-items: flex-end;
@@ -40,6 +40,10 @@ const { recuerdo: r } = Astro.props;
   h3 {
     font-size: inherit;
     font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   p {

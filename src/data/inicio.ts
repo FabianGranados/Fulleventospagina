@@ -14,9 +14,6 @@ export const pestanas: { id: Pestana; texto: string }[] = [
   { id: 'cerca', texto: 'Cerca de ti' },
 ];
 
-// Contadores de la usuaria con sesión (tarjeta de perfil)
-export const contadores = { planes: 38, seguidores: 412, siguiendo: 289 };
-
 export interface Publicacion {
   id: string;
   autor: string; // id de personas.ts

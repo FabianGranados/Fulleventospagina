@@ -1437,6 +1437,23 @@ const bandeja = EVENTOS_CHAT.map((id) => eventoDe(id));
     font-weight: 700;
   }
 
+  /* Perfil del organizador sin pantalla todavía (decisión 2.29, PF2): inactivo, con la píldora "Próximamente" */
+  .info :global(.ver-perfil.inactivo) {
+    gap: 8px;
+    padding-right: 6px;
+    border: 1px dashed var(--line-input);
+    background: var(--surface-sunken);
+    color: var(--muted);
+  }
+
+  .info :global(.ver-perfil .pronto) {
+    font-size: .72rem;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--muted);
+  }
+
   .info :global(.info-bloque) {
     padding: 16px 18px;
     border-bottom: 1px solid var(--line);

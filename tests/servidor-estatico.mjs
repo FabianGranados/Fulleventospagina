@@ -31,7 +31,14 @@ const resolver = async (ruta) => {
 createServer(async (req, res) => {
   const archivo = await resolver(req.url ?? '/');
   if (!archivo) {
-    res.writeHead(404).end('No encontrado');
+    // Como Cloudflare: la página 404 del sitio (src/pages/404.astro), con estado 404
+    const pagina404 = join(raiz, '404.html');
+    try {
+      const html = await readFile(pagina404);
+      res.writeHead(404, { 'content-type': tipos['.html'] }).end(html);
+    } catch {
+      res.writeHead(404).end('No encontrado');
+    }
     return;
   }
   res.writeHead(200, { 'content-type': tipos[extname(archivo)] ?? 'application/octet-stream' });

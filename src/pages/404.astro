@@ -1,0 +1,156 @@
+---
+// Página no encontrada (decisión 2.29, PF2). Antes un enlace roto mostraba la página en blanco del servidor.
+// Pública: el encabezado de visitante o el de la app según la sesión (decisión 2.24), como Agenda o Evento.
+import Base from '../layouts/Base.astro';
+import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
+import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
+import Pie from '../components/layout/Pie.astro';
+import Icono from '../components/ui/Icono.astro';
+---
+
+<Base titulo="Página no encontrada · Fulleventos" descripcion="No encontramos esta página en Fulleventos.">
+  <EncabezadoVisitante class="solo-visitante" />
+  <EncabezadoApp class="solo-sesion" />
+  <main id="contenido" class="contenedor no-encontrada">
+    <section class="tarjeta" aria-labelledby="titulo-404">
+      <div class="portada" aria-hidden="true">
+        <span class="numero">404</span>
+      </div>
+      <div class="cuerpo">
+        <h1 id="titulo-404">No encontramos esta página</h1>
+        <p>Puede que el enlace esté mal escrito o que la página ya no exista.</p>
+        <div class="botones">
+          <a href="/" class="boton principal solo-visitante">Ir al inicio</a>
+          <a href="/inicio" class="boton principal solo-sesion">Ir al inicio</a>
+          <a href="/agenda" class="boton secundario"><Icono nombre="agenda" tamano={16} />Ver la agenda</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Pie />
+  <BarraNavegacion class="solo-sesion" />
+</Base>
+
+<style>
+  .no-encontrada {
+    padding-top: 24px;
+  }
+
+  .tarjeta {
+    max-width: 640px;
+    margin-inline: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+
+  .portada {
+    height: 140px;
+    background: var(--fondo-portada);
+    display: grid;
+    place-items: center;
+  }
+
+  .numero {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 4.5rem;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: var(--degradado-titular);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .cuerpo {
+    padding: 24px 20px 28px;
+    text-align: center;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 8px auto 0;
+    max-width: 40ch;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .botones {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .boton {
+    height: 48px;
+    padding: 0 22px;
+    border-radius: var(--radius-pill);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: .95rem;
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  .boton:active {
+    transform: scale(.97);
+  }
+
+  .principal,
+  .principal:hover {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .secundario {
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .secundario:hover {
+    background: var(--light-hover);
+    color: var(--ink);
+  }
+
+  @media (min-width: 768px) {
+    .no-encontrada {
+      padding-top: 48px;
+    }
+
+    .tarjeta {
+      border-radius: var(--radius-2xl);
+    }
+
+    .portada {
+      height: 184px;
+    }
+
+    .numero {
+      font-size: 6rem;
+    }
+
+    .cuerpo {
+      padding: 32px 40px 40px;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+    }
+  }
+</style>

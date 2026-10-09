@@ -1,0 +1,114 @@
+---
+// Fila de parche de Mi perfil (decisión 2.29): color del parche, nombre, "12 miembros · {evento} · Vie 9 oct" y
+// chevrón. Toda la fila lleva a su conversación (/mensajes/:slug, H42). Datos de parches.ts (H25, H37).
+import Icono from '../ui/Icono.astro';
+import { totalMiembros, type Parche } from '../../data/parches';
+import { eventos } from '../../data/eventos';
+import { eventoChat } from '../../data/mensajes';
+import { fechaCorta } from '../../lib/formato';
+
+interface Props {
+  parche: Parche;
+}
+
+const { parche: p } = Astro.props;
+const evento = eventos.find((e) => e.id === p.evento);
+const total = totalMiembros(p);
+const detalle = [
+  `${total} ${total === 1 ? 'miembro' : 'miembros'}`,
+  // Nombre corto del chat cuando existe (el mismo de la bandeja de Mensajes)
+  evento ? (eventoChat[evento.id]?.corto ?? evento.titulo) : undefined,
+  evento ? fechaCorta(evento.fecha) : undefined,
+]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<article class:list={['fila-parche', p.color]}>
+  <span class="cuadro" aria-hidden="true">{p.iniciales}</span>
+  <div class="texto">
+    <h3><a href={`/mensajes/${p.slug}`}>{p.nombre}</a></h3>
+    <p>{detalle}</p>
+  </div>
+  <span class="chevron" aria-hidden="true"><Icono nombre="siguiente" tamano={16} /></span>
+</article>
+
+<style>
+  .fila-parche {
+    position: relative;
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  .fila-parche:hover {
+    background: var(--light-hover);
+  }
+
+  .fila-parche:active {
+    transform: scale(.985);
+  }
+
+  .fila-parche:has(a:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .fila-parche a:focus-visible {
+    outline: none;
+  }
+
+  .cuadro {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-xs);
+    display: grid;
+    place-items: center;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .c1 .cuadro { background: var(--peach); }
+  .c2 .cuadro { background: var(--lilac); }
+  .c3 .cuadro { background: var(--pink); }
+  .c4 .cuadro { background: var(--lime); }
+  .c5 .cuadro { background: var(--yellow); }
+  .c6 .cuadro { background: var(--aqua); }
+
+  .texto {
+    min-width: 0;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  p {
+    font-size: .82rem;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .chevron {
+    display: grid;
+    color: var(--muted);
+  }
+</style>

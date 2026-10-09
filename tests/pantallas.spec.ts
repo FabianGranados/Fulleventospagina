@@ -34,6 +34,8 @@ const RUTAS_CON_SESION = [
   '/mensajes/',
   '/mensajes/salseros-de-jueves/',
   '/yo/',
+  // Perfil de otra persona (decisión 2.29): acciones, hoja "Opciones" y planes en común
+  '/perfil/lauram/',
   '/crear-evento/',
   '/evento/bogota/noche-de-salsa-y-boleros-en-vivo/',
   '/noticias/',

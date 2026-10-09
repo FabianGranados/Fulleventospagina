@@ -69,6 +69,18 @@ const trazos = {
   // Centro de noticias (decisión 2.25): periódico doblado con columnas de texto
   noticias: '<path d="M4 5h12v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z"/><path d="M16 9h4v10a2 2 0 0 1-2 2"/><path d="M8 9h4M8 13h4M8 17h4"/>',
   devoluciones: '<path d="M20 11a8 8 0 0 0-14.9-4M4 4v4h4M4 13a8 8 0 0 0 14.9 4M20 20v-4h-4"/>',
+  // Perfil y rueda de ajustes (decisión 2.29)
+  rueda:
+    '<path d="M13.1 4.5 14.6 2.4l2.3.9-.4 2.6 1.6 1.6 2.6-.4.9 2.3-2.1 1.5v2.2l2.1 1.5-.9 2.3-2.6-.4-1.6 1.6.4 2.6-2.3.9-1.5-2.1h-2.2l-1.5 2.1-2.3-.9.4-2.6-1.6-1.6-2.6.4-.9-2.3 2.1-1.5v-2.2L2.4 9.4l.9-2.3 2.6.4 1.6-1.6-.4-2.6 2.3-.9 1.5 2.1z"/><circle cx="12" cy="12" r="3"/>',
+  salir: '<path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+  lapiz: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  cambiarCuenta: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 10-5.5"/><path d="m17 12 3 3-3 3M20 15h-5"/>',
+  personaMas: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',
+  ayuda: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.2-2.4 3.7M12 17.3h.01"/>',
+  siguiente: '<path d="m9 6 6 6-6 6"/>',
+  bandera: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  // Hoja de texto (Términos y Política); "documento" es la cédula de Evento
+  hoja: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
 } as const;
 
 export type NombreIcono = keyof typeof trazos;

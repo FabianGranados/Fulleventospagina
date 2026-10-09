@@ -1,20 +1,27 @@
 ---
-// Pantalla Perfil (handoff 4.10). La usan /yo (Mi perfil) y /perfil/:usuario (perfil de otra persona).
-// Si alguien abre su propio /perfil/:usuario, se muestra Mi perfil (propuesta de 8.2.8, H46).
+// Pantalla Perfil (handoff 4.10, rediseñada en la decisión 2.29). La usan /yo (Mi perfil) y /perfil/:usuario
+// (perfil de otra persona). Si alguien abre su propio /perfil/:usuario, se muestra Mi perfil (8.2.8, H46).
+// - Mi perfil: encabezado completo con el avatar marcado, rueda de ajustes y cinco pestañas (Próximos planes,
+//   Parches, Recuerdos, Reseñas y Guardados).
+// - Otra persona: encabezado de detalle (como Evento), hoja "Opciones" y tres pestañas.
 import Base from '../../layouts/Base.astro';
 import EncabezadoApp from '../layout/EncabezadoApp.astro';
 import Pie from '../layout/Pie.astro';
 import BarraNavegacion from '../layout/BarraNavegacion.astro';
+import EstadoVacio from '../ui/EstadoVacio.astro';
 import CabeceraPerfil from './CabeceraPerfil.astro';
 import Pestanas from './Pestanas.astro';
 import TarjetaPlan from './TarjetaPlan.astro';
+import FilaPlan from './FilaPlan.astro';
+import FilaParche from './FilaParche.astro';
 import MosaicoRecuerdo from './MosaicoRecuerdo.astro';
 import TarjetaResena from './TarjetaResena.astro';
+import VentanaAjustes from './VentanaAjustes.astro';
+import VentanaOpcionesPerfil from './VentanaOpcionesPerfil.astro';
 import { usuaria, type Persona } from '../../data/personas';
-import { VENTA_PROPIA } from '../../config';
-import { eventos } from '../../data/eventos';
-import { perfil as buscarPerfil } from '../../data/perfil';
-import { planesDeUsuaria, type EstadoPlan } from '../../data/asistencia';
+import { eventos, type Evento } from '../../data/eventos';
+import { cifrasPerfil, perfil as buscarPerfil } from '../../data/perfil';
+import { AMIGOS, misParches, planesDeUsuaria, type EstadoPlan } from '../../data/asistencia';
 
 interface Props {
   persona: Persona;
@@ -23,6 +30,7 @@ interface Props {
 const { persona } = Astro.props;
 const propio = persona.id === usuaria.id;
 const perfil = buscarPerfil(persona.id);
+const cifras = cifrasPerfil(persona.id);
 const nombreCorto = persona.nombre.split(' ')[0];
 
 // Segunda persona en Mi perfil, tercera en el ajeno (H37, tabla "Estado de asistencia" de la sección 7)
@@ -32,150 +40,264 @@ const textoEstado: Record<EstadoPlan, [string, string]> = {
   parche: ['En parche', 'En parche'],
 };
 
-// Próximos planes: solo hay estado de asistencia de la usuaria del demo (asistencia.ts), con la regla
-// "En parche" > "Va" > "Le interesa" (8.2.8)
-const planes = (perfil && persona.id === usuaria.id ? planesDeUsuaria() : []).flatMap((p) => {
-  const evento = eventos.find((e) => e.id === p.evento);
-  return evento ? [{ evento, estado: textoEstado[p.estado][propio ? 0 : 1] }] : [];
-});
+// Parches de la usuaria donde también está esta persona: "En común" y sus próximos planes (PF1)
+const enComun = propio ? [] : misParches.filter((p) => p.miembros.includes(persona.id));
 
+// Próximos planes.
+// - Mi perfil: todo evento con estado de asistencia, con la regla "En parche" > "Va" > "Le interesa" (8.2.8).
+// - Otra persona: solo lo que dicen los datos. Si es amiga, los eventos de los parches en común ("En parche");
+//   de nadie más hay asistencia, así que no se inventa (estado vacío del handoff).
+const planes: { evento: Evento; estado: string }[] = propio
+  ? planesDeUsuaria().flatMap((p) => {
+      const evento = eventos.find((e) => e.id === p.evento);
+      return evento ? [{ evento, estado: textoEstado[p.estado][0] }] : [];
+    })
+  : AMIGOS.includes(persona.id)
+    ? eventos
+        .filter((e) => enComun.some((p) => p.evento === e.id))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha))
+        .map((evento) => ({ evento, estado: textoEstado.parche[1] }))
+    : [];
+
+const recuerdos = perfil?.recuerdos ?? [];
+const resenas = perfil?.resenas ?? [];
+const parches = propio ? misParches : [];
+
+// Conteo al lado de cada pestaña, solo si hay algo (decisión 2.29). Guardados vive en el navegador: sin conteo.
+const conteo = (n: number) => (n > 0 ? n : undefined);
 const pestanas = [
-  { id: 'planes', texto: 'Próximos planes' },
-  { id: 'recuerdos', texto: 'Recuerdos' },
-  { id: 'resenas', texto: 'Reseñas' },
+  { id: 'planes', texto: 'Próximos planes', conteo: conteo(planes.length) },
+  ...(propio ? [{ id: 'parches', texto: 'Parches', conteo: conteo(parches.length) }] : []),
+  { id: 'recuerdos', texto: 'Recuerdos', conteo: conteo(recuerdos.length) },
+  { id: 'resenas', texto: 'Reseñas', conteo: conteo(resenas.length) },
+  ...(propio ? [{ id: 'guardados', texto: 'Guardados' }] : []),
 ];
 
+const agenda = { texto: 'Ver la agenda', href: '/agenda' };
 const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulleventos`;
 ---
 
 <Base titulo={titulo} tamanoBase={15} requiereSesion>
-  <EncabezadoApp variante="detalle-perfil" />
+  {propio ? <EncabezadoApp variante="completo" activa="yo" /> : <EncabezadoApp variante="detalle" />}
   <main id="contenido" class="contenedor perfil">
-    <CabeceraPerfil persona={persona} perfil={perfil} propio={propio} />
+    <CabeceraPerfil persona={persona} perfil={perfil} cifras={cifras} propio={propio} enComun={enComun} />
 
-    {
-      propio && (
-        // Accesos de Mi perfil que pide H46. Sus pantallas aún no están diseñadas (N70).
-        // "Mis boletas" es de la compra propia (fase 2, decisión 2.22)
-        <nav class="cuenta" aria-label="Tu cuenta">
-          {VENTA_PROPIA && <a href="/mis-boletas">Mis boletas</a>}
-          <a href="/guardados">Guardados</a>
-          <a href="/ajustes">Ajustes y privacidad</a>
-          {/* Sesión de demostración (decisión 2.24): vuelve a la Bienvenida como visitante */}
-          <button type="button" class="cerrar-sesion" data-cerrar-sesion>Cerrar sesión</button>
-        </nav>
-      )
-    }
+    <div class="contenido">
+      <Pestanas etiqueta="Contenido del perfil" pestanas={pestanas} />
 
-    {
-      perfil ? (
-        <>
-          <Pestanas etiqueta="Contenido del perfil" pestanas={pestanas} />
+      <div role="tabpanel" id="panel-planes" aria-labelledby="pestana-planes" tabindex="0">
+        <h2 class="solo-lectores">Próximos planes</h2>
+        {
+          planes.length > 0 ? (
+            <>
+              {/* Celular: filas compactas. Computador: tarjetas (fila deslizante y, desde 1178 px, 5 columnas) */}
+              <ul class="filas-planes">
+                {planes.map((p) => (
+                  <li>
+                    <FilaPlan evento={p.evento} estado={p.estado} />
+                  </li>
+                ))}
+              </ul>
+              <ul class="tarjetas-planes">
+                {planes.map((p) => (
+                  <li>
+                    <TarjetaPlan evento={p.evento} estado={p.estado} />
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : propio ? (
+            <EstadoVacio icono="agenda" texto="Aún no tienes planes. Explora la agenda" accion={agenda} />
+          ) : (
+            // Texto propuesto en 4.10 y H30: no revela si hay planes ocultos
+            <EstadoVacio icono="agenda" texto={`${nombreCorto} todavía no tiene planes a la vista`} />
+          )
+        }
+      </div>
 
-          <div role="tabpanel" id="panel-planes" aria-labelledby="pestana-planes" tabindex="0">
-            <h2 class="solo-lectores">Próximos planes</h2>
-            <div class="rejilla-planes">
-              {planes.map((p) => <TarjetaPlan evento={p.evento} estado={p.estado} />)}
-            </div>
+      {
+        propio && (
+          <div role="tabpanel" id="panel-parches" aria-labelledby="pestana-parches" tabindex="0" hidden>
+            <h2 class="solo-lectores">Parches</h2>
+            {parches.length > 0 ? (
+              <ul class="lista-parches">
+                {parches.map((p) => (
+                  <li>
+                    <FilaParche parche={p} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EstadoVacio icono="parches" texto="Aún no estás en ningún parche. Ármalo desde la página de un evento." />
+            )}
           </div>
+        )
+      }
 
-          <div role="tabpanel" id="panel-recuerdos" aria-labelledby="pestana-recuerdos" tabindex="0" hidden>
-            <h2 class="solo-lectores">Recuerdos</h2>
-            <div class="rejilla-recuerdos">
-              {perfil.recuerdos.map((r) => <MosaicoRecuerdo recuerdo={r} />)}
-            </div>
-          </div>
+      <div role="tabpanel" id="panel-recuerdos" aria-labelledby="pestana-recuerdos" tabindex="0" hidden>
+        <h2 class="solo-lectores">Recuerdos</h2>
+        {
+          recuerdos.length > 0 ? (
+            <ul class="rejilla-recuerdos">
+              {recuerdos.map((r) => (
+                <li>
+                  <MosaicoRecuerdo recuerdo={r} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EstadoVacio
+              icono="recuerdos"
+              texto={propio ? 'Aquí quedarán los planes a los que vayas.' : `${nombreCorto} todavía no tiene recuerdos a la vista.`}
+            />
+          )
+        }
+      </div>
 
-          <div role="tabpanel" id="panel-resenas" aria-labelledby="pestana-resenas" tabindex="0" hidden>
-            <h2 class="solo-lectores">Reseñas</h2>
-            <div class="resenas">
-              {perfil.resenas.map((v) => <TarjetaResena resena={v} />)}
-            </div>
+      <div role="tabpanel" id="panel-resenas" aria-labelledby="pestana-resenas" tabindex="0" hidden>
+        <h2 class="solo-lectores">Reseñas</h2>
+        {
+          resenas.length > 0 ? (
+            <ul class="resenas">
+              {resenas.map((v) => (
+                <li>
+                  <TarjetaResena resena={v} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EstadoVacio
+              icono="estrella"
+              texto={propio ? 'Cuando vayas a un plan, podrás contar qué tal estuvo.' : `${nombreCorto} todavía no ha escrito reseñas.`}
+              accion={propio ? agenda : undefined}
+            />
+          )
+        }
+      </div>
+
+      {
+        propio && (
+          <div role="tabpanel" id="panel-guardados" aria-labelledby="pestana-guardados" tabindex="0" hidden>
+            <h2 class="solo-lectores">Guardados</h2>
+            {/* Guardar (marcador) en Agenda y Mapa todavía no deja registro en el demo: siempre el estado vacío */}
+            <EstadoVacio
+              icono="marcador"
+              texto="Aún no has guardado planes. Toca el marcador de un evento para tenerlo aquí."
+              accion={agenda}
+            />
           </div>
-        </>
-      ) : (
-        // Estado vacío neutro (texto propuesto en 4.10 y H30): no revela si hay planes ocultos
-        <p class="vacio">{nombreCorto} todavía no tiene planes a la vista</p>
-      )
-    }
+        )
+      }
+    </div>
   </main>
   <Pie />
   <BarraNavegacion activa={propio ? 'tu' : undefined} />
+  {propio ? <VentanaAjustes /> : <VentanaOpcionesPerfil nombre={nombreCorto} />}
 </Base>
-
-<script>
-  import { cerrarSesion } from '../../lib/sesion';
-
-  document.querySelector('[data-cerrar-sesion]')?.addEventListener('click', () => {
-    cerrarSesion();
-    location.assign('/');
-  });
-</script>
 
 <style>
   .perfil {
-    padding-top: 24px;
+    padding-bottom: 40px;
+  }
+
+  .contenido {
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
-  }
-
-  .cuenta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .cuenta a,
-  .cerrar-sesion {
-    height: 44px;
-    border-radius: var(--radius-pill);
-    padding: 0 20px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    display: inline-flex;
-    align-items: center;
-    font-size: .92rem;
-    font-weight: 700;
-  }
-
-  .cerrar-sesion {
-    color: var(--ink);
-  }
-
-  .cerrar-sesion:hover {
-    color: var(--brand);
+    gap: 16px;
   }
 
   [role='tabpanel']:focus-visible {
     outline-offset: 4px;
+    border-radius: var(--radius-xs);
   }
 
-  .rejilla-planes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 20px;
+  ul {
+    list-style: none;
+  }
+
+  /* Próximos planes: filas en celular, tarjetas en computador */
+  .filas-planes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tarjetas-planes {
+    display: none;
+  }
+
+  .lista-parches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .rejilla-recuerdos {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .resenas {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     max-width: 760px;
   }
 
-  .vacio {
-    text-align: center;
-    padding: 40px 16px;
-    background: var(--surface);
-    border: 1px dashed var(--line);
-    border-radius: var(--radius-card);
-    color: var(--muted);
+  @media (min-width: 768px) {
+    .contenido {
+      margin-top: 28px;
+      gap: 20px;
+    }
+
+    .filas-planes {
+      display: none;
+    }
+
+    /* Tableta: fila deslizante de tarjetas de 220 px que llega al borde (decisión 2.28) */
+    .tarjetas-planes {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 6px;
+      padding: 6px 6px 10px;
+      margin: -6px calc(-1 * var(--margen-lateral)) -10px -6px;
+      padding-right: var(--margen-lateral);
+    }
+
+    .tarjetas-planes li {
+      flex: 0 0 220px;
+      display: flex;
+      scroll-snap-align: start;
+    }
+
+    .tarjetas-planes li > :global(*) {
+      flex: 1;
+    }
+
+    .lista-parches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .rejilla-recuerdos {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+  }
+
+  @media (min-width: 1178px) {
+    .tarjetas-planes {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      overflow: visible;
+      padding: 0;
+      margin: 0;
+    }
   }
 </style>

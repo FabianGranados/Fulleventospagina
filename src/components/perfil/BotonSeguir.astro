@@ -1,25 +1,56 @@
 ---
 // N61 · Botón "Seguir" ↔ "Siguiendo" (tamaño del Perfil: 44 px, 0 22px, .92rem).
 // El nombre accesible empieza por el texto visible y nombra a la persona (detalle fino de 8.2.8, H59).
+// En el demo se recuerda en este navegador (clave fe-seguidos-demo, siempre con try/catch) y anuncia el cambio
+// (PF11, decisión 2.29). En producción se guarda en el servidor con la sesión (H12).
 interface Props {
   nombre: string; // nombre corto de la persona: "Seguir a Laura"
+  id: string; // id de personas.ts
+  class?: string;
 }
 
-const { nombre } = Astro.props;
+const { nombre, id, class: clase } = Astro.props;
 ---
 
-<button type="button" class="seguir" aria-pressed="false" data-seguir>
+<button type="button" class:list={['seguir', clase]} aria-pressed="false" data-seguir={id} data-nombre={nombre}>
   <span data-texto>Seguir</span><span class="solo-lectores"> a {nombre}</span>
 </button>
+<span class="solo-lectores" role="status" data-aviso-seguir></span>
 
 <script>
-  // En el demo el estado vive en la página; en producción se guarda en el servidor con sesión (H12).
+  const CLAVE = 'fe-seguidos-demo';
+  const leer = (): string[] => {
+    try {
+      const datos = JSON.parse(localStorage.getItem(CLAVE) ?? '[]');
+      return Array.isArray(datos) ? datos.filter((x) => typeof x === 'string') : [];
+    } catch {
+      return [];
+    }
+  };
+  const guardar = (lista: string[]) => {
+    try {
+      localStorage.setItem(CLAVE, JSON.stringify(lista));
+    } catch {
+      // Sin almacenamiento el cambio vale solo en esta página
+    }
+  };
+
   document.querySelectorAll<HTMLButtonElement>('[data-seguir]').forEach((boton) => {
+    const id = boton.dataset.seguir!;
+    const nombre = boton.dataset.nombre ?? '';
     const texto = boton.querySelector<HTMLElement>('[data-texto]');
-    boton.addEventListener('click', () => {
-      const activo = boton.getAttribute('aria-pressed') !== 'true';
+    const aviso = boton.nextElementSibling as HTMLElement | null;
+    const pintar = (activo: boolean) => {
       boton.setAttribute('aria-pressed', String(activo));
       if (texto) texto.textContent = activo ? 'Siguiendo' : 'Seguir';
+    };
+    pintar(leer().includes(id));
+    boton.addEventListener('click', () => {
+      const activo = boton.getAttribute('aria-pressed') !== 'true';
+      pintar(activo);
+      const lista = leer().filter((x) => x !== id);
+      guardar(activo ? [...lista, id] : lista);
+      if (aviso) aviso.textContent = activo ? `Ahora sigues a ${nombre}.` : `Ya no sigues a ${nombre}.`;
     });
   });
 </script>
@@ -37,6 +68,13 @@ const { nombre } = Astro.props;
     font-size: .92rem;
     font-weight: 700;
     white-space: nowrap;
+    transition-property: transform, background-color, color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  .seguir:active {
+    transform: scale(.97);
   }
 
   .seguir[aria-pressed='true'] {

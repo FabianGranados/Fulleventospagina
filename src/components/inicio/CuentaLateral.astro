@@ -4,7 +4,7 @@
 import Icono, { type NombreIcono } from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
-import { contadores } from '../../data/inicio';
+import { cifrasPerfil } from '../../data/perfil';
 import { misParches } from '../../data/asistencia';
 import { chatsSinLeer } from '../../data/mensajes';
 import { estadoParche, fondoParche as fondo } from './resumen';
@@ -15,6 +15,8 @@ interface Props {
 }
 
 const { noLeidos = chatsSinLeer } = Astro.props;
+// Las mismas cifras de Mi perfil, calculadas de los datos (PF6, decisión 2.29)
+const contadores = cifrasPerfil(usuaria.id)!;
 
 // soloComputador: en celular "Tus parches" va compacto arriba del feed (ResumenCelular, decisión 2.27)
 const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean; conteo?: number; soloComputador?: boolean }[] = [

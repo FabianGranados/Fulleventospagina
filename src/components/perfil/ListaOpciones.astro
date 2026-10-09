@@ -1,0 +1,187 @@
+---
+// Lista de opciones en caja (decisión 2.29): la usan la rueda de ajustes (VentanaAjustes) y "Opciones" del
+// perfil de otra persona (VentanaOpcionesPerfil). Cada fila es un botón (o un enlace) de 52 px con ícono, texto,
+// subtítulo opcional y chevrón, o la píldora "Próximamente" si no tiene pantalla diseñada (H38).
+// Las filas "Próximamente" escriben "Próximamente podrás {acción}." en el AvisoHoja de su diálogo.
+import Icono, { type NombreIcono } from '../ui/Icono.astro';
+
+export interface Opcion {
+  texto: string;
+  icono: NombreIcono;
+  sub?: string;
+  // Sin pantalla todavía: "Próximamente podrás {proximamente}."
+  proximamente?: string;
+  href?: string;
+  // data-ir: abre una sub-vista del diálogo
+  ir?: string;
+  // data-accion: la maneja el script de la ventana
+  accion?: string;
+  // Texto e ícono en rojo de acción (Cerrar sesión, Bloquear)
+  peligro?: boolean;
+  // Sin chevrón ni píldora (acciones que se hacen ahí mismo)
+  sinFlecha?: boolean;
+}
+
+interface Props {
+  opciones: Opcion[];
+  etiqueta?: string; // id del título del grupo
+  class?: string;
+}
+
+const { opciones, etiqueta, class: clase } = Astro.props;
+---
+
+<ul class:list={['caja', clase]} aria-labelledby={etiqueta}>
+  {
+    opciones.map((o) => {
+      const cuerpo = (
+        <>
+          <span class="icono" aria-hidden="true">
+            <Icono nombre={o.icono} tamano={20} />
+          </span>
+          <span class="textos">
+            <span class="texto">{o.texto}</span>
+            {o.sub && <span class="sub">{o.sub}</span>}
+          </span>
+          {o.proximamente ? (
+            <span class="pronto">Próximamente</span>
+          ) : o.sinFlecha ? null : (
+            <span class="chevron" aria-hidden="true">
+              <Icono nombre="siguiente" tamano={16} />
+            </span>
+          )}
+        </>
+      );
+      return (
+        <li>
+          {o.href ? (
+            <a href={o.href} class:list={['fila', { peligro: o.peligro }]}>
+              {cuerpo}
+            </a>
+          ) : (
+            <button
+              type="button"
+              class:list={['fila', { peligro: o.peligro }]}
+              data-proximamente={o.proximamente}
+              data-ir={o.ir}
+              data-accion={o.accion}
+            >
+              {cuerpo}
+            </button>
+          )}
+        </li>
+      );
+    })
+  }
+</ul>
+
+<script>
+  import { avisarEnHoja } from './aviso-hoja';
+
+  document.addEventListener('click', (ev) => {
+    const fila = (ev.target as Element | null)?.closest<HTMLElement>('.caja [data-proximamente]');
+    if (fila) avisarEnHoja(fila, `Próximamente podrás ${fila.dataset.proximamente}.`);
+  });
+</script>
+
+<style>
+  .caja {
+    list-style: none;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  /* Separador con sangría: empieza después del ícono (14 + 24 + 12 px) */
+  li + li {
+    position: relative;
+  }
+
+  li + li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50px;
+    right: 0;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .fila {
+    width: 100%;
+    min-height: 52px;
+    padding: 8px 14px;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    text-align: left;
+    font-size: inherit;
+    transition-property: background-color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .fila:hover {
+    color: var(--ink);
+    background: var(--light-hover);
+  }
+
+  .fila:active {
+    background: var(--surface-sunken);
+  }
+
+  /* overflow: hidden de la caja recortaría el anillo exterior */
+  .fila:focus-visible {
+    outline-offset: -3px;
+  }
+
+  .icono,
+  .chevron {
+    display: grid;
+    place-items: center;
+  }
+
+  .chevron {
+    color: var(--muted);
+  }
+
+  .textos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .texto {
+    font-size: .95rem;
+    font-weight: 500;
+  }
+
+  .sub {
+    font-size: .8rem;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .pronto {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-pill);
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  .peligro,
+  .peligro:hover {
+    color: var(--brand);
+  }
+
+  .peligro .texto {
+    font-weight: 700;
+  }
+</style>

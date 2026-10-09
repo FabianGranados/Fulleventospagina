@@ -65,7 +65,11 @@ const { detalle: d } = m;
             <li><span role="img" aria-label="[Foto de asistente]" style={`background: ${fondo}`} /></li>
           ))}
         </ul>
-        <a href="/perfil/galeria-cafe-libro" class="enlace solo" data-requiere-cuenta="para ver los perfiles y sus fotos" data-retomar="fotos">Ver las {d.fotosRecuerdos} fotos</a>
+        {/* El perfil del organizador con sus fotos no existe todavía (PF2, H38): con sesión dice "Próximamente" */}
+        <div class="solo">
+          <button type="button" class="enlace" data-requiere-cuenta="para ver los perfiles y sus fotos" data-retomar="fotos" data-ver-fotos>Ver las {d.fotosRecuerdos} fotos</button>
+          <p class="pronto" role="status" data-aviso-fotos></p>
+        </div>
       </section>
     )
   }
@@ -259,4 +263,37 @@ const { detalle: d } = m;
   .solo {
     align-self: flex-start;
   }
+
+  button.enlace {
+    border-width: 0 0 2px;
+    border-style: solid;
+    border-color: var(--ink);
+    background: transparent;
+    color: var(--ink);
+    padding: 0 0 1px;
+    font-family: inherit;
+  }
+
+  button.enlace:hover {
+    color: var(--brand);
+  }
+
+  .pronto {
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .pronto:not(:empty) {
+    margin-top: 6px;
+  }
 </style>
+
+<script>
+  const boton = document.querySelector<HTMLButtonElement>('[data-ver-fotos]');
+  const aviso = document.querySelector<HTMLElement>('[data-aviso-fotos]');
+  boton?.addEventListener('click', () => {
+    if (!aviso) return;
+    aviso.textContent = '';
+    requestAnimationFrame(() => (aviso.textContent = 'Próximamente podrás ver las fotos de ediciones pasadas.'));
+  });
+</script>

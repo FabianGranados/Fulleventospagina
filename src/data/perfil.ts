@@ -4,10 +4,9 @@
 // El estado de la persona frente a cada plan ("Va", "Le interesa", "En parche") sale de asistencia.ts,
 // el mismo dato de Inicio y Evento (H37).
 
-export interface Estadistica {
-  etiqueta: string;
-  valor: number;
-}
+import { misParches, planesDeUsuaria } from './asistencia';
+import { eventos } from './eventos';
+import { usuaria } from './personas';
 
 export interface Recuerdo {
   titulo: string;
@@ -29,7 +28,10 @@ export interface Perfil {
   barrio?: string; // solo para quien la persona autorice (H30)
   ciudad: string; // id de ciudades.ts
   biografia: string;
-  estadisticas: Estadistica[];
+  // Las únicas cifras que no salen de los datos: las del prototipo (handoff 4.10). Planes, ciudades y parches se
+  // calculan con cifrasPerfil (PF6, decisión 2.29).
+  seguidores: number;
+  siguiendo: number;
   gustos: string[];
   recuerdos: Recuerdo[]; // del más reciente al más antiguo
   resenas: Resena[]; // de la más reciente a la más antigua
@@ -41,14 +43,8 @@ export const perfiles: Record<string, Perfil> = {
     ciudad: 'bogota',
     biografia:
       'Salsera de jueves, rockera de sábado. Si hay concierto gratis en un parque, ahí estoy. Siempre busco gente para armar parche.',
-    // "Planes" en lugar de "Eventos": un solo término con Inicio (H37, recomendación de la sección 8)
-    estadisticas: [
-      { etiqueta: 'Planes', valor: 38 },
-      { etiqueta: 'Ciudades', valor: 5 },
-      { etiqueta: 'Seguidores', valor: 412 },
-      { etiqueta: 'Siguiendo', valor: 289 },
-      { etiqueta: 'Parches', valor: 7 },
-    ],
+    seguidores: 412,
+    siguiendo: 289,
     gustos: ['Salsa', 'Rock', 'Planes gratis', 'Stand-up', 'Fútbol'],
     recuerdos: [
       { titulo: 'Techno hasta el amanecer', ciudad: 'bogota', mes: 'Sep 2026', bg1: '#6B3FA0', bg2: '#0E0A1A' },
@@ -83,3 +79,32 @@ export const perfil = (id: string): Perfil | undefined => perfiles[id];
 
 // Color de cada gusto por posición, en el ciclo del prototipo (4.10, sección 6)
 export const coloresGusto = ['var(--peach)', 'var(--lilac)', 'var(--lime)', 'var(--pink)', 'var(--yellow)'];
+
+// Cifras del perfil, calculadas de los datos (PF6, decisión 2.29). Una sola fuente para Perfil e Inicio
+// (CuentaLateral): antes eran 38 / 5 / 7 fijas y no coincidían con lo que se veía en las pestañas.
+// - Planes: próximos planes + recuerdos. "Planes" en lugar de "Eventos" (H37).
+// - Ciudades: ciudades distintas de esos planes y recuerdos.
+// - Parches: parches de los que es miembro.
+// Solo existen para quien tiene perfil con datos (Camila en el demo): de las demás no se inventan cifras.
+export interface CifrasPerfil {
+  planes: number;
+  ciudades: number;
+  parches: number;
+  seguidores: number;
+  siguiendo: number;
+}
+
+export const cifrasPerfil = (id: string): CifrasPerfil | undefined => {
+  const p = perfil(id);
+  if (!p) return undefined;
+  // Asistencia y parches solo están cargados para la usuaria del demo (asistencia.ts)
+  const proximos = id === usuaria.id ? planesDeUsuaria() : [];
+  const ciudadesProximos = proximos.map((x) => eventos.find((e) => e.id === x.evento)?.ciudad).filter(Boolean);
+  return {
+    planes: proximos.length + p.recuerdos.length,
+    ciudades: new Set([...ciudadesProximos, ...p.recuerdos.map((r) => r.ciudad)]).size,
+    parches: id === usuaria.id ? misParches.length : 0,
+    seguidores: p.seguidores,
+    siguiendo: p.siguiendo,
+  };
+};

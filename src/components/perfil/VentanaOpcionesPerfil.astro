@@ -1,0 +1,57 @@
+---
+// Hoja "Opciones" del perfil de otra persona (decisión 2.29, PF1). La abre el botón "Más opciones" ("…") con
+// data-abrir-modal="opciones-perfil". "Compartir perfil" copia la dirección; lo demás no tiene pantalla todavía:
+// invitar (H30), reportar y bloquear (H9) dicen "Próximamente".
+import Modal from '../ui/Modal.astro';
+import ListaOpciones from './ListaOpciones.astro';
+import AvisoHoja from './AvisoHoja.astro';
+
+interface Props {
+  nombre: string; // nombre corto: "Bloquear a Laura"
+}
+
+const { nombre } = Astro.props;
+---
+
+<Modal id="opciones-perfil" titulo="Opciones" forma="hoja" ancho={440}>
+  <div class="opciones" data-opciones-perfil>
+    <ListaOpciones
+      opciones={[
+        { texto: 'Compartir perfil', icono: 'compartir', accion: 'compartir', sinFlecha: true },
+        { texto: 'Invitar a un plan', icono: 'agenda', proximamente: `invitar a ${nombre} a un plan` },
+      ]}
+    />
+    <ListaOpciones
+      opciones={[
+        { texto: 'Reportar', icono: 'bandera', proximamente: 'reportar perfiles' },
+        { texto: `Bloquear a ${nombre}`, icono: 'prohibido', peligro: true, proximamente: 'bloquear perfiles' },
+      ]}
+    />
+    <AvisoHoja />
+  </div>
+</Modal>
+
+<script>
+  import { avisarEnHoja } from './aviso-hoja';
+
+  const raiz = document.querySelector<HTMLElement>('[data-opciones-perfil]');
+  raiz?.querySelector<HTMLButtonElement>('[data-accion="compartir"]')?.addEventListener('click', async (ev) => {
+    const boton = ev.currentTarget as HTMLButtonElement;
+    const url = location.origin + location.pathname;
+    try {
+      await navigator.clipboard.writeText(url);
+      avisarEnHoja(boton, 'Copiamos el enlace del perfil.');
+    } catch {
+      // Sin permiso para el portapapeles: se muestra la dirección para copiarla a mano
+      avisarEnHoja(boton, `Copia este enlace: ${url}`);
+    }
+  });
+</script>
+
+<style>
+  .opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+</style>

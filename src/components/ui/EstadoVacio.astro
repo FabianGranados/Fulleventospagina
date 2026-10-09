@@ -1,0 +1,74 @@
+---
+// Estado vacío compartido (decisión 2.29): ícono en un círculo, texto y una acción opcional.
+// Lo usan los paneles del Perfil; sirve para cualquier lista sin contenido.
+import Icono, { type NombreIcono } from './Icono.astro';
+
+interface Props {
+  icono: NombreIcono;
+  texto: string;
+  accion?: { texto: string; href: string };
+}
+
+const { icono, texto, accion } = Astro.props;
+---
+
+<div class="vacio">
+  <span class="circulo" aria-hidden="true"><Icono nombre={icono} tamano={24} /></span>
+  <p>{texto}</p>
+  {accion && <a href={accion.href} class="accion">{accion.texto}</a>}
+</div>
+
+<style>
+  .vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 32px 16px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-card);
+  }
+
+  .circulo {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--surface-sunken);
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    margin-bottom: 12px;
+  }
+
+  p {
+    max-width: 36ch;
+    font-size: .95rem;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+
+  .accion {
+    margin-top: 14px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: inline-flex;
+    align-items: center;
+    font-size: .92rem;
+    font-weight: 700;
+    transition-property: transform, background-color;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  .accion:hover {
+    background: var(--light-hover);
+  }
+
+  .accion:active {
+    transform: scale(.97);
+  }
+</style>
