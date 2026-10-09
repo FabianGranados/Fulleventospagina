@@ -630,7 +630,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
   }
 
   /* H61: pista de que hay más chips. Desde 768 px pasan a dos líneas; por debajo se desplazan
-     de lado con un desvanecido en el borde (mismo criterio que la Bienvenida, decisión 2.14) */
+     de lado con un desplazamiento hasta el borde de la pantalla (mismo criterio que la Bienvenida, decisión 2.14) */
   @media (min-width: 768px) {
     .chips {
       flex-wrap: wrap;
@@ -640,9 +640,9 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
   @media (max-width: 767px) {
     .chips {
-      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
-      padding-right: 30px;
-      margin-right: 0;
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
     }
 
     /* Objetivo táctil de 44 px en celular (decisión 2.27) */

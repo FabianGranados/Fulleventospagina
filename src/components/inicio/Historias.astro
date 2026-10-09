@@ -37,22 +37,12 @@ import { nombreCiudad } from '../../data/ciudades';
 </div>
 
 <style>
-  /* Siempre desborda: la barra se oculta y un desvanecido en el borde avisa que hay más (H61, detalle fino 6) */
+  /* Siempre desborda: la barra se oculta y la fila llega al borde de la pantalla para que se asome la siguiente (H61; sin desvanecido, decisión 2.28) */
   .fila-historias {
     position: relative;
     min-width: 0;
   }
 
-  .fila-historias::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 32px;
-    background: linear-gradient(90deg, rgba(251, 247, 243, 0), var(--bg));
-    pointer-events: none;
-  }
 
   /* position: relative para que el texto oculto no estire la página (detalle fino global 4) */
   .historias {
@@ -64,6 +54,14 @@ import { nombreCiudad } from '../../data/ciudades';
     scrollbar-width: none;
     padding: 4px 32px 4px 4px;
     margin: -4px;
+  }
+
+  /* En celular la fila llega al borde de la pantalla (decisión 2.28) */
+  @media (max-width: 767px) {
+    .historias {
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
+    }
   }
 
   .historias::-webkit-scrollbar {

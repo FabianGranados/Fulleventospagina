@@ -490,7 +490,9 @@ import { categoriasMapa } from '../data/mapa';
 
   @media (max-width: 767px) {
     .chips {
-      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
       padding-right: 24px;
     }
   }

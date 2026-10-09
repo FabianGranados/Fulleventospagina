@@ -272,7 +272,7 @@ const descripcion =
   }
 
   /* En celular (decisión 2.27) cada grupo es una fila con desplazamiento lateral, como los chips de la Agenda
-     y "Este finde" (decisión 2.14): relleno para el anillo de foco, desvanecido en el borde y position: relative
+     y "Este finde" (decisión 2.14): relleno para el anillo de foco, desplazamiento hasta el borde de la pantalla y position: relative
      para que nada oculto desborde. Chips de 44 px de alto. */
   @media (max-width: 767px) {
     /* Sin wrap: en columna, un flex de varias líneas toma el ancho de su contenido y desbordaría */
@@ -291,7 +291,9 @@ const descripcion =
       padding: 6px 24px 6px 6px;
       margin: 0 calc(-1 * var(--margen-lateral)) 0 -6px;
       scroll-padding-inline: 6px 40px;
-      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
     }
 
     .chip {

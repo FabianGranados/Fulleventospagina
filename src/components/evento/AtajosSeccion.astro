@@ -1,5 +1,5 @@
 ---
-// N28 · Atajos "En esta página". H61: desvanecido en el borde cuando hay más atajos por ver.
+// N28 · Atajos "En esta página". H61: fila con desplazamiento lateral (sin desvanecido, decisión 2.28).
 interface Props {
   atajos: { href: string; texto: string }[];
 }
@@ -13,17 +13,6 @@ const { atajos } = Astro.props;
   </nav>
 </div>
 
-<script>
-  document.querySelectorAll<HTMLElement>('[data-atajos]').forEach((caja) => {
-    const fila = caja.querySelector<HTMLElement>('[data-atajos-fila]')!;
-    const revisar = () => {
-      caja.dataset.inicio = String(fila.scrollLeft > 4);
-      caja.dataset.fin = String(fila.scrollLeft + fila.clientWidth < fila.scrollWidth - 4);
-    };
-    fila.addEventListener('scroll', revisar, { passive: true });
-    new ResizeObserver(revisar).observe(fila);
-  });
-</script>
 
 <style>
   .atajos {
@@ -41,33 +30,6 @@ const { atajos } = Astro.props;
   }
 
   /* Pista de que hay más (H61) */
-  .atajos::before,
-  .atajos::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 40px;
-    pointer-events: none;
-    opacity: 0;
-    z-index: 1;
-  }
-
-  .atajos::before {
-    left: 0;
-    background: linear-gradient(90deg, var(--bg), transparent);
-  }
-
-  .atajos::after {
-    right: 0;
-    background: linear-gradient(270deg, var(--bg), transparent);
-  }
-
-  .atajos[data-inicio='true']::before,
-  .atajos[data-fin='true']::after {
-    opacity: 1;
-  }
-
   a {
     flex-shrink: 0;
     height: 40px;

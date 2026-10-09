@@ -555,3 +555,8 @@ Viene de la auditoría de UX en celular (hallazgos UX1, UX2, UX5–UX11, UX14 y 
   - Objetivos táctiles que siguen por debajo de 44 px, por ejemplo en el Mapa (UX16).
   - Registro (UX17).
   - Mapa en celular (UX18).
+
+### 2.28 Filas que se deslizan sin desvanecido (9 de octubre de 2026)
+
+- **Qué:** se quita el desvanecido del borde derecho de todas las filas con desplazamiento lateral: historias, "Tu semana", "Tus parches", pestañas del feed, opciones del compositor, chips de Agenda, "Este finde", Noticias y Mapa, ranking de ciudades y atajos del evento. En celular esas filas llegan hasta el borde de la pantalla (margen derecho negativo igual al margen lateral y relleno del mismo tamaño), así que el siguiente elemento se asoma desde el borde, como en las apps.
+- **Por qué:** el cliente lo vio en su celular y no le gustó: el desvanecido parecía un corte. Reemplaza la pista de "hay más" de las decisiones 2.14 y 2.27 (H61): ahora la pista es el elemento que se asoma.

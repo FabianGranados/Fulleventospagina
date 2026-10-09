@@ -302,7 +302,7 @@ const ocultos = eventos.length - LIMITE;
   }
 
   /* Pista de que hay más chips (H61): en tableta y escritorio pasan a dos líneas;
-     en celular se desplazan de lado con un desvanecido en el borde */
+     en celular se desplazan de lado con un desplazamiento hasta el borde de la pantalla */
   @media (min-width: 768px) {
     .chips {
       flex-wrap: wrap;
@@ -312,7 +312,9 @@ const ocultos = eventos.length - LIMITE;
 
   @media (max-width: 767px) {
     .chips {
-      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
       padding-right: 24px;
     }
 

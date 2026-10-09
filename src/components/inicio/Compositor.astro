@@ -176,7 +176,9 @@ const nombrePila = usuaria.nombre.split(' ')[0];
       scrollbar-width: none;
       margin: 0 -12px -6px;
       padding: 12px 24px 6px 12px;
-      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
     }
 
     .plegable:not(.abierto):not(:focus-within) .acciones {

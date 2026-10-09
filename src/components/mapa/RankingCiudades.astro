@@ -108,7 +108,7 @@ const ranking = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).sort((a, b) =
   }
 
   /* Ninguna ciudad queda escondida sin pista (H61): dos líneas desde 768 px; en celular,
-     desplazamiento de lado con un desvanecido en el borde (mismo patrón que la Bienvenida) */
+     desplazamiento de lado con un desplazamiento hasta el borde de la pantalla (mismo patrón que la Bienvenida) */
   @media (min-width: 768px) {
     .fila {
       flex-wrap: wrap;
@@ -118,7 +118,9 @@ const ranking = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).sort((a, b) =
 
   @media (max-width: 767px) {
     .fila {
-      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
       padding-right: 24px;
     }
   }
