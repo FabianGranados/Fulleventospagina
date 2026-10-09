@@ -4,6 +4,7 @@
 import { AMIGOS, YO, ciudadDe, type Conversacion, type Mensaje, type Reaccion } from '../../data/mensajes';
 import * as E from './estado';
 import * as P from './plantillas';
+import { nombreMensajes, sinLeerTexto } from '../../lib/formato';
 
 type Encuesta = Extract<Mensaje, { tipo: 'encuesta' }>;
 
@@ -20,6 +21,7 @@ export const iniciar = () => {
   const celular = matchMedia('(max-width: 899px)');
 
   const encabezado = document.querySelector<HTMLElement>('[data-encabezado]');
+  const barraNav = document.querySelector<HTMLElement>('[data-barra-navegacion]');
   const lista = $('[data-lista]');
   const filas = $('[data-filas]');
   const resumen = $('[data-resumen]');
@@ -67,14 +69,28 @@ export const iniciar = () => {
   };
 
   // El encabezado compartido cuenta conversaciones sin leer (N1): se actualiza al leer
+  // y también la pestaña de la barra inferior (decisión 2.27), con el mismo texto
   const actualizarEncabezado = (n: number) => {
     const enlace = encabezado?.querySelector<HTMLAnchorElement>('a[href="/mensajes"]');
-    if (!enlace) return;
-    enlace.setAttribute('aria-label', n ? `Mensajes, ${n} ${n === 1 ? 'chat sin leer' : 'chats sin leer'}` : 'Mensajes');
-    const insignia = enlace.querySelector('.insignia');
-    if (insignia) {
-      if (n) insignia.textContent = String(n);
-      else insignia.remove();
+    if (enlace) {
+      enlace.setAttribute('aria-label', nombreMensajes(n));
+      const insignia = enlace.querySelector('.insignia');
+      if (insignia) {
+        if (n) insignia.textContent = String(n);
+        else insignia.remove();
+      }
+    }
+    const pestana = barraNav?.querySelector<HTMLAnchorElement>('a[href="/mensajes"]');
+    if (pestana) {
+      const insignia = pestana.querySelector('[data-insignia-sin-leer]');
+      const texto = pestana.querySelector('[data-sin-leer]');
+      if (n) {
+        if (insignia) insignia.textContent = String(n);
+        if (texto) texto.textContent = `, ${sinLeerTexto(n)}`;
+      } else {
+        insignia?.remove();
+        texto?.remove();
+      }
     }
   };
 
@@ -174,7 +190,7 @@ export const iniciar = () => {
   const quitarDialogoInfo = () => {
     info.setAttribute('role', 'complementary');
     info.removeAttribute('aria-modal');
-    for (const el of [encabezado, lista, conv]) if (el) el.inert = false;
+    for (const el of [encabezado, barraNav, lista, conv]) if (el) el.inert = false;
   };
 
   const abrirConversacion = (id: string, desdeLista: boolean) => {
@@ -238,7 +254,7 @@ export const iniciar = () => {
     pintar();
     info.setAttribute('role', 'dialog');
     info.setAttribute('aria-modal', 'true');
-    for (const el of [encabezado, lista, conv]) if (el) el.inert = true;
+    for (const el of [encabezado, barraNav, lista, conv]) if (el) el.inert = true;
     focar('[data-foco="cerrar-info"]', info);
   };
 

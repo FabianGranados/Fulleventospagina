@@ -3,6 +3,9 @@
 // "Armar parche" abre la ventana "Nuevo parche" de Mensajes (H38). "Etiquetar evento", "Reseña" y "Publicar"
 // llevan al camino "Una publicación sobre un evento" de /crear-evento (decisión 2.26), con lo escrito en ?texto=.
 // "Foto" sigue sin diseño (H38) y avisa "Próximamente".
+// Por debajo de 768 px (decisión 2.27) es una sola fila: avatar, campo y un botón de enviar; las opciones aparecen
+// al enfocar el campo (o cuando tiene texto). El botón se llama "Publicar lo que escribiste" para no confundirse
+// con el "Publicar" (+) del encabezado, que lleva a elegir entre un evento nuevo o una publicación.
 import Icono from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
@@ -26,6 +29,9 @@ const nombrePila = usuaria.nombre.split(' ')[0];
         placeholder={`¿Qué plan tienes, ${nombrePila}? Etiqueta un evento con @`}
       />
     </label>
+    <button type="submit" class="enviar" aria-label="Publicar lo que escribiste">
+      <Icono nombre="avion" tamano={18} grosor={2.2} />
+    </button>
   </div>
   <div class="acciones">
     <a href={rutaPublicar()} class="secundario">
@@ -40,9 +46,16 @@ const nombrePila = usuaria.nombre.split(' ')[0];
     <a href={`${rutaPublicar()}&tipo=resena`} class="secundario">
       <Icono nombre="estrella" tamano={16} />Reseña
     </a>
-    <button type="submit" class="publicar">Publicar</button>
+    <button type="submit" class="publicar">Publicar<span class="solo-lectores"> lo que escribiste</span></button>
   </div>
 </form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-compositor]').forEach((form) => {
+    form.classList.add('plegable');
+    form.addEventListener('focusin', () => form.classList.add('abierto'));
+  });
+</script>
 
 <style>
   .compositor {
@@ -123,11 +136,57 @@ const nombrePila = usuaria.nombre.split(' ')[0];
     font-weight: 700;
   }
 
+  .enviar {
+    display: none;
+  }
+
   /* Objetivos táctiles de 44 px en celular (WCAG 2.5.8 y regla 4 del proyecto) */
   @media (max-width: 767px) {
-    .secundario,
-    .publicar {
+    .compositor {
+      padding: 12px;
+      gap: 0;
+    }
+
+    .arriba {
+      gap: 8px;
+    }
+
+    .enviar {
+      flex-shrink: 0;
+      width: 44px;
       height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--brand);
+      color: var(--on-dark);
+      display: grid;
+      place-items: center;
+    }
+
+    .publicar {
+      display: none;
+    }
+
+    /* Opciones en una fila con desplazamiento lateral. Con JavaScript aparecen al enfocar o tocar el campo y se
+       quedan (si se ocultaran al perder el foco, en iOS el toque sobre una opción se perdería); sin JavaScript
+       se ven siempre. */
+    .acciones {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin: 0 -12px -6px;
+      padding: 12px 24px 6px 12px;
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    }
+
+    .plegable:not(.abierto):not(:focus-within) .acciones {
+      display: none;
+    }
+
+    .secundario {
+      flex-shrink: 0;
+      height: 44px;
+      white-space: nowrap;
     }
   }
 </style>

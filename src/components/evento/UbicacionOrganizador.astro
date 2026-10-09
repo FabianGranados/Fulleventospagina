@@ -52,12 +52,12 @@ const direccion = d ? `${m.lugarDetalle} · ${d.direccion}` : m.lugarDetalle;
               <b>{d.organizador.nombre}</b>
               <span class="seguidores">{d.organizador.seguidores}</span>
             </div>
-            <button type="button" class="seguir" aria-pressed="false" data-seguir data-requiere-cuenta="para seguir al organizador">Seguir</button>
+            <button type="button" class="seguir" aria-pressed="false" data-seguir data-requiere-cuenta="para seguir al organizador" data-retomar="seguir">Seguir</button>
           </div>
           <p class="dudas">
             ¿Dudas sobre mesas, cumpleaños o accesibilidad? Escríbele directo por el chat de Fulleventos.
           </p>
-          <a href={`/mensajes/${organizador.id}`} class="escribir" data-requiere-cuenta="para escribirle al organizador">
+          <a href={`/mensajes/${organizador.id}`} class="escribir" data-requiere-cuenta="para escribirle al organizador" data-retomar="escribir-organizador">
             <Icono nombre="mensajes" tamano={18} />
             Escribir al organizador
           </a>

@@ -18,7 +18,7 @@ const { eventoId } = Astro.props;
       <h2 id="h-publicaciones" class="titulo-seccion" tabindex="-1" data-foco-publicaciones>Publicaciones</h2>
       <p class="sub">Cuenta algo de este plan: una invitación, una reseña o cómo llegar.</p>
     </div>
-    <a class="escribir" href={rutaPublicar(eventoId)} data-requiere-cuenta="para escribir una publicación">
+    <a class="escribir" href={rutaPublicar(eventoId)} data-requiere-cuenta="para escribir una publicación" data-retomar="publicar">
       <Icono nombre="mas" tamano={16} grosor={2.2} />
       Escribir una publicación
     </a>

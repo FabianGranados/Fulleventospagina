@@ -4,6 +4,7 @@
 import Base from '../../layouts/Base.astro';
 import EncabezadoApp from '../layout/EncabezadoApp.astro';
 import Pie from '../layout/Pie.astro';
+import BarraNavegacion from '../layout/BarraNavegacion.astro';
 import CabeceraPerfil from './CabeceraPerfil.astro';
 import Pestanas from './Pestanas.astro';
 import TarjetaPlan from './TarjetaPlan.astro';
@@ -99,6 +100,7 @@ const titulo = propio ? 'Mi perfil · Fulleventos' : `${persona.nombre} · Fulle
     }
   </main>
   <Pie />
+  <BarraNavegacion activa={propio ? 'tu' : undefined} />
 </Base>
 
 <script>

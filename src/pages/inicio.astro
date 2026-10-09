@@ -3,10 +3,12 @@
 // Sin backend: los alternadores y filtros son estado del navegador y se pierden al salir (prototipo).
 import Base from '../layouts/Base.astro';
 import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
+import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import Icono from '../components/ui/Icono.astro';
 import CuentaLateral from '../components/inicio/CuentaLateral.astro';
 import Historias from '../components/inicio/Historias.astro';
 import Compositor from '../components/inicio/Compositor.astro';
+import ResumenCelular from '../components/inicio/ResumenCelular.astro';
 import Publicacion from '../components/inicio/Publicacion.astro';
 import Descubre from '../components/inicio/Descubre.astro';
 import TarjetaPublicacion from '../components/publicaciones/TarjetaPublicacion.astro';
@@ -29,6 +31,8 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
       <Historias />
       <Compositor />
       <div class="aviso-lugar" data-aviso-compositor></div>
+      {/* Solo en celular: "Tu semana" y "Tus parches" compactos, antes del feed (decisión 2.27) */}
+      <ResumenCelular />
 
       {/* Publicaciones de la usuaria sobre eventos (decisión 2.26), arriba del feed. En el demo están en este
           navegador (lib/publicaciones.ts); el bloque aparece cuando hay alguna. No se filtran con las pestañas. */}
@@ -86,6 +90,7 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
     </div>
   </template>
   <TarjetaPublicacion />
+  <BarraNavegacion activa="inicio" noLeidos={noLeidos} />
 </Base>
 
 <script>
@@ -347,6 +352,27 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
   .pestana {
     position: relative;
     display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  /* En celular las pestañas van en una fila con desplazamiento lateral (decisión 2.27), con el patrón de los
+     chips de la Agenda (decisión 2.14): relleno para el anillo de foco y desvanecido en el borde. min-width: 0
+     porque un fieldset toma por defecto el ancho de su contenido. */
+  @media (max-width: 767px) {
+    .pestanas {
+      position: relative;
+      min-width: 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 6px 24px 6px 6px;
+      margin: -6px -6px;
+      scroll-padding-inline: 6px 40px;
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    }
+
+    .pestana span {
+      white-space: nowrap;
+    }
   }
 
   .pestana input {

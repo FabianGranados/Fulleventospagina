@@ -39,16 +39,26 @@ export const iniciarPublicacion = ({ ir, aEventoNuevo, alElegirEvento }: Opcione
   const grupos = $$<HTMLElement>('[data-grupo-eventos]');
   const sinResultados = $<HTMLElement>('[data-sin-resultados]');
   const anuncioBusqueda = $<HTMLElement>('[data-anuncio-busqueda]');
+  const verMas = $<HTMLButtonElement>('[data-ver-mas-eventos]');
   let esperaAnuncio = 0;
+  // Sin búsqueda se ven "Tus planes" y los 5 próximos; "Ver más eventos" muestra el resto (decisión 2.27).
+  // El evento elegido se ve siempre, aunque sea de los de más.
+  let todos = false;
 
   const filtrar = () => {
     const terminos = normalizar(buscar.value).split(' ').filter(Boolean);
+    const recortar = !terminos.length && !todos;
     let visibles = 0;
+    let ocultosDeMas = 0;
     items.forEach((li) => {
-      const ve = terminos.every((t) => li.dataset.busqueda!.includes(t));
+      const coincide = terminos.every((t) => li.dataset.busqueda!.includes(t));
+      const deMas = recortar && li.hasAttribute('data-extra') && !$<HTMLInputElement>('input', li).checked;
+      if (coincide && deMas) ocultosDeMas++;
+      const ve = coincide && !deMas;
       li.hidden = !ve;
       if (ve) visibles++;
     });
+    verMas.hidden = ocultosDeMas === 0;
     grupos.forEach((g) => (g.hidden = !$$<HTMLElement>('[data-item-evento]', g).some((li) => !li.hidden)));
     sinResultados.hidden = visibles > 0;
     $<HTMLElement>('[data-termino]').textContent = buscar.value.trim();
@@ -62,6 +72,18 @@ export const iniciarPublicacion = ({ ir, aEventoNuevo, alElegirEvento }: Opcione
     }, 400);
   };
   buscar.addEventListener('input', filtrar);
+  verMas.addEventListener('click', () => {
+    const antes = new Set(items.filter((li) => !li.hidden));
+    todos = true;
+    filtrar();
+    // El foco va al primer evento que apareció
+    const nuevo = items.find((li) => !li.hidden && !antes.has(li));
+    if (nuevo) $<HTMLInputElement>('input', nuevo).focus();
+  });
+  // Con un evento elegido, la fila de "Continuar" queda fija abajo
+  const marcarEleccion = () => b1.classList.toggle('con-eleccion', Boolean(elegido('pub-evento')));
+  b1.addEventListener('change', marcarEleccion);
+  filtrar();
   // Enter en el buscador no envía el paso
   buscar.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') ev.preventDefault();
@@ -222,6 +244,8 @@ export const iniciarPublicacion = ({ ir, aEventoNuevo, alElegirEvento }: Opcione
       if (!radio) return false;
       radio.checked = true;
       v1.limpiar();
+      marcarEleccion();
+      filtrar();
       prepararEvento();
       return true;
     },
@@ -245,7 +269,9 @@ export const iniciarPublicacion = ({ ir, aEventoNuevo, alElegirEvento }: Opcione
       pintarFotos();
       previa.replaceChildren();
       buscar.value = '';
+      todos = false;
       filtrar();
+      marcarEleccion();
       contarTexto();
     },
   };

@@ -6,8 +6,8 @@ import Avatar from '../ui/Avatar.astro';
 import { usuaria } from '../../data/personas';
 import { contadores } from '../../data/inicio';
 import { misParches } from '../../data/asistencia';
-import { totalMiembros, type Parche } from '../../data/parches';
-import { conversaciones, chatsSinLeer } from '../../data/mensajes';
+import { chatsSinLeer } from '../../data/mensajes';
+import { estadoParche, fondoParche as fondo } from './resumen';
 import { cifra } from '../../lib/formato';
 
 interface Props {
@@ -16,7 +16,8 @@ interface Props {
 
 const { noLeidos = chatsSinLeer } = Astro.props;
 
-const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean; conteo?: number }[] = [
+// soloComputador: en celular "Tus parches" va compacto arriba del feed (ResumenCelular, decisión 2.27)
+const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean; conteo?: number; soloComputador?: boolean }[] = [
   { texto: 'Inicio', href: '/inicio', icono: 'inicio', actual: true },
   // Mismo ícono de calendario que el encabezado para la Agenda (detalle fino 28)
   { texto: 'Explorar agenda', href: '/agenda', icono: 'agenda' },
@@ -24,7 +25,7 @@ const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean;
   // Acceso al centro de noticias con sesión (decisión 2.25): aquí y no en el encabezado, que a 320 px ya no tiene espacio
   { texto: 'Noticias', href: '/noticias', icono: 'noticias' },
   // Un solo nombre para la lista de parches (H62)
-  { texto: 'Tus parches', href: '#parches', icono: 'parches' },
+  { texto: 'Tus parches', href: '#parches', icono: 'parches', soloComputador: true },
   {
     texto: 'Mensajes',
     href: '/mensajes',
@@ -35,23 +36,6 @@ const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean;
   { texto: 'Recuerdos', href: '/yo?pestana=recuerdos', icono: 'recuerdos' },
 ];
 
-// Una regla para todos (detalle fino 48): con cupo máximo, "N de M cupos"; sin cupo, "N miembros" y los
-// mensajes nuevos de su chat, el mismo dato que el separador "N mensajes nuevos" de Mensajes (H37)
-const nuevosDe = (p: Parche) => conversaciones.find((c) => c.id === p.id)?.nuevos ?? 0;
-const estadoParche = (p: Parche) => {
-  const n = totalMiembros(p);
-  if (p.cupos) return `${n} de ${p.cupos} cupos`;
-  const nuevos = nuevosDe(p);
-  return `${n} miembros${nuevos ? ` · ${nuevos} ${nuevos === 1 ? 'nuevo' : 'nuevos'}` : ''}`;
-};
-const fondo: Record<string, string> = {
-  c1: 'var(--peach)',
-  c2: 'var(--lilac)',
-  c3: 'var(--pink)',
-  c4: 'var(--lime)',
-  c5: 'var(--yellow)',
-  c6: 'var(--aqua)',
-};
 ---
 
 <aside class="cuenta" aria-label="Tu cuenta">
@@ -76,7 +60,7 @@ const fondo: Record<string, string> = {
         <a
           href={m.href}
           aria-current={m.actual ? 'page' : undefined}
-          class:list={{ actual: m.actual }}
+          class:list={{ actual: m.actual, 'solo-computador': m.soloComputador }}
         >
           <Icono nombre={m.icono} tamano={18} />
           {m.texto}
@@ -219,6 +203,13 @@ const fondo: Record<string, string> = {
 
   .parches {
     gap: 12px;
+  }
+
+  @media (max-width: 767px) {
+    .parches,
+    .menu .solo-computador {
+      display: none;
+    }
   }
 
   h2 {

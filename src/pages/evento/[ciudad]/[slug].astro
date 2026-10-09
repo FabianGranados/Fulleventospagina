@@ -11,6 +11,7 @@ import EncabezadoApp from '../../../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../../../components/layout/EncabezadoVisitante.astro';
 import VentanaCuenta from '../../../components/ui/VentanaCuenta.astro';
 import Pie from '../../../components/layout/Pie.astro';
+import BarraNavegacion from '../../../components/layout/BarraNavegacion.astro';
 import Modal from '../../../components/ui/Modal.astro';
 import HeroeEvento from '../../../components/evento/HeroeEvento.astro';
 import DatosClave from '../../../components/evento/DatosClave.astro';
@@ -149,7 +150,7 @@ const datosCompra = VENTA_PROPIA && {
 <Base titulo={titulo} descripcion={descripcion} tamanoBase={15}>
   {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>{VENTA_PROPIA ? 'Ir a comprar boletas' : 'Ir a las boletas'}</a>}
   <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
-  <div class:list={['pagina-evento', { 'con-barra': vende, 'barra-con-nota': vende && !VENTA_PROPIA && !e.urlVenta }]}>
+  <div class:list={['pagina-evento', { 'con-barra': vende }]}>
     <EncabezadoVisitante class="solo-visitante" />
     <EncabezadoApp variante="detalle" class="solo-sesion" />
     <main id="contenido" class="contenedor principal">
@@ -177,6 +178,7 @@ const datosCompra = VENTA_PROPIA && {
       <PlanesParecidos m={m} />
     </main>
     <Pie />
+    <BarraNavegacion class="solo-sesion" />
     {vende && <BarraCompra m={m} />}
     {
       vende && VENTA_PROPIA && (
@@ -229,11 +231,18 @@ const datosCompra = VENTA_PROPIA && {
   // "Ir a las boletas" (H59): lleva el foco al botón de compra (o de la boletera) visible
   document.querySelector('[data-ir-comprar]')?.addEventListener('click', (ev) => {
     const botones = [...document.querySelectorAll<HTMLElement>('[data-abrir-compra], [data-boton-boletera]')];
-    const visible = botones.find((b) => b.offsetParent !== null);
+    const visible = botones.find((b) => b.offsetParent !== null && getComputedStyle(b).visibility !== 'hidden');
     if (visible) {
       ev.preventDefault();
       visible.focus();
       visible.scrollIntoView({ block: 'center' });
+      return;
+    }
+    // La barra de celular se oculta mientras se ven las localidades (decisión 2.27): entonces, a las localidades
+    const localidades = document.getElementById('localidades');
+    if (localidades) {
+      ev.preventDefault();
+      localidades.scrollIntoView();
     }
   });
 
@@ -242,16 +251,26 @@ const datosCompra = VENTA_PROPIA && {
   const encabezado = [...document.querySelectorAll<HTMLElement>('[data-encabezado]')].find((e) => e.getClientRects().length);
   const atajos = document.querySelector<HTMLElement>('[data-atajos]');
   const barra = document.querySelector<HTMLElement>('[data-barra-compra]');
+  const barraNav = document.querySelector<HTMLElement>('[data-barra-navegacion]');
+  // Lo que tapan las barras fijas de abajo (la de compra y, con sesión en celular, la de navegación)
+  const tapadoAbajo = () =>
+    Math.max(
+      0,
+      ...[barra, barraNav]
+        .filter((b): b is HTMLElement => Boolean(b && b.offsetHeight && getComputedStyle(b).position === 'fixed'))
+        .map((b) => innerHeight - b.getBoundingClientRect().top),
+    );
   const ajustar = () =>
     requestAnimationFrame(() => {
       const raiz = document.documentElement;
       const fijo = encabezado && getComputedStyle(encabezado).position === 'sticky' ? encabezado.offsetHeight : 0;
       const atajosFijos = atajos && getComputedStyle(atajos).position === 'sticky' ? atajos.offsetHeight : 0;
       raiz.style.scrollPaddingTop = `${fijo + atajosFijos + 12}px`;
-      raiz.style.scrollPaddingBottom = barra && barra.offsetHeight ? `${barra.offsetHeight + 12}px` : '';
+      const abajo = tapadoAbajo();
+      raiz.style.scrollPaddingBottom = abajo ? `${abajo + 12}px` : '';
     });
   const observador = new ResizeObserver(ajustar);
-  [encabezado, atajos, barra].forEach((el) => el && observador.observe(el));
+  [encabezado, atajos, barra, barraNav].forEach((el) => el && observador.observe(el));
   addEventListener('resize', ajustar);
 </script>
 
@@ -262,13 +281,17 @@ const datosCompra = VENTA_PROPIA && {
   }
 
   @media (max-width: 979px) {
+    /* La barra de compra mide 69 px más el área segura (decisión 2.27: ya sin la nota de demostración) */
     .con-barra {
-      padding-bottom: 84px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
+  }
 
-    /* La barra con la nota de demostración del BotonBoletera mide hasta 108 px a 320 px */
-    .barra-con-nota {
-      padding-bottom: 116px;
+  /* Con sesión en celular, el body ya reserva la barra inferior y el área segura (BarraNavegacion); la de
+     compra va encima de ella */
+  @media (max-width: 767px) {
+    :global(html[data-sesion='si']) .con-barra {
+      padding-bottom: 80px;
     }
   }
 

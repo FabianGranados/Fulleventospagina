@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
 import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
 import Pie from '../components/layout/Pie.astro';
+import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import Hero from '../components/bienvenida/Hero.astro';
 import AgendaFinde from '../components/bienvenida/AgendaFinde.astro';
 import ComoFunciona from '../components/bienvenida/ComoFunciona.astro';
@@ -25,6 +26,7 @@ import Noticias from '../components/bienvenida/Noticias.astro';
     <Noticias />
   </main>
   <Pie />
+  <BarraNavegacion class="solo-sesion" />
 </Base>
 
 <style>

@@ -6,6 +6,7 @@ import Base from '../../layouts/Base.astro';
 import EncabezadoApp from '../../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../../components/layout/EncabezadoVisitante.astro';
 import Pie from '../../components/layout/Pie.astro';
+import BarraNavegacion from '../../components/layout/BarraNavegacion.astro';
 import Icono from '../../components/ui/Icono.astro';
 import EnlaceSubrayado from '../../components/ui/EnlaceSubrayado.astro';
 import TarjetaEvento from '../../components/eventos/TarjetaEvento.astro';
@@ -154,6 +155,7 @@ const esquema = {
     <a href="/noticias" class="volver abajo"><Icono nombre="volver" tamano={18} />Volver a noticias</a>
   </main>
   <Pie />
+  <BarraNavegacion activa="noticias" class="solo-sesion" />
 </Base>
 
 <script>

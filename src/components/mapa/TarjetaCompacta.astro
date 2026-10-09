@@ -64,6 +64,7 @@ const href = rutaEvento(e.ciudad, e.titulo);
         data-reposteado-sesion={reposteado ? '' : undefined}
         data-abrir-modal="ventana-repost"
         data-requiere-cuenta="para repostear planes"
+        data-retomar={`repostear-${e.id}`}
       >
         <Icono nombre="repostear" tamano={14} grosor={2.2} /><span data-repost-texto>Repostear</span>
       </button>
@@ -74,6 +75,8 @@ const href = rutaEvento(e.ciudad, e.titulo);
         aria-label={`Guardar ${e.titulo}`}
         data-guardar
         data-requiere-cuenta="para guardar tus planes"
+        data-retomar={`guardar-${e.id}`}
+        data-retomar-aviso={`Listo: guardaste ${e.titulo}.`}
       >
         <Icono nombre="marcador" tamano={16} />
       </button>

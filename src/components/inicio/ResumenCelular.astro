@@ -1,0 +1,181 @@
+---
+// "Tu semana" y "Tus parches" en formato compacto, solo por debajo de 768 px (decisión 2.27, UX). En celular las
+// tarjetas grandes quedaban al final de Inicio (a unos 3.500 px); aquí van justo después del compositor, cada una
+// en una fila con desplazamiento lateral. En computador no se muestra: siguen en las columnas (Descubre y
+// CuentaLateral), que en celular ocultan esas dos tarjetas para no repetirlas.
+import { misParches } from '../../data/asistencia';
+import { semana, confirmados, estadoParche, fondoParche } from './resumen';
+---
+
+<section class="resumen-celular" aria-labelledby="resumen-semana-titulo">
+  <h2 id="resumen-semana-titulo" class="titulo">Tu semana <span class="cuenta">· {confirmados}</span></h2>
+  <ul class="fila" role="list">
+    {
+      semana.map((s) => (
+        <li>
+          <a href={s.href} class="plan">
+            <span class="fecha" aria-hidden="true">
+              <b>{s.numero}</b>
+              <span>{s.dia}</span>
+            </span>
+            <span class="texto">
+              <span class="solo-lectores">{s.dia} {s.numero}: </span>
+              <b>{s.titulo}</b>
+              <span class="detalle">{s.detalle}</span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    misParches.length > 0 && (
+      <>
+        <h2 class="titulo">Tus parches</h2>
+        <ul class="fila" role="list">
+          {misParches.map((p) => (
+            <li>
+              <a href={`/mensajes/${p.slug}`} class="parche">
+                <span class="cuadro" style={`background: ${fondoParche[p.color]}`} aria-hidden="true">
+                  {p.iniciales}
+                </span>
+                <span class="texto">
+                  <b>{p.nombre}</b>
+                  <span class="detalle" data-estado-parche={p.id}>{estadoParche(p)}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+</section>
+
+<style>
+  .resumen-celular {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .resumen-celular {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+  }
+
+  .titulo {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .cuenta {
+    color: var(--muted);
+    letter-spacing: .06em;
+  }
+
+  /* Mismo patrón que los chips de la Agenda (decisión 2.14): desplazamiento lateral, desvanecido en el borde,
+     relleno para que el anillo de foco no se recorte y position: relative para el texto oculto */
+  .fila {
+    position: relative;
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px 24px 6px 4px;
+    margin: -6px -4px 4px;
+    scroll-padding-inline: 4px 40px;
+    mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  }
+
+  li {
+    flex-shrink: 0;
+    width: min(240px, 72vw);
+  }
+
+  .plan,
+  .parche {
+    height: 100%;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+  }
+
+  .plan,
+  .plan:hover {
+    background: var(--ink);
+    color: var(--on-dark);
+  }
+
+  /* Amarillo sobre fondo oscuro (base.css, .superficie-oscura) */
+  .plan:focus-visible {
+    outline-color: var(--yellow);
+  }
+
+  .parche {
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .fecha {
+    width: 36px;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.1;
+    font-size: .72rem;
+    color: var(--on-dark-muted);
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--on-dark);
+  }
+
+  .texto {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  .texto b {
+    font-size: .88rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .detalle {
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .plan .detalle {
+    color: var(--on-dark-muted);
+  }
+
+  .cuadro {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-xs);
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: .8rem;
+    color: var(--ink);
+  }
+</style>

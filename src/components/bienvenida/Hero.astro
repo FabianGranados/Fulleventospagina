@@ -73,11 +73,17 @@ const cuando = `${diaSemana[0].toUpperCase()}${diaSemana.slice(1)} ${dia} ${mes}
       va y arma parche para no llegar solo.
     </p>
     <div class="acciones">
-      <Boton href="/registro" class="boton-hero">
+      <Boton href="/registro" class="boton-hero solo-visitante">
         Crear mi cuenta gratis
         <Icono nombre="flecha" tamano={18} class="flecha" />
       </Boton>
-      <EnlaceSubrayado href="#agenda" sobreOscuro>Ver la agenda sin registrarme</EnlaceSubrayado>
+      {/* Con sesión no se invita a crear la cuenta que ya se tiene (decisión 2.27) */}
+      <Boton href="/inicio" class="boton-hero solo-sesion">
+        Ir a mi inicio
+        <Icono nombre="flecha" tamano={18} class="flecha" />
+      </Boton>
+      <EnlaceSubrayado href="#agenda" sobreOscuro class="solo-visitante">Ver la agenda sin registrarme</EnlaceSubrayado>
+      <EnlaceSubrayado href="#agenda" sobreOscuro class="solo-sesion">Ver la agenda</EnlaceSubrayado>
     </div>
     {pruebaSocial && <PruebaSocial {...pruebaSocial} />}
   </div>

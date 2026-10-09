@@ -506,3 +506,52 @@ El cliente pidió el centro de noticias: "va a ser nuestra principal manera de c
 - **En producción** el backend guarda el evento nuevo con estado "En revisión", con coordenadas para el mapa (H14). También guarda las publicaciones con moderación, reportar y bloquear, y aplica en el servidor quién puede ver cada una. Las fotos se suben a un almacenamiento propio. `lib/publicaciones.ts` y su clave de `localStorage` se reemplazan, pero la tarjeta y los dos caminos siguen sirviendo.
 
 - **Corrección del 9 de octubre (Noticias con sesión).** El cliente no encontraba Noticias con la sesión iniciada: solo estaba en "Secciones" de Inicio. Se agrega el ícono de Noticias (periódico) al encabezado de la app, entre Mapa y Mensajes, marcado como página actual en `/noticias`. Reemplaza lo "descartado" en 2.25: en celular los íconos ya bajaban a su propia fila, así que uno más no rompe nada (las pruebas a 320 px siguen sin scroll horizontal).
+
+### 2.27 Primer bloque de mejoras para celular (9 de octubre de 2026)
+
+Viene de la auditoría de UX en celular (hallazgos UX1, UX2, UX5–UX11, UX14 y UX15). El cliente aprobó este primer bloque. En computador (768 px y más) el encabezado y el resto de las pantallas quedan exactamente como estaban.
+
+- **Encabezado con sesión de una sola fila (UX1).**
+  - **Qué:** por debajo de 768 px el encabezado de la app pasa de 227 px (4 filas: logo / buscador / 6 íconos / "Publicar" y avatar) a 61 px. **Variante completa:** logo (32 px de alto, `--tope-logo`), lupa, "+" y avatar, cada uno de 44 × 44. La lupa despliega debajo de la fila el mismo buscador (campo y ciudad), con `aria-expanded` y `aria-controls`, el foco en el campo al abrir y Escape para cerrar y volver a la lupa. Sin JavaScript el buscador se ve abierto y la lupa no aparece (como el menú del visitante, 2.18). **Variantes de detalle:** "Volver" queda solo como flecha de 44 × 44 (el texto "Volver" sigue para lectores de pantalla), el logo centrado en la rejilla de 3 columnas y el avatar a la derecha. Se quitan en celular la fila de íconos, la campana, "Mapa" y Mensajes de `detalle-perfil`: están en la barra inferior.
+  - **Nombres:** el "+" se llama "Publicar", igual que el botón con texto de computador (mismo destino: `/crear-evento`, que deja elegir entre un evento nuevo y una publicación).
+  - **El encabezado sigue sin ser fijo en celular** (2.14, 2.15), así que el `scroll-padding-top` sigue en 12 px; en computador no cambia.
+- **Barra de navegación inferior (N70, ahora diseñada; UX2).**
+  - **Qué:** `components/layout/BarraNavegacion.astro`, solo con sesión y por debajo de 768 px. Fija abajo, fondo `--surface`, borde superior `--line`, 56 px más el área segura (`env(safe-area-inset-bottom)`). Cinco pestañas a todo el ancho, con ícono y texto de 12 px: **Inicio** (`/inicio`), **Explorar** (`/agenda`; activa en Agenda y Mapa, que ya tienen el selector "Lista / Mapa"), **Noticias** (`/noticias` y cada noticia), **Mensajes** (con la insignia de chats sin leer y el mismo nombre accesible que el ícono del encabezado: "Mensajes, 3 chats sin leer") y **Tú** (`/yo`).
+  - **Noticias con pestaña propia** por decisión del cliente: "no tiene que salir grande pero sí visible: es una de las entradas para darnos a conocer".
+  - **Publicar no va en la barra:** es el "+" del encabezado.
+  - **Pestaña activa:** `aria-current="page"`, color `--ink`, texto en negrita, trazo más grueso y una raya arriba (no solo el color).
+  - **Un solo "Principal" visible:** en celular el nav de íconos del encabezado está oculto, y en computador la barra no se ve.
+  - **Dónde va:** en todas las páginas con `EncabezadoApp` (Inicio, Agenda, Mapa, Noticias, cada noticia, Evento, Mensajes, `/yo`, perfiles, `/crear-evento` y la Bienvenida), con `solo-sesion` en las públicas. Con sesión, el `body` reserva su alto abajo (`--espacio-barra-nav`) para que no tape el final de la página ni el pie, y el `scroll-padding-bottom` evita que el foco quede debajo (WCAG 2.4.11).
+  - **Conversación a pantalla completa:** la barra no se muestra en `/mensajes/<conversación>` en celular. Taparía el campo de escribir, que va pegado abajo, y la conversación ya tiene su flecha para volver a la lista. En la lista de Mensajes sí está.
+  - **Evento:** la barra de compra se apila encima de la barra inferior cuando hay sesión.
+- **Ventana "Crea tu cuenta" como hoja inferior y retomar la acción (UX5, UX6).**
+  - **Forma `hoja` del Modal:** por debajo de 520 px se pega abajo, a todo el ancho, con radio de 20 px solo arriba, alto automático (máximo 90 % de la pantalla, con scroll interno) y el fondo oscurecido que deja ver la página. Sube con una animación corta, sin movimiento con `prefers-reduced-motion`. En pantallas grandes es igual a `centrada`. La usan la ventana de cuenta y "Repostear evento" (su contenido cabe: unos 620 px a 390 × 740). El botón cerrar mide 44 × 44 en todas las formas.
+  - **Retomar:** los controles con `data-requiere-cuenta` llevan `data-retomar="<clave>"`. La ventana arma `volver` con la ruta actual, `?accion=<clave>` y un ancla a su bloque (por ejemplo `/evento/bogota/…?accion=voy#acciones-evento`). Al volver con sesión, la ventana (que está en cada página con acciones de cuenta) quita el parámetro y el ancla de la URL con `history.replaceState`, desplaza hasta el control y le da el foco. El ancla se quita porque, si el navegador la procesa después del script, mueve el foco al documento.
+  - **Acciones simples y seguras** (Voy, Me interesa, Ya tengo boleta y Guardar): llevan además `data-retomar-aviso`. Se ejecutan si no estaban hechas y se muestra el aviso `role="status"`: "Listo: vas a {evento}.", "Listo: marcaste que te interesa {evento}.", "Listo: marcaste que ya tienes boleta para {evento}." y "Listo: guardaste {evento}.". El aviso aparece arriba (para no tapar las barras de abajo) y se va a los 8 segundos.
+  - **Acciones que abren flujos** (Armar parche, Escribir una publicación, Invitar amigos, Repostear, Seguir, Escribir al organizador y Ver las fotos): solo llevan hasta el botón, sin aviso.
+  - La clave se compara tal cual con los controles de la página: una clave desconocida se ignora. `rutaVolver()` sigue rechazando rutas externas y acepta la consulta y el ancla.
+- **Bienvenida con sesión e Inicio con un solo "Publicar" (UX7, UX8, UX9).**
+  - **Héroe con sesión:** "Ir a mi inicio" (→ `/inicio`) y "Ver la agenda" (→ `#agenda`) en lugar de "Crear mi cuenta gratis" y "Ver la agenda sin registrarme".
+  - **Compositor en celular:** una fila con avatar, campo y un botón redondo de enviar. Las opciones (Etiquetar evento, Armar parche, Foto, Reseña) aparecen al enfocar o tocar el campo, en una fila con desplazamiento lateral, y se quedan visibles (si se ocultaran al perder el foco, en iOS se perdería el toque). Sin JavaScript se ven siempre.
+  - **Nombres sin duplicar:** el botón del compositor se llama "Publicar lo que escribiste" (en computador sigue diciendo "Publicar" y el resto queda para lectores), porque envía lo escrito. El "+" del encabezado sigue siendo "Publicar" y lleva a elegir qué publicar.
+  - **"Tu semana" y "Tus parches"** (antes al final, a unos 3.500 px) van en celular justo después del compositor, en formato compacto (`components/inicio/ResumenCelular.astro`): cada uno en una fila de tarjetas con desplazamiento lateral. En celular se ocultan las tarjetas grandes y el enlace "Tus parches" del menú "Secciones". Los cálculos se comparten en `components/inicio/resumen.ts`. En computador no cambia.
+- **Filas de chips con desplazamiento lateral (UX10).**
+  - **Qué:** en `/noticias`, por debajo de 768 px, Ciudad y Tema van cada uno en una fila con desplazamiento horizontal, con el rótulo encima. Las pestañas del feed de Inicio también: "Cerca de ti" ya no cae sola en otra línea. Es el mismo patrón de la Agenda y "Este finde" (2.14): relleno para que el anillo de foco no se recorte, desvanecido en el borde y `position: relative` en la fila.
+  - **Chips de 44 px** de alto en celular en Noticias, Agenda, "Este finde" y las pestañas de Inicio.
+- **`/crear-evento`, camino B (UX11).**
+  - **Sin avance automático:** al elegir un evento, la fila "Atrás / Continuar" queda fija abajo, encima de la barra inferior. No se avanza solo porque en un grupo de radios las flechas cambian la elección: se pasaría de paso sin querer (WCAG 3.2.2).
+  - **Lista recortada:** sin búsqueda se ven "Tus planes" y los 5 próximos del resto, con el botón "Ver más eventos" (el foco va al primero que aparece). La búsqueda sigue buscando en todos. Un evento elegido se ve siempre, aunque sea de los de más.
+- **Barra de compra del evento más liviana (UX14, UX15).**
+  - **Sin `urlVenta`:** el botón compacto de la barra se ve claramente inactivo: fondo `--surface-sunken`, texto `--muted` (5:1), borde punteado y sin flecha. La nota "Demostración: falta el enlace oficial…" ya no se ve en la barra (sigue en la tarjeta lateral). En la barra queda solo para lectores, como descripción del botón.
+  - **Se oculta** mientras la tarjeta de boletas o la sección de localidades están en pantalla (IntersectionObserver). No se esconde si tiene el foco. "Ir a las boletas" lleva entonces a las localidades.
+  - **Eventos gratis:** siguen sin barra.
+  - **Espacio inferior** del contenido: 80 px más el área segura (antes 84 o 116 px). Con sesión en celular, el `body` suma la barra inferior. El `scroll-padding-bottom` se calcula con lo que tapan las dos barras.
+- **Pruebas.** La pasada con sesión de `npm test` suma la Bienvenida (`/`) y una conversación (`/mensajes/salseros-de-jueves/`), que ahora cambian con la barra inferior: de 287 a 299 pruebas.
+- **Queda para los siguientes bloques:**
+  - Tarjeta compacta en Agenda, noticia y `/yo` (UX3).
+  - Reordenar el evento en celular (UX4).
+  - Chat (UX12).
+  - Perfiles (UX13).
+  - Objetivos táctiles que siguen por debajo de 44 px, por ejemplo en el Mapa (UX16).
+  - Registro (UX17).
+  - Mapa en celular (UX18).

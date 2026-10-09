@@ -27,6 +27,8 @@ const grupos = [
   { id: 'tus', titulo: 'Tus planes', lista: ordenados.filter((e) => esPlan(e.id)) },
   { id: 'otros', titulo: 'Más eventos en Fulleventos', lista: ordenados.filter((e) => !esPlan(e.id)) },
 ];
+// Sin búsqueda se ven "Tus planes" y los 5 próximos del resto; "Ver más eventos" muestra los demás (decisión 2.27)
+const PROXIMOS_VISIBLES = 5;
 const busqueda = (e: (typeof eventos)[number]) =>
   normalizar([e.titulo, e.lugar, nombreCiudad(e.ciudad), e.categoria].join(' '));
 
@@ -368,11 +370,12 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
             <div class="grupo-eventos" data-grupo-eventos>
               <h3 class="subtitulo">{g.titulo}</h3>
               <ul>
-                {g.lista.map((e) => {
+                {g.lista.map((e, i) => {
                   const { dia, mes } = placaFecha(e.fecha);
                   const estado = estadoPlan(e.id);
+                  const extra = g.id === 'otros' && i >= PROXIMOS_VISIBLES;
                   return (
-                    <li data-item-evento data-busqueda={busqueda(e)}>
+                    <li data-item-evento data-busqueda={busqueda(e)} data-extra={extra ? '' : undefined}>
                       <label class="opcion-evento">
                         <input type="radio" name="pub-evento" value={e.id} />
                         <span class="mini" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} aria-hidden="true">
@@ -393,13 +396,16 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
           ))
         }
       </fieldset>
+      {/* Con JavaScript los eventos de más se ocultan hasta tocar este botón; la búsqueda siempre busca en todos */}
+      <button type="button" class="boton contorno ver-mas-eventos" hidden data-ver-mas-eventos>Ver más eventos</button>
       <ErrorCampo id="pub-evento" />
       <div class="sin-resultados" data-sin-resultados hidden>
         <p>No encontramos eventos con «<span data-termino></span>».</p>
         <p>¿Es un plan que todavía no está en Fulleventos?</p>
         <button type="button" class="boton contorno" data-a-evento-nuevo>Publicar un evento nuevo</button>
       </div>
-      <div class="acciones">
+      {/* Con un evento elegido, la fila queda fija abajo (decisión 2.27): la lista es larga y el botón quedaba al final */}
+      <div class="acciones acciones-b1">
         <button type="button" class="atras" data-ir="inicio">Atrás</button>
         <button type="submit" class="boton primario">Continuar</button>
       </div>
@@ -1471,6 +1477,35 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
     font-size: .8333rem;
     font-weight: 700;
     color: var(--ink);
+  }
+
+  /* Camino B · 1: sin búsqueda, solo "Tus planes" y los 5 próximos (decisión 2.27) */
+  .ver-mas-eventos {
+    align-self: flex-start;
+    height: 48px;
+    padding: 0 22px;
+    font-size: .92rem;
+  }
+
+  .ver-mas-eventos[hidden] {
+    display: none;
+  }
+
+  /* Con un evento elegido, "Continuar" queda fijo abajo (encima de la barra inferior de celular, si está) */
+  .con-eleccion .acciones-b1 {
+    position: sticky;
+    bottom: var(--espacio-barra-nav, 0px);
+    z-index: 5;
+    margin: 0 calc(-1 * clamp(20px, 4vw, 44px));
+    padding: 12px clamp(20px, 4vw, 44px);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -10px 24px rgba(23, 18, 15, .06);
+  }
+
+  /* Que el foco no quede debajo de la fila fija (WCAG 2.4.11) */
+  :global(html:has(.con-eleccion:not([hidden]))) {
+    scroll-padding-bottom: calc(var(--espacio-barra-nav, 0px) + 92px);
   }
 
   /* ---------- Éxito ---------- */

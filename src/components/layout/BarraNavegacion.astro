@@ -1,0 +1,163 @@
+---
+// N70 · Barra de navegación inferior (decisión 2.27). Solo con sesión y por debajo de 768 px; en computador las
+// secciones siguen en los íconos del encabezado (EncabezadoApp), que en celular se ocultan, así que nunca hay
+// dos navegaciones "Principal" visibles a la vez.
+// 5 pestañas: Inicio, Explorar (Agenda y Mapa, que ya tienen el selector "Lista / Mapa"), Noticias (pestaña propia
+// por decisión del cliente: "no tiene que salir grande pero sí visible"), Mensajes (con los chats sin leer) y Tú.
+// Va al final de cada página que usa EncabezadoApp, con class="solo-sesion" en las públicas.
+import Icono from '../ui/Icono.astro';
+import { chatsSinLeer } from '../../data/mensajes';
+import { sinLeerTexto } from '../../lib/formato';
+
+export type PestanaBarra = 'inicio' | 'explorar' | 'noticias' | 'mensajes' | 'tu';
+
+interface Props {
+  activa?: PestanaBarra;
+  // Sin cifra propia de la página, la de los datos del chat (misma fuente que el encabezado, H13)
+  noLeidos?: number;
+  class?: string;
+}
+
+const { activa, noLeidos = chatsSinLeer, class: clase } = Astro.props;
+
+const pestanas: { id: PestanaBarra; href: string; icono: 'inicio' | 'agenda' | 'noticias' | 'mensajes' | 'persona'; texto: string }[] = [
+  { id: 'inicio', href: '/inicio', icono: 'inicio', texto: 'Inicio' },
+  { id: 'explorar', href: '/agenda', icono: 'agenda', texto: 'Explorar' },
+  { id: 'noticias', href: '/noticias', icono: 'noticias', texto: 'Noticias' },
+  { id: 'mensajes', href: '/mensajes', icono: 'mensajes', texto: 'Mensajes' },
+  { id: 'tu', href: '/yo', icono: 'persona', texto: 'Tú' },
+];
+---
+
+<nav aria-label="Principal" class:list={['barra-navegacion', clase]} data-barra-navegacion>
+  <ul>
+    {
+      pestanas.map((p) => (
+        <li>
+          <a href={p.href} class="pestana" aria-current={activa === p.id ? 'page' : undefined}>
+            <span class="icono">
+              <Icono nombre={p.icono} tamano={22} grosor={activa === p.id ? 2.4 : 2} />
+              {p.id === 'mensajes' && noLeidos > 0 && (
+                <span class="insignia" aria-hidden="true" data-insignia-sin-leer>
+                  {noLeidos}
+                </span>
+              )}
+            </span>
+            <span class="texto">
+              {p.texto}
+              {p.id === 'mensajes' && noLeidos > 0 && <span class="solo-lectores" data-sin-leer>, {sinLeerTexto(noLeidos)}</span>}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .barra-navegacion {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .barra-navegacion {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Con sesión, el final de la página (y el pie) no queda debajo de la barra. La variable la usan también la
+       barra de compra del evento, para apilarse encima, y los avisos fijos. */
+    :global(html[data-sesion='si']) {
+      --espacio-barra-nav: calc(56px + env(safe-area-inset-bottom, 0px));
+      /* Que el foco y los saltos de ancla no queden debajo de la barra (WCAG 2.4.11) */
+      scroll-padding-bottom: calc(var(--espacio-barra-nav) + 12px);
+    }
+
+    :global(html[data-sesion='si'] body) {
+      padding-bottom: var(--espacio-barra-nav);
+    }
+  }
+
+  ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    height: 56px;
+  }
+
+  .pestana {
+    position: relative;
+    height: 100%;
+    min-height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--muted);
+    font-size: .76rem;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+
+  .pestana:hover {
+    color: var(--ink);
+  }
+
+  .pestana:focus-visible {
+    outline-offset: -3px;
+  }
+
+  /* Activa: color de tinta, texto en negrita, trazo más grueso y una barra arriba (nunca solo el color) */
+  .pestana[aria-current='page'] {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .pestana[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 28px;
+    height: 3px;
+    margin-left: -14px;
+    border-radius: 0 0 3px 3px;
+    background: var(--ink);
+  }
+
+  .icono {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .insignia {
+    position: absolute;
+    top: -5px;
+    left: 14px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--brand);
+    color: var(--on-dark);
+    font-size: .66rem;
+    font-weight: 700;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    padding: 0 4px;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+
+  .texto {
+    white-space: nowrap;
+  }
+</style>

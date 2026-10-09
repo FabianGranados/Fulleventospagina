@@ -8,8 +8,9 @@ interface Props {
   id: string;
   titulo: string;
   ancho?: number;
-  // "lateral": panel arriba a la derecha (checkout de Evento); "centrada": el resto
-  forma?: 'centrada' | 'lateral';
+  // "lateral": panel arriba a la derecha (checkout de Evento); "hoja": por debajo de 520 px se pega abajo, a todo
+  // el ancho y con alto automático (decisión 2.27), y en pantallas grandes es "centrada"; "centrada": el resto
+  forma?: 'centrada' | 'lateral' | 'hoja';
 }
 
 const { id, titulo, ancho = 520, forma = 'centrada' } = Astro.props;
@@ -106,10 +107,11 @@ const { id, titulo, ancho = 520, forma = 'centrada' } = Astro.props;
     font-weight: 700;
   }
 
+  /* 44 × 44 en todas las formas (objetivo táctil, decisión 2.27) */
   .cerrar {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border: 0;
     border-radius: 50%;
     background: var(--bg);
@@ -119,14 +121,12 @@ const { id, titulo, ancho = 520, forma = 'centrada' } = Astro.props;
   }
 
   .lateral .cerrar {
-    width: 44px;
-    height: 44px;
     background: var(--surface);
   }
 
-  /* En celular, pantalla completa (N68) */
+  /* En celular, pantalla completa (N68); la hoja, abajo y del alto de su contenido */
   @media (max-width: 519px) {
-    .modal,
+    .modal:not(.hoja),
     .lateral {
       width: 100%;
       max-width: 100%;
@@ -135,10 +135,38 @@ const { id, titulo, ancho = 520, forma = 'centrada' } = Astro.props;
       margin: 0;
     }
 
-    .caja {
+    .modal:not(.hoja) .caja {
       min-height: 100%;
       max-height: 100dvh;
       border-radius: 0;
+    }
+
+    .hoja {
+      width: 100%;
+      max-width: 100%;
+      max-height: 90vh;
+      max-height: 90dvh;
+      margin: auto 0 0;
+    }
+
+    .hoja .caja {
+      max-height: 90vh;
+      max-height: 90dvh;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -12px 40px rgba(23, 18, 15, .25);
+    }
+
+    /* Sube desde abajo; sin movimiento con prefers-reduced-motion (regla global de base.css) */
+    .hoja[open] .caja {
+      animation: subir-hoja .22s ease-out;
+    }
+  }
+
+  @keyframes subir-hoja {
+    from {
+      transform: translateY(40px);
+      opacity: 0;
     }
   }
 </style>

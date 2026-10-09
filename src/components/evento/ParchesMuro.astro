@@ -40,12 +40,12 @@ const n = lista.length;
       <p class="sub">Únete a un grupo para llegar acompañado, o arma el tuyo.</p>
     </div>
     <div class="botones-cabecera">
-      <a class="armar" href={rutaNuevoParche(eventoId)} data-requiere-cuenta="para armar un parche">
+      <a class="armar" href={rutaNuevoParche(eventoId)} data-requiere-cuenta="para armar un parche" data-retomar="armar-parche">
         <Icono nombre="mas" tamano={16} grosor={2.2} />
         Armar parche
       </a>
       {/* Publicación formal sobre el evento (decisión 2.26): más completa que una entrada del muro */}
-      <a class="armar" href={rutaPublicar(eventoId)} data-requiere-cuenta="para escribir una publicación">
+      <a class="armar" href={rutaPublicar(eventoId)} data-requiere-cuenta="para escribir una publicación" data-retomar="publicar">
         <Icono nombre="foto" tamano={16} />
         Escribir una publicación
       </a>

@@ -62,3 +62,7 @@ export const hora12 = (valor: string) => {
   const h = Number(m[1]);
   return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'a. m.' : 'p. m.'}`;
 };
+
+// Nombre accesible de Mensajes con los chats sin leer: "Mensajes, 3 chats sin leer" (encabezado y barra inferior)
+export const sinLeerTexto = (n: number) => (n ? `${n} ${n === 1 ? 'chat sin leer' : 'chats sin leer'}` : '');
+export const nombreMensajes = (n: number) => (n ? `Mensajes, ${sinLeerTexto(n)}` : 'Mensajes');

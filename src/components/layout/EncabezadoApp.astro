@@ -1,11 +1,14 @@
 ---
 // N1 · Encabezado con sesión: un solo componente con variantes (H41).
 // completo: Inicio, Agenda, Mapa, Mensajes · detalle: Evento · detalle-perfil: Perfil
+// Por debajo de 768 px (decisión 2.27) es una sola fila: logo + lupa, "+" y avatar (completo) o flecha "Volver",
+// logo centrado y avatar (detalle). Los íconos de secciones pasan a la barra inferior (BarraNavegacion, N70).
 import Icono from '../ui/Icono.astro';
 import Logo from '../ui/Logo.astro';
 import { ciudades } from '../../data/ciudades';
 import { usuaria } from '../../data/personas';
 import { chatsSinLeer } from '../../data/mensajes';
+import { nombreMensajes } from '../../lib/formato';
 
 type Pagina = 'inicio' | 'agenda' | 'mapa' | 'noticias' | 'mensajes';
 
@@ -30,7 +33,7 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
     id: 'mensajes',
     href: '/mensajes',
     icono: 'mensajes',
-    nombre: noLeidos ? `Mensajes, ${noLeidos} ${noLeidos === 1 ? 'chat sin leer' : 'chats sin leer'}` : 'Mensajes',
+    nombre: nombreMensajes(noLeidos),
   },
 ];
 ---
@@ -41,7 +44,8 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
       variante !== 'completo' && (
         <a href="/inicio" class="volver" data-volver>
           <Icono nombre="volver" tamano={18} />
-          Volver
+          {/* En celular solo la flecha (44 × 44); el texto queda para lectores de pantalla */}
+          <span class="texto-volver">Volver</span>
         </a>
       )
     }
@@ -50,7 +54,7 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
 
     {
       variante === 'completo' && (
-        <form class="buscador" role="search" action="/agenda" method="get" data-buscador-app>
+        <form class="buscador" id="buscador-app" role="search" action="/agenda" method="get" data-buscador-app>
           <Icono nombre="lupa" tamano={18} class="lupa" />
           <input type="search" name="q" placeholder="Busca planes, gente o lugares" aria-label="Buscar" />
           <label class="ciudad">
@@ -95,6 +99,24 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
         </nav>
       )
     }
+
+    {/* Solo por debajo de 768 px (decisión 2.27). Fuera del nav: el nav "Principal" de celular es la barra inferior */}
+    <div class="acciones-celular">
+      {
+        variante === 'completo' && (
+          <>
+            {/* Sin JavaScript el buscador se ve abierto y este botón no aparece (como el menú del visitante) */}
+            <button type="button" class="redondo" aria-label="Buscar" aria-expanded="false" aria-controls="buscador-app" hidden data-abrir-busqueda>
+              <Icono nombre="lupa" tamano={20} />
+            </button>
+            <a href="/crear-evento" class="redondo mas" aria-label="Publicar">
+              <Icono nombre="mas" tamano={20} grosor={2.4} />
+            </a>
+          </>
+        )
+      }
+      <a href="/yo" class="avatar" aria-label={`${usuaria.iniciales}, tu perfil`}>{usuaria.iniciales}</a>
+    </div>
   </div>
 </header>
 
@@ -112,6 +134,28 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
     encabezado.querySelector<HTMLFormElement>('[data-buscador-app]')?.addEventListener('submit', (ev) => {
       if (document.querySelector('[data-agenda-app]')) ev.preventDefault();
     });
+
+    // Búsqueda plegable de celular (decisión 2.27): la lupa la abre debajo de la fila, con el foco en el campo;
+    // Escape la cierra y devuelve el foco a la lupa. En computador el buscador siempre se ve.
+    const lupa = encabezado.querySelector<HTMLButtonElement>('[data-abrir-busqueda]');
+    const buscador = encabezado.querySelector<HTMLFormElement>('[data-buscador-app]');
+    if (lupa && buscador) {
+      lupa.hidden = false;
+      encabezado.classList.add('busqueda-plegable');
+      const celular = matchMedia('(max-width: 767px)');
+      const alternar = (abrir: boolean) => {
+        lupa.setAttribute('aria-expanded', String(abrir));
+        buscador.classList.toggle('abierta', abrir);
+        if (abrir) buscador.querySelector<HTMLInputElement>('input')?.focus();
+      };
+      lupa.addEventListener('click', () => alternar(lupa.getAttribute('aria-expanded') !== 'true'));
+      buscador.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && celular.matches && lupa.getAttribute('aria-expanded') === 'true') {
+          alternar(false);
+          lupa.focus();
+        }
+      });
+    }
 
     // Si este encabezado está oculto (la versión de visitante es la visible, decisión 2.24), no toca el valor
     const ajustar = () => {
@@ -153,7 +197,7 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
   }
 
   /* Variantes de detalle: tres columnas para que el logo quede centrado en la página y no entre
-     "Volver" y los íconos, que miden distinto. En celular los íconos bajan a su propia fila, centrados. */
+     "Volver" y los íconos, que miden distinto. En celular la tercera columna es el avatar (decisión 2.27). */
   .detalle .fila,
   .detalle-perfil .fila {
     display: grid;
@@ -169,14 +213,6 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
   .detalle-perfil .derecha {
     justify-self: end;
     margin-left: 0;
-  }
-
-  @media (max-width: 767px) {
-    .detalle .iconos,
-    .detalle-perfil .derecha {
-      grid-column: 1 / -1;
-      justify-self: center;
-    }
   }
 
   .volver {
@@ -367,11 +403,98 @@ const iconos: { id: Pagina; href: string; icono: Pagina; nombre: string }[] = [
     right: -3px;
   }
 
-  /* En celular el encabezado deja de ser fijo (H40, decisiones 2.14 y 2.15) */
+  .acciones-celular {
+    display: none;
+  }
+
+  /* En celular el encabezado deja de ser fijo (H40, decisiones 2.14 y 2.15) y es una sola fila de unos 61 px
+     (decisión 2.27): las secciones, la campana y "Publicar" con texto pasan a la barra inferior o al "+" */
   @media (max-width: 767px) {
     .encabezado {
       position: static;
-      --tope-logo: 40px;
+      --tope-logo: 32px;
+    }
+
+    .fila {
+      padding-block: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .iconos,
+    .derecha {
+      display: none;
+    }
+
+    .acciones-celular {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .detalle .acciones-celular,
+    .detalle-perfil .acciones-celular {
+      justify-self: end;
+      margin-left: 0;
+    }
+
+    .redondo {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+    }
+
+    .redondo:hover {
+      color: var(--brand);
+    }
+
+    .redondo[aria-expanded='true'] {
+      background: var(--surface-sunken);
+    }
+
+    .redondo.mas,
+    .redondo.mas:hover {
+      background: var(--ink);
+      color: var(--on-dark);
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      margin-left: 0;
+    }
+
+    .volver {
+      width: 44px;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .texto-volver {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    /* El buscador baja a su propia línea, a todo el ancho; con JavaScript se pliega detrás de la lupa */
+    .buscador {
+      order: 10;
+      flex: 1 1 100%;
+      max-width: none;
+    }
+
+    .busqueda-plegable .buscador:not(.abierta) {
+      display: none;
     }
   }
 </style>

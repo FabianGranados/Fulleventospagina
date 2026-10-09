@@ -49,6 +49,10 @@ export const rutaVolver = (param: string | null | undefined, defecto = '/inicio'
   return param;
 };
 
+// Parámetro con la acción que el visitante quiso hacer antes de crear la cuenta o entrar (decisión 2.27).
+// Viaja dentro de volver (p. ej. "/evento/bogota/…?accion=voy#acciones-evento"); lo lee y lo quita VentanaCuenta.
+export const PARAM_ACCION = 'accion';
+
 // "/entrar?volver=%2Fagenda%3Fciudad%3Dcali"
 export const conVolver = (destino: string, volver: string) => `${destino}?volver=${encodeURIComponent(volver)}`;
 

@@ -7,6 +7,7 @@ import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
 import VentanaCuenta from '../components/ui/VentanaCuenta.astro';
 import Pie from '../components/layout/Pie.astro';
+import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import AgendaApp from '../components/agenda/AgendaApp.astro';
 import VentanaRepost from '../components/eventos/VentanaRepost.astro';
 ---
@@ -18,6 +19,7 @@ import VentanaRepost from '../components/eventos/VentanaRepost.astro';
     <AgendaApp />
   </main>
   <Pie />
+  <BarraNavegacion activa="explorar" class="solo-sesion" />
   <VentanaRepost />
   <VentanaCuenta />
 </Base>

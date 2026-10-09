@@ -3,6 +3,8 @@
 // pestaña. Fulleventos no vende boletas en el primer lanzamiento (VENTA_PROPIA = false, src/config.ts).
 // Sin `urlVenta` (todo el demo: las boleteras son [BOLETERA], P8, H1) el botón se ve igual, pero inactivo y
 // con una nota de demostración, para que el diseño quede completo sin inventar enlaces.
+// Compacto (barra de celular, decisión 2.27): sin enlace se ve claramente inactivo (gris, sin flecha) y la nota
+// no se ve en la barra (sigue en la tarjeta lateral); queda solo para lectores, como descripción del botón.
 import Icono from '../ui/Icono.astro';
 import type { Evento } from '../../data/eventos';
 
@@ -36,11 +38,11 @@ const idNota = `${id}-nota`;
         <span>
           Comprar{compacto ? <span class="solo-lectores"> en {e.vende}</span> : ` en ${e.vende}`}
         </span>
-        <span aria-hidden="true">↗</span>
+        {!compacto && <span aria-hidden="true">↗</span>}
       </button>
     )
   }
-  {!url && <p id={idNota} class="nota">Demostración: falta el enlace oficial de venta de este evento.</p>}
+  {!url && <p id={idNota} class:list={['nota', { 'solo-lectores': compacto }]}>Demostración: falta el enlace oficial de venta de este evento.</p>}
 </div>
 
 <style>
@@ -102,11 +104,11 @@ const idNota = `${id}-nota`;
     font-size: .95rem;
   }
 
-  .compacto .nota {
-    flex: 1 0 100%;
-    order: 3;
-    margin-top: -4px;
-    font-size: .7rem;
-    text-align: left;
+  /* Inactivo en la barra: fondo hundido y texto gris (#6E6259 sobre #F3ECE5, 5:1) */
+  .compacto .boton[aria-disabled='true'],
+  .compacto .boton[aria-disabled='true']:hover {
+    background: var(--surface-sunken);
+    color: var(--muted);
+    border: 1px dashed var(--line-input);
   }
 </style>

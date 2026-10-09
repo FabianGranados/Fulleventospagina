@@ -3,6 +3,7 @@
 // Demo local sin backend ni tiempo real (decisión pendiente P6; H9, H13, H29, H30): el estado vive en el navegador.
 // Las partes que cambian se pintan con plantillas.ts en el servidor y en el navegador (una sola fuente de marcado).
 import EncabezadoApp from '../layout/EncabezadoApp.astro';
+import BarraNavegacion from '../layout/BarraNavegacion.astro';
 import Icono from '../ui/Icono.astro';
 import ModalNuevoChat from './ModalNuevoChat.astro';
 import { EVENTOS_CHAT } from '../../data/mensajes';
@@ -127,6 +128,9 @@ const bandeja = EVENTOS_CHAT.map((id) => eventoDe(id));
 
   <p class="solo-lectores" role="status" data-anuncio></p>
   <ModalNuevoChat />
+  <!-- Barra inferior de celular (decisión 2.27). En la conversación a pantalla completa no se muestra: taparía el
+       campo de escribir, y la conversación ya tiene su flecha para volver a la lista -->
+  <BarraNavegacion activa="mensajes" noLeidos={sinLeer} />
 </div>
 
 <script>
@@ -1761,8 +1765,14 @@ const bandeja = EVENTOS_CHAT.map((id) => eventoDe(id));
       overflow: hidden;
     }
 
-    .app-mensajes[data-pane='chat'] :global(.encabezado) {
+    .app-mensajes[data-pane='chat'] :global(.encabezado),
+    .app-mensajes[data-pane='chat'] :global(.barra-navegacion) {
       display: none;
+    }
+
+    /* Sin la barra inferior, la página no reserva su espacio (decisión 2.27) */
+    :global(html:has(.app-mensajes[data-pane='chat'])) {
+      --espacio-barra-nav: 0px;
     }
 
     .app-mensajes[data-pane='chat'] .principal {

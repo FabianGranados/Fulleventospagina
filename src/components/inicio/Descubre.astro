@@ -4,29 +4,15 @@
 import Etiqueta from '../ui/Etiqueta.astro';
 import Avatar from '../ui/Avatar.astro';
 import MiniMapaInicio from './MiniMapaInicio.astro';
-import { tuSemana, genteGustos, tendencias } from '../../data/inicio';
+import { genteGustos, tendencias } from '../../data/inicio';
+import { semana, confirmados } from './resumen';
 import { eventos } from '../../data/eventos';
 import { ciudades, nombreCiudad } from '../../data/ciudades';
 import { persona } from '../../data/personas';
-import { cifra, planes, ciudadesTexto, placaFecha, rutaEvento, horaSinCorte } from '../../lib/formato';
+import { cifra, planes, ciudadesTexto } from '../../lib/formato';
 import { conteoCiudad } from '../../data/eventos';
 import { VENTA_PROPIA } from '../../config';
 
-const semana = tuSemana.map((s) => {
-  const e = eventos.find((ev) => ev.id === s.evento)!;
-  const dia = new Date(`${e.fecha}T12:00:00-05:00`)
-    .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'America/Bogota' })
-    .replace('.', '');
-  return {
-    titulo: e.titulo,
-    href: rutaEvento(e.ciudad, e.titulo),
-    numero: placaFecha(e.fecha).dia,
-    dia,
-    // La hora sale del evento (H37); sin hora, solo el detalle
-    detalle: [e.hora && horaSinCorte(e.hora), s.detalle].filter(Boolean).join(' · '),
-  };
-});
-const confirmados = semana.length === 1 ? '1 plan confirmado' : `${semana.length} planes confirmados`;
 const activas = ciudades.filter((c) => conteoCiudad(c.id) > 0).length;
 const gente = genteGustos.map((g) => ({ ...g, p: persona(g.persona)! }));
 ---
@@ -144,7 +130,13 @@ const gente = genteGustos.map((g) => ({ ...g, p: persona(g.persona)! }));
     font-weight: 700;
   }
 
-  /* Tu semana */
+  /* Tu semana. En celular va compacta después del compositor (ResumenCelular, decisión 2.27) */
+  @media (max-width: 767px) {
+    .semana {
+      display: none;
+    }
+  }
+
   .semana {
     background: var(--ink);
     color: var(--on-dark);

@@ -4,10 +4,16 @@
 // Sin sesión, cualquier control con data-requiere-cuenta="<acción>" (p. ej. "para decir que vas") no se ejecuta:
 // abre esta ventana con "Crear cuenta" → /registro?volver=<ruta actual> y "Ya tengo cuenta · Entrar" →
 // /entrar?volver=<ruta actual>. Con sesión no hace nada y la acción funciona como siempre.
+// Retomar la acción (decisión 2.27): si el control tiene data-retomar="<clave>", el volver lleva además
+// ?accion=<clave> y un ancla a su bloque. Al volver con sesión, esta misma ventana (va en cada página con acciones
+// de cuenta) quita el parámetro de la URL, desplaza hasta el control y le da el foco. Si el control además tiene
+// data-retomar-aviso (acciones simples y seguras: Voy, Me interesa, Ya tengo boleta, Guardar), la ejecuta si no
+// estaba hecha y muestra el aviso. Las que abren flujos (Armar parche, Escribir una publicación, Invitar…) solo
+// llevan hasta el botón.
 import Modal from './Modal.astro';
 ---
 
-<Modal id="ventana-cuenta" titulo="Crea tu cuenta" ancho={440}>
+<Modal id="ventana-cuenta" titulo="Crea tu cuenta" ancho={440} forma="hoja">
   <div class="cuerpo">
     <p class="texto">Es gratis y solo tarda un minuto. Con tu cuenta ves a qué va tu gente, armas parche y guardas tus planes.</p>
     <a href="/registro" class="crear" data-cuenta-registro>Crear cuenta</a>
@@ -15,8 +21,55 @@ import Modal from './Modal.astro';
   </div>
 </Modal>
 
+<p class="aviso-retomar" role="status" data-aviso-retomar></p>
+
 <script>
-  import { conVolver, haySesion, rutaActual } from '../../lib/sesion';
+  import { conVolver, haySesion, PARAM_ACCION, rutaActual } from '../../lib/sesion';
+
+  // Ruta de vuelta con la intención: /evento/…?accion=voy#acciones-evento
+  const volverCon = (control: HTMLElement) => {
+    const clave = control.dataset.retomar;
+    if (!clave) return rutaActual();
+    const url = new URL(location.href);
+    url.searchParams.set(PARAM_ACCION, clave);
+    const ancla = control.closest<HTMLElement>('section[id], #acciones-evento');
+    if (ancla) url.hash = ancla.id;
+    return `${url.pathname}${url.search}${url.hash}`;
+  };
+
+  // Al volver con sesión: ejecutar la acción simple o llevar hasta el botón
+  const retomar = () => {
+    const params = new URLSearchParams(location.search);
+    const clave = params.get(PARAM_ACCION);
+    if (!clave) return;
+    params.delete(PARAM_ACCION);
+    const consulta = params.toString();
+    // También sin el ancla: el ancla solo sirve para llegar al bloque sin JavaScript, y si el navegador la procesa
+    // después de este script, mueve el foco al documento (pasos de foco del fragmento)
+    history.replaceState(history.state, '', `${location.pathname}${consulta ? `?${consulta}` : ''}`);
+    if (!haySesion()) return;
+    // Comparación exacta (sin armar selectores con lo que trae la URL)
+    const candidatos = [...document.querySelectorAll<HTMLElement>('[data-retomar]')].filter((el) => el.dataset.retomar === clave);
+    const control = candidatos.find((el) => el.getClientRects().length) ?? candidatos[0];
+    if (!control) return;
+    const aviso = control.dataset.retomarAviso;
+    if (aviso && control.getAttribute('aria-pressed') !== 'true') control.click();
+    control.scrollIntoView({ block: 'center' });
+    control.focus({ preventScroll: true });
+    if (aviso) {
+      const region = document.querySelector<HTMLElement>('[data-aviso-retomar]');
+      if (!region) return;
+      // Un momento después, para que los lectores de pantalla anuncien el cambio de la región
+      setTimeout(() => {
+        region.textContent = aviso;
+        region.classList.add('visible');
+        setTimeout(() => region.classList.remove('visible'), 8000);
+      }, 150);
+    }
+  };
+  // Después de que los scripts de la página aplicaron el estado de la usuaria (asistencia.ts, AgendaApp…)
+  if (document.readyState === 'complete') retomar();
+  else addEventListener('DOMContentLoaded', retomar, { once: true });
 
   const dialogo = document.getElementById('ventana-cuenta') as HTMLDialogElement | null;
 
@@ -36,7 +89,7 @@ import Modal from './Modal.astro';
         ev.stopImmediatePropagation();
         const accion = control.dataset.requiereCuenta;
         titulo.textContent = accion ? `Crea tu cuenta ${accion}` : 'Crea tu cuenta';
-        const volver = rutaActual();
+        const volver = volverCon(control);
         registro.href = conVolver('/registro', volver);
         entrar.href = conVolver('/entrar', volver);
         origen = control;
@@ -54,6 +107,41 @@ import Modal from './Modal.astro';
 </script>
 
 <style>
+  /* Aviso "Listo: …" al retomar la acción: arriba, para no tapar las barras fijas de abajo */
+  .aviso-retomar {
+    position: fixed;
+    left: 50%;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    z-index: 40;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--on-dark);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: .92rem;
+    box-shadow: 0 12px 30px rgba(23, 18, 15, .25);
+  }
+
+  .aviso-retomar:not(.visible) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* En computador el encabezado con sesión es fijo (73 px): el aviso va debajo */
+  @media (min-width: 768px) {
+    .aviso-retomar {
+      top: 90px;
+    }
+  }
+
   .cuerpo {
     display: flex;
     flex-direction: column;

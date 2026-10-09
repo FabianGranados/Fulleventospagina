@@ -7,6 +7,7 @@ import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../components/layout/EncabezadoVisitante.astro';
 import VentanaCuenta from '../components/ui/VentanaCuenta.astro';
 import Pie from '../components/layout/Pie.astro';
+import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import CabeceraMapa from '../components/mapa/CabeceraMapa.astro';
 import MapaColombia from '../components/mapa/MapaColombia.astro';
 import PanelResultados from '../components/mapa/PanelResultados.astro';
@@ -44,6 +45,7 @@ import { categoriasMapa } from '../data/mapa';
     <RankingCiudades />
   </main>
   <Pie />
+  <BarraNavegacion activa="explorar" class="solo-sesion" />
   <VentanaRepost />
   <VentanaCuenta />
 </Base>

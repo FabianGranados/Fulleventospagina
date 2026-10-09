@@ -6,6 +6,7 @@ import Base from '../../layouts/Base.astro';
 import EncabezadoApp from '../../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../../components/layout/EncabezadoVisitante.astro';
 import Pie from '../../components/layout/Pie.astro';
+import BarraNavegacion from '../../components/layout/BarraNavegacion.astro';
 import TarjetaNoticia from '../../components/noticias/TarjetaNoticia.astro';
 import { ciudades } from '../../data/ciudades';
 import { TEMAS, temas } from '../../data/noticias';
@@ -86,6 +87,7 @@ const descripcion =
     </ul>
   </main>
   <Pie />
+  <BarraNavegacion activa="noticias" class="solo-sesion" />
 </Base>
 
 <script>
@@ -267,6 +269,35 @@ const descripcion =
     background: var(--ink);
     border-color: var(--ink);
     color: var(--on-dark);
+  }
+
+  /* En celular (decisión 2.27) cada grupo es una fila con desplazamiento lateral, como los chips de la Agenda
+     y "Este finde" (decisión 2.14): relleno para el anillo de foco, desvanecido en el borde y position: relative
+     para que nada oculto desborde. Chips de 44 px de alto. */
+  @media (max-width: 767px) {
+    /* Sin wrap: en columna, un flex de varias líneas toma el ancho de su contenido y desbordaría */
+    .grupo {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .chips {
+      position: relative;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 6px 24px 6px 6px;
+      margin: 0 calc(-1 * var(--margen-lateral)) 0 -6px;
+      scroll-padding-inline: 6px 40px;
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    }
+
+    .chip {
+      flex-shrink: 0;
+      height: 44px;
+    }
   }
 
   .rejilla {

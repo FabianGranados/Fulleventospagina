@@ -42,7 +42,7 @@ const mas = amigos.length - avatares.length;
 
 <!-- Página pública (decisión 2.24): los botones salen como los ve el visitante. Con sesión, asistencia.ts aplica el
      estado de la usuaria (data-sesion-pulsado); sin sesión, data-requiere-cuenta abre "Crea tu cuenta" -->
-<div class="acciones-evento">
+<div class="acciones-evento" id="acciones-evento">
   <div class="fila">
     <button
       type="button"
@@ -51,6 +51,8 @@ const mas = amigos.length - avatares.length;
       data-voy
       data-sesion-pulsado={String(m.voy)}
       data-requiere-cuenta="para decir que vas"
+      data-retomar="voy"
+      data-retomar-aviso={`Listo: vas a ${e.titulo}.`}
     >
       <Icono nombre="visto" tamano={18} grosor={2.4} />
       <span data-texto-voy>Voy</span>
@@ -62,6 +64,8 @@ const mas = amigos.length - avatares.length;
       data-interes
       data-sesion-pulsado={String(interesa)}
       data-requiere-cuenta="para marcar lo que te interesa"
+      data-retomar="interes"
+      data-retomar-aviso={`Listo: marcaste que te interesa ${e.titulo}.`}
     >
       <Icono nombre="estrella" tamano={18} />
       Me interesa
@@ -75,13 +79,15 @@ const mas = amigos.length - avatares.length;
           data-tengo-boleta
           data-sesion-pulsado={String(tengoBoleta)}
           data-requiere-cuenta="para marcar que ya tienes boleta"
+          data-retomar="boleta"
+          data-retomar-aviso={`Listo: marcaste que ya tienes boleta para ${e.titulo}.`}
         >
           <Icono nombre="boleta" tamano={18} />
           Ya tengo boleta
         </button>
       )
     }
-    <button type="button" class="boton claro" data-compartir="invitar" data-requiere-cuenta="para invitar a tus amigos">
+    <button type="button" class="boton claro" data-compartir="invitar" data-requiere-cuenta="para invitar a tus amigos" data-retomar="invitar">
       <Icono nombre="avion" tamano={18} />
       Invitar amigos
     </button>

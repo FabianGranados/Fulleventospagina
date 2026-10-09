@@ -1,6 +1,9 @@
 ---
 // N37 · Barra de compra fija por debajo de 980 px.
 // Con VENTA_PROPIA = false (decisión 2.22): precio desde y el botón compacto a la boletera.
+// Más liviana (decisión 2.27): solo en eventos de pago (la página no la pinta en los gratis), se oculta mientras la
+// tarjeta de boletas o la sección de localidades están en pantalla, y con sesión en celular se apila encima de la
+// barra de navegación inferior (--espacio-barra-nav, BarraNavegacion).
 import type { ModeloEvento } from './modelo';
 import BotonBoletera from '../eventos/BotonBoletera.astro';
 import { VENTA_PROPIA } from '../../config';
@@ -32,6 +35,23 @@ const inicial = m.localidades[0];
   }
 </div>
 
+<script>
+  // Se oculta cuando lo que muestra ya está a la vista: la tarjeta de boletas (computador) o las localidades
+  const barra = document.querySelector<HTMLElement>('[data-barra-compra]');
+  const vigilados = [...document.querySelectorAll<HTMLElement>('#comprar-boletas, #localidades')];
+  if (barra && vigilados.length && 'IntersectionObserver' in window) {
+    const visibles = new Set<Element>();
+    const observador = new IntersectionObserver((entradas) => {
+      entradas.forEach((e) => (e.isIntersecting ? visibles.add(e.target) : visibles.delete(e.target)));
+      const ocultar = visibles.size > 0;
+      // Si el foco está dentro, no se esconde de golpe
+      if (ocultar && barra.contains(document.activeElement)) return;
+      barra.toggleAttribute('data-oculta', ocultar);
+    });
+    vigilados.forEach((v) => observador.observe(v));
+  }
+</script>
+
 <style>
   .barra {
     display: none;
@@ -52,6 +72,22 @@ const inicial = m.localidades[0];
       flex-wrap: wrap;
       align-items: center;
       gap: 12px;
+      transition: transform .2s ease, visibility .2s;
+    }
+
+    /* Oculta (fuera de la pantalla y fuera del orden del foco) mientras se ven las boletas */
+    .barra[data-oculta] {
+      transform: translateY(calc(100% + var(--espacio-barra-nav, 0px)));
+      visibility: hidden;
+    }
+  }
+
+  /* Con sesión en celular, encima de la barra de navegación inferior; el área segura ya la cubre esa barra */
+  @media (max-width: 767px) {
+    :global(html[data-sesion='si']) .barra {
+      bottom: var(--espacio-barra-nav, 0px);
+      padding-bottom: 10px;
+      z-index: 19;
     }
   }
 
