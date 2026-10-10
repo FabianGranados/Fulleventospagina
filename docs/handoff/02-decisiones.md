@@ -621,3 +621,37 @@ Viene de la auditoría de UX del perfil (hallazgos PF1–PF14) y de la propuesta
 
 - **Qué:** en la Bienvenida, buscar con texto en el encabezado lleva a `/agenda?q=<texto>&ciudad=<ciudad>`, que ya filtra por lo escrito ("2 planes para «salsa»…"). Sin texto, sigue bajando a "Este finde".
 - **Por qué:** el cliente buscó desde el celular y la lupa "no lo llevaba a nada": la decisión 2.15 hacía que en la Bienvenida la búsqueda solo bajara a "Este finde" e ignorara lo escrito. Con sesión ya iba a la agenda; ahora los dos encabezados se comportan igual.
+
+### 2.32 Hero de intención (10 de octubre de 2026)
+
+El cliente dijo del héroe anterior: "me gusta pero no entiendo bien el fin y no me dan ganas de interactuar… no tanto texto, más al grano y colores de intención". Tras un estudio de referentes (Eventbrite, Fever, DICE, Resident Advisor, Luma…) aprobó esta propuesta. Los patrones que se toman de ellos: **titular corto**, **buscador protagonista**, **chips de intención**, **contenido real** (cifras calculadas, nunca de adorno), **valor antes que cuenta** (se puede usar todo sin registrarse), **color con significado** y **sin carruseles**.
+
+- **Qué reemplaza:**
+  - De la 2.13: la etiqueta "Arma tu parche", el titular y los destinos de los enlaces del héroe ("Ver la agenda sin registrarme" sale: el buscador y los chips ya llevan a la agenda).
+  - La 2.19 completa (titular minimalista de computador, botón con flecha y tarjeta flotante "Destacado este finde") y la 2.20 (degradado en las letras; se quitan los tokens `--peach-suave` y `--pink-suave`).
+  - La parte de la 2.18 que dejó "Crear cuenta" solo en el menú de celular: ahora también está en el héroe, como enlace.
+  - Se mantienen la foto con su carga (AVIF/WebP, prioridad alta, `alt=""`), la capa oscura de computador, la prueba social oculta (2.13) y el ajuste de celular (sin alto mínimo, radio de 22 px).
+- **Estructura** (`components/bienvenida/Hero.astro`), igual en todos los anchos:
+  - **Un solo `h1`:** "Tu plan de este finde, con tu gente". Archivo 900, blanco, `clamp(2.1rem, 6.4vw, 4.2rem)`, interlineado 1, `letter-spacing: -0.03em`, `text-wrap: balance`. Sin degradado ni titular de bloques: se acaba el truco de los dos `h1`.
+  - **Línea de apoyo:** "Planes en toda Colombia, quién va y parche para ir." (DM Sans 400, 1,02 rem en celular y 1,15 rem en computador, `--on-dark-muted`).
+  - **Buscador** (`form role="search"`, nombre "Buscar planes", a `/agenda` por GET): campo `q` con marcador "Salsa, rock, fútbol, teatro…", selector `ciudad` ("Toda Colombia" y las ciudades) y botón "Buscar", el único rojo (`--brand`) del héroe. Caja blanca: píldora en una fila desde 600 px; en celular, campo arriba y ciudad + botón debajo, con radio `--radius-lg`. Con texto va a `/agenda?q=…&ciudad=…`; sin texto baja a "Este finde" y la ciudad elegida filtra sus filas (mismo comportamiento que el buscador del encabezado, 2.31; la lógica es común, `lib/buscador.ts`). Sin JavaScript va a `/agenda` con los parámetros. El foco del campo se marca en toda la caja con el anillo amarillo.
+  - **Chips de intención** (`nav` "Planes por categoría"): enlaces a la agenda filtrada, no botones. Rumba, Conciertos, Gratis, Deporte, Arte y teatro y Comida, cada uno con su color de relleno y texto `--ink`, más "Ver en el mapa" (neutro, contorno blanco) y, con sesión, "Lo que repostea tu gente" (neutro, `?categoria=amigos`). Cada uno lleva el conteo real de planes del finde en un círculo y su nombre accesible es "Rumba 6 planes". Un chip sin planes no se pinta. Al elegir ciudad (en el héroe o en los chips de ciudad de "Este finde"), los enlaces suman `&ciudad=<id>` y los conteos se recalculan. 44 px de alto; en celular la fila se desliza de lado hasta el borde del héroe, sin desvanecido (2.28); desde 768 px baja de línea.
+  - **Cifra real:** "**19 planes** este finde en **11 ciudades**", calculada; con ciudad, "**2 planes** este finde en Cali". Es región `aria-live="polite"`.
+  - **Cuenta:** "Crear mi cuenta gratis" como enlace subrayado (en la línea de la cifra en computador y en su propia línea en celular); con sesión, "Ir a mi inicio".
+- **Capa oscura en celular:** más clara arriba (70 %, donde el titular va sobre la foto) y más oscura abajo (90 %, donde van el formulario y los chips).
+- **Encabezado de visitante sin buscador en la Bienvenida:** `EncabezadoVisitante` recibe `buscador={false}` solo en `/`, porque el buscador está en el héroe. Las demás páginas no cambian; el encabezado con sesión conserva su lupa.
+- **Medidas:** a 390 × 844 el formulario (248–333 px) y los chips (341–401 px) quedan en el primer pantallazo y el título "Este finde en Colombia" se ve (590–618 px). A 1280 × 800 se ve el inicio de "Este finde" (título a 697 px).
+- **Colores por categoría** (cambia la nota 5 de la sección 3: hasta ahora no había un color fijo por categoría). Fuente única en `src/data/categorias.ts` (`id`, `texto`, `color`) y tokens `--cat-*` en `tokens.css`. Se usan en los chips del héroe y como marca (punto de 10 px) junto al título de cada fila de "Este finde" (`FilaEventos`, prop `color`). El color nunca es el único indicador: el nombre siempre está escrito. Los pasteles van como relleno con texto `--ink`, nunca como texto sobre la crema. Las tarjetas y los chips de la Agenda quedan para una fase 2.
+
+  | Categoría | Token | Color | Texto `--ink` encima |
+  |---|---|---|---|
+  | Rumba | `--cat-rumba` | `--pink` `#EE93BC` | 8,44:1 |
+  | Conciertos | `--cat-conciertos` | `--lilac` `#A3A8F0` | 8,33:1 |
+  | Gratis | `--cat-gratis` | `--lime` `#B9E07A` | 12,40:1 |
+  | Deporte | `--cat-deporte` | `--aqua` `#8FD3D0` | 10,97:1 |
+  | Arte y teatro | `--cat-teatro` | `--peach` `#F3B27E` | 10,16:1 |
+  | Comida | `--cat-comida` | `--yellow` `#F6DC6A` | 13,60:1 |
+
+  El botón "Buscar" lleva texto blanco sobre `--brand` (5,35:1).
+- **Textos:** "Tu plan de este finde, con tu gente" lo eligió el cliente. Están por aprobar: la línea de apoyo, el marcador del buscador, los nombres de los chips ("Gratis" sin "este finde"), la cifra y "Ir a mi inicio" en este lugar.
+- **Descartado:** carrusel de destacados (insinúa diapositivas y aleja del objetivo), botón principal "Crear mi cuenta gratis" (la cuenta no es lo primero que se pide) y el titular con pregunta del boceto ("¿Qué hacemos este finde?").

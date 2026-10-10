@@ -14,7 +14,7 @@ import Noticias from '../components/bienvenida/Noticias.astro';
 
 <Base titulo="Fulleventos Colombia">
   <!-- Pública. Con la sesión de demostración (decisión 2.24) el encabezado pasa a ser el de la app -->
-  <EncabezadoVisitante class="solo-visitante" />
+  <EncabezadoVisitante class="solo-visitante" buscador={false} />
   <EncabezadoApp variante="completo" class="solo-sesion" />
   <!-- Orden de la auditoría H44 (decisión 2.13): los planes a la venta justo después del héroe -->
   <main id="contenido" class="contenedor principal">

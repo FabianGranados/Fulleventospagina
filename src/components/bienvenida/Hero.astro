@@ -1,15 +1,17 @@
 ---
-import Etiqueta from '../ui/Etiqueta.astro';
-import Titular from '../ui/Titular.astro';
-import Boton from '../ui/Boton.astro';
+// Héroe de intención (decisión 2.32): titular corto, buscador, chips de categoría con su color y la cifra real de
+// planes del finde. La ciudad elegida aquí (o en los chips de ciudad de "Este finde") la sincroniza AgendaFinde,
+// que avisa con el evento "finde:ciudad"; este script solo repinta los chips y la cifra.
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import Icono from '../ui/Icono.astro';
 import PruebaSocial from './PruebaSocial.astro';
 import { Picture } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import { eventos } from '../../data/eventos';
-import { nombreCiudad } from '../../data/ciudades';
-import { pesos, placaFecha, rutaEvento, horaSinCorte } from '../../lib/formato';
+import { eventos, type Evento } from '../../data/eventos';
+import { ciudades } from '../../data/ciudades';
+import { categorias, colorCategoria, rutaCategoria } from '../../data/categorias';
+import { fechasAgenda, socialAgenda } from '../../data/agenda';
+import { planes, ciudadesTexto } from '../../lib/formato';
 
 interface Props {
   // Se muestra solo con datos reales (decisión 2.13); sin datos no se pinta.
@@ -25,17 +27,27 @@ const archivos = import.meta.glob<{ default: ImageMetadata }>('../../assets/hero
 });
 const foto = Object.values(archivos)[0]?.default;
 
-// Plan destacado de la tarjeta flotante en computador (decisión 2.19). En producción lo elige el equipo
-// editorial desde el backend; en el demo es el evento principal (e1).
-const destacado = eventos.find((e) => e.id === 'e1')!;
-const { dia, mes } = placaFecha(destacado.fecha);
-const diaSemana = new Date(`${destacado.fecha}T12:00:00-05:00`)
-  .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'America/Bogota' })
-  .replace('.', '');
-const cuando = `${diaSemana[0].toUpperCase()}${diaSemana.slice(1)} ${dia} ${mes}` + (destacado.hora ? ` · ${horaSinCorte(destacado.hora)}` : '');
+// Conteos reales del finde (el mismo rango que "Este finde" de la Agenda), por ciudad y en todo el país
+const finde = fechasAgenda.find((f) => f.id === 'finde')!;
+const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
+const conteos = (lista: Evento[]) =>
+  Object.fromEntries([['all', lista.length], ...ciudades.map((c) => [c.id, lista.filter((e) => e.ciudad === c.id).length])]);
+
+const chips = categorias
+  .map((c) => ({
+    id: c.id,
+    texto: c.texto,
+    color: colorCategoria(c),
+    conteos: conteos(enFinde.filter((e) => e.etiquetas.includes(c.id))),
+  }))
+  .filter((c) => c.conteos.all > 0);
+
+// "Lo que repostea tu gente" (solo con sesión): el mismo filtro `amigos` de la Agenda
+const conteosAmigos = conteos(enFinde.filter((e) => socialAgenda[e.id]?.amigos));
+const ciudadesConPlanes = new Set(enFinde.map((e) => e.ciudad)).size;
 ---
 
-<section aria-label="Bienvenida" class:list={['hero', 'superficie-oscura', { 'con-foto': foto }]}>
+<section aria-labelledby="hero-titulo" class:list={['hero', 'superficie-oscura', { 'con-foto': foto }]} data-hero>
   {
     foto && (
       <Picture
@@ -52,79 +64,153 @@ const cuando = `${diaSemana[0].toUpperCase()}${diaSemana.slice(1)} ${dia} ${mes}
     )
   }
 
-  <div class="texto">
-    <!-- Celular: titular de bloques con degradado (decisión 2.13). Computador: titular minimalista
-         (decisión 2.19). Solo uno se muestra a la vez, así que solo hay un h1 en el árbol accesible. -->
-    <Etiqueta tamano="lg" class="etiqueta-hero">Arma tu parche</Etiqueta>
-    <Titular
-      class="titular-celular"
-      lineas={[
-        { texto: 'De la rumba' },
-        { texto: 'del viernes', sangria: 'clamp(0em, 2vw, 1.15em)' },
-        { texto: 'al concierto del sábado', sangria: 'clamp(0em, 1vw, .4em)', maxAncho: '13ch' },
-      ]}
-    />
-    <h1 class="titular-escritorio">
-      <span>De la rumba del viernes</span>{' '}
-      <span>al concierto del sábado</span>
-    </h1>
-    <p class="bajada">
-      Descubre planes en Bogotá, Medellín, Cali, Barranquilla y todo el país, mira quién de tus amigos
-      va y arma parche para no llegar solo.
-    </p>
-    <div class="acciones">
-      <Boton href="/registro" class="boton-hero solo-visitante">
-        Crear mi cuenta gratis
-        <Icono nombre="flecha" tamano={18} class="flecha" />
-      </Boton>
+  <div class="contenido">
+    <h1 id="hero-titulo">Tu plan de este finde, con tu gente</h1>
+    <p class="apoyo">Planes en toda Colombia, quién va y parche para ir.</p>
+
+    <!-- Sin JavaScript va a /agenda con lo escrito y la ciudad; con JavaScript, sin texto baja a "Este finde" -->
+    <form class="buscador" role="search" aria-label="Buscar planes" action="/agenda" method="get" data-buscador-hero>
+      <label class="campo">
+        <Icono nombre="lupa" tamano={20} class="lupa" />
+        <span class="solo-lectores">Buscar planes</span>
+        <input type="search" name="q" placeholder="Salsa, rock, fútbol, teatro…" enterkeyhint="search" />
+      </label>
+      <div class="fila-ciudad">
+        <label class="ciudad">
+          <Icono nombre="pin" tamano={18} class="pin" />
+          <span class="solo-lectores">Ciudad</span>
+          <select name="ciudad" autocomplete="off" data-selector-ciudad>
+            <option value="all">Toda Colombia</option>
+            {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
+          </select>
+        </label>
+        <button type="submit" class="buscar">Buscar</button>
+      </div>
+    </form>
+
+    <nav class="intenciones" aria-label="Planes por categoría">
+      <ul role="list">
+        {
+          chips.map((c) => (
+            <li>
+              <a
+                href={rutaCategoria(c.id)}
+                class="chip"
+                style={`--chip: ${c.color}`}
+                data-chip-categoria={c.id}
+                data-conteos={JSON.stringify(c.conteos)}
+              >
+                {c.texto}{' '}
+                <span class="conteo">
+                  <span data-conteo>{c.conteos.all}</span>
+                  <span class="solo-lectores" data-conteo-palabra>{c.conteos.all === 1 ? ' plan' : ' planes'}</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a href="/mapa" class="chip neutro" data-chip-mapa>
+            <Icono nombre="mapa" tamano={18} />Ver en el mapa
+          </a>
+        </li>
+        {
+          conteosAmigos.all > 0 && (
+            <li class="solo-sesion">
+              <a
+                href={rutaCategoria('amigos')}
+                class="chip neutro"
+                data-chip-categoria="amigos"
+                data-conteos={JSON.stringify(conteosAmigos)}
+              >
+                Lo que repostea tu gente{' '}
+                <span class="conteo">
+                  <span data-conteo>{conteosAmigos.all}</span>
+                  <span class="solo-lectores" data-conteo-palabra>{conteosAmigos.all === 1 ? ' plan' : ' planes'}</span>
+                </span>
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </nav>
+
+    <div class="cierre">
+      <p class="cifra" aria-live="polite" data-cifra data-conteos={JSON.stringify(conteos(enFinde))}>
+        <b>{planes(enFinde.length)}</b> este finde en <b>{ciudadesTexto(ciudadesConPlanes)}</b>
+      </p>
+      <EnlaceSubrayado href="/registro" sobreOscuro class="cta solo-visitante">Crear mi cuenta gratis</EnlaceSubrayado>
       {/* Con sesión no se invita a crear la cuenta que ya se tiene (decisión 2.27) */}
-      <Boton href="/inicio" class="boton-hero solo-sesion">
-        Ir a mi inicio
-        <Icono nombre="flecha" tamano={18} class="flecha" />
-      </Boton>
-      <EnlaceSubrayado href="#agenda" sobreOscuro class="solo-visitante">Ver la agenda sin registrarme</EnlaceSubrayado>
-      <EnlaceSubrayado href="#agenda" sobreOscuro class="solo-sesion">Ver la agenda</EnlaceSubrayado>
+      <EnlaceSubrayado href="/inicio" sobreOscuro class="cta solo-sesion">Ir a mi inicio</EnlaceSubrayado>
     </div>
     {pruebaSocial && <PruebaSocial {...pruebaSocial} />}
   </div>
-
-  <a class="destacado" href={rutaEvento(destacado.ciudad, destacado.titulo)}>
-    <span class="destacado-imagen" style={`--bg1: ${destacado.bg1}; --bg2: ${destacado.bg2}`}></span>
-    <span class="destacado-antetitulo">Destacado este finde</span>
-    <span class="destacado-titulo">{destacado.titulo}</span>
-    <span class="destacado-dato">{destacado.lugar.split(' · ')[0]} · {nombreCiudad(destacado.ciudad)}</span>
-    <span class="destacado-dato destacado-cuando">{cuando}</span>
-    <span class="destacado-precio">
-      {destacado.precio ? `Desde ${pesos(destacado.precio)}` : 'Gratis'}
-      {destacado.precio > 0 && <small>+ cargo por servicio</small>}
-    </span>
-  </a>
 </section>
+
+<script>
+  import { ciudades } from '../../data/ciudades';
+  import { rutaCategoria } from '../../data/categorias';
+  import { planes } from '../../lib/formato';
+  import { bajarSiVacio } from '../../lib/buscador';
+
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+
+  if (hero) {
+    bajarSiVacio(hero.querySelector<HTMLFormElement>('[data-buscador-hero]')!);
+
+    const nombres: Record<string, string> = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
+    const chips = [...hero.querySelectorAll<HTMLAnchorElement>('[data-chip-categoria]')];
+    const mapa = hero.querySelector<HTMLAnchorElement>('[data-chip-mapa]')!;
+    const cifra = hero.querySelector<HTMLElement>('[data-cifra]')!;
+    const inicial = cifra.innerHTML;
+    // Planes del finde por ciudad, contados una vez aunque estén en dos categorías
+    const totales = JSON.parse(cifra.dataset.conteos!) as Record<string, number>;
+    let actual = 'all';
+
+    document.addEventListener('finde:ciudad', (ev) => {
+      const ciudad = (ev as CustomEvent<string>).detail;
+      if (ciudad === actual) return;
+      actual = ciudad;
+
+      chips.forEach((chip) => {
+        const n = (JSON.parse(chip.dataset.conteos!) as Record<string, number>)[ciudad] ?? 0;
+        // Un chip sin planes en la ciudad elegida no se muestra (como en la carga)
+        chip.parentElement!.hidden = n === 0;
+        chip.href = rutaCategoria(chip.dataset.chipCategoria!, ciudad);
+        chip.querySelector('[data-conteo]')!.textContent = String(n);
+        chip.querySelector('[data-conteo-palabra]')!.textContent = n === 1 ? ' plan' : ' planes';
+      });
+      mapa.href = ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${ciudad}`;
+
+      if (ciudad === 'all') {
+        cifra.innerHTML = inicial;
+        return;
+      }
+      const n = totales[ciudad] ?? 0;
+      cifra.replaceChildren();
+      if (n) {
+        const b = document.createElement('b');
+        b.textContent = planes(n);
+        cifra.append(b, ` este finde en ${nombres[ciudad]}`);
+      } else {
+        cifra.textContent = `Sin planes este finde en ${nombres[ciudad]}`;
+      }
+    });
+  }
+</script>
 
 <style>
   .hero {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    min-height: 520px;
-    padding: 56px clamp(22px, 5vw, 64px) 52px;
-    border-radius: var(--radius-2xl);
     overflow: hidden;
+    padding: 48px clamp(22px, 5vw, 64px) 44px;
+    border-radius: var(--radius-2xl);
     background: var(--fondo-heroe);
     color: var(--on-dark);
   }
 
-  .texto {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1;
-    min-width: 0;
-  }
-
   /* La foto va de fondo y la capa oscura asegura el contraste del texto blanco (detalle fino 18):
-     casi opaca a la izquierda, donde va el texto, y más clara a la derecha, donde se ve la foto */
+     casi opaca a la izquierda, donde va el contenido, y más clara a la derecha, donde se luce la foto */
   .hero :global(.marco-foto) {
     position: absolute;
     inset: 0;
@@ -152,192 +238,383 @@ const cuando = `${diaSemana[0].toUpperCase()}${diaSemana.slice(1)} ${dia} ${mes}
     );
   }
 
-  .texto,
-  .destacado {
+  .contenido {
     position: relative;
     z-index: 2;
+    max-width: 780px;
   }
 
-  .hero :global(.etiqueta-hero) {
-    align-self: flex-start;
-    margin-left: clamp(0px, 3vw, 44px);
+  h1 {
+    max-width: 14ch;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(2.1rem, 6.4vw, 4.2rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+    color: var(--on-dark);
   }
 
-  .titular-escritorio,
-  .destacado {
-    display: none;
+  .apoyo {
+    margin-top: 14px;
+    font-size: 1.15rem;
+    line-height: 1.45;
+    color: var(--on-dark-muted);
+    text-wrap: pretty;
   }
 
-  .bajada {
+  /* Buscador: píldora blanca en una fila (computador); en celular, campo arriba y ciudad + botón debajo */
+  .buscador {
+    --relleno: 6px;
     margin-top: 26px;
-    max-width: 48ch;
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, .9);
-  }
-
-  .acciones {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 16px 22px;
-    margin-top: 26px;
+    gap: 6px;
+    padding: var(--relleno);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .12), 0 12px 32px rgba(0, 0, 0, .28);
   }
 
-  .acciones :global(.boton-hero) {
-    display: inline-flex;
+  /* El foco del campo se marca en toda la caja (amarillo sobre el fondo oscuro); la ciudad y el botón, que están
+     sobre blanco, llevan el anillo rojo de siempre */
+  .buscador:has(input:focus-visible) {
+    outline: 3px solid var(--yellow);
+    outline-offset: 3px;
+  }
+
+  .buscador :focus-visible {
+    outline-color: var(--brand);
+  }
+
+  .buscador input:focus-visible {
+    outline: none;
+  }
+
+  .campo {
+    flex: 1;
+    min-width: 0;
+    display: flex;
     align-items: center;
     gap: 10px;
+    height: 48px;
+    padding-left: 16px;
+    cursor: text;
   }
 
-  /* La flecha es del diseño minimalista de computador (decisión 2.19) */
-  .acciones :global(.flecha) {
-    display: none;
+  .campo :global(.lupa) {
+    flex-shrink: 0;
+    color: var(--muted);
   }
 
-  /* Computador: héroe minimalista (decisión 2.19), titular limpio sin mayúsculas ni bloques de color */
-  @media (min-width: 821px) {
-    .hero {
-      min-height: 560px;
-      align-items: stretch;
-    }
-
-    .hero :global(.etiqueta-hero),
-    .hero :global(.titular-celular) {
-      display: none;
-    }
-
-    .titular-escritorio {
-      display: block;
-      max-width: 15ch;
-      font-family: var(--ui);
-      font-size: clamp(2.6rem, 4.4vw, 3.9rem);
-      font-weight: 700;
-      line-height: 1.04;
-      letter-spacing: -0.035em;
-      text-wrap: balance;
-    }
-
-    /* Letras con el degradado de la marca en tonos suaves (decisión 2.20), alternado por línea como en celular */
-    .titular-escritorio span {
-      background: linear-gradient(90deg, var(--peach-suave), var(--pink-suave));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .titular-escritorio span + span {
-      background-image: linear-gradient(90deg, var(--pink-suave), var(--peach-suave));
-    }
-
-    .bajada {
-      margin-top: 20px;
-      max-width: 42ch;
-      font-size: 1.08rem;
-    }
-
-    .acciones {
-      margin-top: 30px;
-    }
-
-    .acciones :global(.boton-hero) {
-      padding: 14px 22px 14px 26px;
-    }
-
-    .acciones :global(.flecha) {
-      display: block;
-      transition: transform .2s ease-out;
-    }
-
-    .acciones :global(.boton-hero:hover .flecha) {
-      transform: translateX(3px);
-    }
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--ink);
   }
 
-  /* Tarjeta flotante del plan destacado: solo cuando hay espacio al lado del texto */
-  @media (min-width: 1024px) {
-    .destacado,
-    .destacado:hover {
-      display: flex;
-      flex-direction: column;
-      align-self: flex-end;
-      flex: 0 0 272px;
-      padding: 12px 12px 16px;
-      border-radius: var(--radius-lg);
-      background: var(--surface);
-      color: var(--ink);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
-    }
-
-    .destacado-imagen {
-      aspect-ratio: 16 / 10;
-      margin-bottom: 12px;
-      border-radius: 12px;
-      background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 60%), var(--bg2);
-    }
-
-    .destacado-antetitulo {
-      padding-inline: 4px;
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--brand);
-    }
-
-    .destacado-titulo {
-      margin-top: 4px;
-      padding-inline: 4px;
-      font-size: 1.02rem;
-      font-weight: 700;
-      line-height: 1.25;
-    }
-
-    .destacado:hover .destacado-titulo {
-      color: var(--brand);
-    }
-
-    .destacado-dato {
-      margin-top: 4px;
-      padding-inline: 4px;
-      font-size: .82rem;
-      color: var(--muted);
-    }
-
-    .destacado-cuando {
-      margin-top: 0;
-    }
-
-    .destacado-precio {
-      margin-top: 10px;
-      padding-inline: 4px;
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    .destacado-precio small {
-      display: block;
-      font-size: .72rem;
-      font-weight: 400;
-      color: var(--muted);
-    }
+  input::placeholder {
+    color: var(--placeholder);
+    opacity: 1;
   }
 
-  /* Ajuste de celular del código base (decisión 2.13) */
+  .fila-ciudad {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ciudad {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .ciudad :global(.pin) {
+    position: absolute;
+    left: 14px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  select {
+    appearance: none;
+    width: 200px;
+    height: 48px;
+    padding: 0 38px 0 40px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E6259' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 14px center / 16px;
+    font-size: .95rem;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 150ms ease-out, background-color 150ms ease-out;
+  }
+
+  select:hover {
+    border-color: var(--line-input);
+    background-color: var(--light-hover);
+  }
+
+  .buscar {
+    height: 48px;
+    padding: 0 26px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-dark);
+    font-size: 1rem;
+    font-weight: 700;
+    transition-property: background-color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  .buscar:hover {
+    background: color-mix(in srgb, var(--brand) 86%, black);
+  }
+
+  .buscar:active {
+    transform: scale(.97);
+  }
+
+  /* Chips de intención: enlaces a la agenda filtrada, con el color de su categoría como relleno */
+  .intenciones {
+    margin-top: 18px;
+  }
+
+  .intenciones ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 8px;
+  }
+
+  .chip,
+  .chip:hover {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 8px 0 16px;
+    border-radius: var(--radius-pill);
+    background: var(--chip);
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition-property: background-color, border-color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  .chip:hover {
+    background: color-mix(in srgb, var(--chip) 84%, white);
+  }
+
+  .chip:active {
+    transform: scale(.97);
+  }
+
+  .hero .chip:focus-visible {
+    outline-offset: 3px;
+  }
+
+  .conteo {
+    display: inline-grid;
+    place-items: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: rgba(23, 18, 15, .12);
+    font-size: .78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Neutros (mapa y "Lo que repostea tu gente"): contorno blanco sobre el oscuro */
+  .chip.neutro {
+    --chip: transparent;
+    border: 1.5px solid rgba(255, 255, 255, .62);
+    color: var(--on-dark);
+  }
+
+  .chip.neutro:hover {
+    background: rgba(255, 255, 255, .1);
+    border-color: var(--on-dark);
+  }
+
+  .chip.neutro:not(:has(.conteo)) {
+    padding-right: 18px;
+  }
+
+  .chip.neutro .conteo {
+    background: rgba(255, 255, 255, .16);
+  }
+
+  .cierre {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 10px;
+    font-size: .95rem;
+    color: var(--on-dark-muted);
+  }
+
+  .cifra {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cifra :global(b) {
+    font-weight: 700;
+    color: var(--on-dark);
+    white-space: nowrap;
+  }
+
+  /* En computador el enlace va en la línea de la cifra, separado por un punto que los lectores no leen */
+  .cifra::after {
+    content: '·' / '';
+    margin-left: 10px;
+  }
+
+  .cierre :global(.cta) {
+    padding-top: 4px;
+  }
+
+  /* Celular y tableta vertical (decisión 2.13): sin alto mínimo, radio de 22 px; la capa se aclara arriba,
+     donde va el titular sobre la foto, y se oscurece abajo, donde van el formulario y los chips */
   @media (max-width: 820px) {
     .hero {
-      min-height: 0;
+      padding: 28px 20px 24px;
       border-radius: 22px;
     }
 
-    /* En celular el texto ocupa todo el ancho: la capa se oscurece parejo */
     .con-foto::before {
-      background: linear-gradient(180deg, rgba(20, 14, 16, .78) 0%, rgba(20, 14, 16, .9) 100%);
+      background: linear-gradient(
+        180deg,
+        rgba(20, 14, 16, .7) 0%,
+        rgba(20, 14, 16, .8) 30%,
+        rgba(20, 14, 16, .9) 55%,
+        rgba(20, 14, 16, .92) 100%
+      );
+    }
+
+    .apoyo {
+      margin-top: 12px;
+      font-size: 1.02rem;
+      max-width: 34ch;
+    }
+
+    .buscador {
+      margin-top: 20px;
+    }
+
+    .intenciones {
+      margin-top: 16px;
+    }
+
+    /* En celular el enlace de la cuenta va en su propia línea */
+    .cierre {
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: 16px;
+      gap: 8px;
+    }
+
+    .cifra::after {
+      content: none;
+    }
+  }
+
+  /* Celular: el campo arriba y la ciudad con el botón en una segunda fila */
+  @media (max-width: 599px) {
+    .buscador {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      border-radius: var(--radius-lg);
+    }
+
+    .campo {
+      padding-left: 12px;
+    }
+
+    select {
+      width: 100%;
+      height: 46px;
+    }
+
+    .ciudad {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .buscar {
+      height: 46px;
+      padding: 0 22px;
+    }
+  }
+
+  /* A 320 px "Toda Colombia" cabe entera sin el pin */
+  @media (max-width: 359px) {
+    .ciudad :global(.pin) {
+      display: none;
+    }
+
+    select {
+      padding: 0 28px 0 14px;
+      background-position: right 10px center;
+      font-size: .9rem;
+    }
+
+    .buscar {
+      padding: 0 16px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    /* Los chips se deslizan de lado y llegan al borde del héroe (sin desvanecido, decisión 2.28); el relleno
+       vertical deja ver el anillo de foco dentro de la fila con scroll */
+    .intenciones ul {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      margin: -8px -20px;
+      padding: 8px 20px;
+      scroll-padding-inline: 20px;
+    }
+
+    .intenciones ul::-webkit-scrollbar {
+      display: none;
+    }
+
+    .intenciones li {
+      flex-shrink: 0;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .acciones :global(.flecha) {
+    .chip,
+    .buscar {
       transition: none;
+    }
+
+    .chip:active,
+    .buscar:active {
+      transform: none;
     }
   }
 </style>

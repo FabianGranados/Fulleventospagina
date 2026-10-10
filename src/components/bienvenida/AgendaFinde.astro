@@ -5,17 +5,10 @@ import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
 import FilaEventos from '../eventos/FilaEventos.astro';
 import { ciudades } from '../../data/ciudades';
 import { eventos, conteoCiudad, type Evento } from '../../data/eventos';
+import { categorias, colorCategoria, rutaCategoria } from '../../data/categorias';
 
-// Una fila deslizable por categoría (decisión 2.30, pedido del cliente). Los id son las `etiquetas` de los eventos
-// y los que acepta `?categoria=` de /agenda. Un evento puede estar en dos filas (un concierto gratis).
-const categorias = [
-  { id: 'rumba', texto: 'Rumba' },
-  { id: 'conciertos', texto: 'Conciertos' },
-  { id: 'gratis', texto: 'Gratis este finde' },
-  { id: 'deporte', texto: 'Deporte' },
-  { id: 'teatro', texto: 'Arte y teatro' },
-  { id: 'comida', texto: 'Comida' },
-];
+// Una fila deslizable por categoría (decisión 2.30, pedido del cliente), con su color de intención (decisión 2.32).
+// Las categorías salen de data/categorias.ts. Un evento puede estar en dos filas (un concierto gratis).
 
 // Orden intercalado por ciudad dentro de cada fila: el 1.º de cada ciudad, luego el 2.º… (4.3, 6.5)
 const intercalar = (lista: Evento[]) => {
@@ -26,7 +19,7 @@ const intercalar = (lista: Evento[]) => {
 };
 
 const filas = categorias
-  .map((c) => ({ ...c, eventos: intercalar(eventos.filter((e) => e.etiquetas.includes(c.id))) }))
+  .map((c) => ({ ...c, titulo: c.fila ?? c.texto, eventos: intercalar(eventos.filter((e) => e.etiquetas.includes(c.id))) }))
   .filter((c) => c.eventos.length > 0);
 ---
 
@@ -63,7 +56,13 @@ const filas = categorias
     {
       filas.map((c) => (
         <div class="fila" data-categoria-fila={c.id}>
-          <FilaEventos id={`finde-${c.id}`} titulo={c.texto} eventos={c.eventos} href={`/agenda?categoria=${c.id}`} />
+          <FilaEventos
+            id={`finde-${c.id}`}
+            titulo={c.titulo}
+            eventos={c.eventos}
+            href={rutaCategoria(c.id)}
+            color={colorCategoria(c)}
+          />
         </div>
       ))
     }
@@ -73,6 +72,7 @@ const filas = categorias
 <script>
   import { ciudades } from '../../data/ciudades';
   import { planes } from '../../lib/formato';
+  import { rutaCategoria } from '../../data/categorias';
 
   const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
   const raiz = document.querySelector<HTMLElement>('[data-agenda]');
@@ -81,7 +81,7 @@ const filas = categorias
     const filas = [...raiz.querySelectorAll<HTMLElement>('[data-categoria-fila]')];
     const contenedorFilas = raiz.querySelector<HTMLElement>('[data-filas]')!;
     const chipsCiudad = [...raiz.querySelectorAll<HTMLButtonElement>('.chips [data-ciudad]')];
-    // Selector de ciudad de los dos encabezados (visitante y con sesión, decisión 2.24); solo uno está visible
+    // Selector de ciudad del héroe (decisión 2.32) y del encabezado con sesión (decisión 2.24)
     const selectores = [...document.querySelectorAll<HTMLSelectElement>('select[data-selector-ciudad]')];
     const vacio = raiz.querySelector<HTMLElement>('[data-vacio]')!;
     const mensajeVacio = raiz.querySelector<HTMLElement>('[data-vacio-mensaje]')!;
@@ -107,9 +107,7 @@ const filas = categorias
         fila.hidden = cuantos === 0;
         if (cuantos) categorias++;
         fila.querySelector('[data-fila-cantidad]')!.textContent = planes(cuantos);
-        const p = new URLSearchParams({ categoria: fila.dataset.categoriaFila! });
-        if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
-        fila.querySelector<HTMLAnchorElement>('a.ver-todos')!.href = `/agenda?${p}`;
+        fila.querySelector<HTMLAnchorElement>('a.ver-todos')!.href = rutaCategoria(fila.dataset.categoriaFila!, estado.ciudad);
         // Cada fila vuelve al inicio y recalcula sus flechas (FilaEventos)
         fila.querySelector('[data-fila-eventos]')!.dispatchEvent(new Event('fila-eventos:reiniciar'));
       });
@@ -123,6 +121,8 @@ const filas = categorias
       chipsCiudad.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ciudad === estado.ciudad)));
       selectores.forEach((s) => (s.value = estado.ciudad));
       verMapa.href = estado.ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${estado.ciudad}`;
+      // El héroe (chips de intención y cifra) sigue a la misma ciudad
+      document.dispatchEvent(new CustomEvent('finde:ciudad', { detail: estado.ciudad }));
 
       if (anunciar) {
         anuncio.textContent = hay

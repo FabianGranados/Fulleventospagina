@@ -32,6 +32,15 @@
   --lime: #B9E07A;
   --aqua: #8FD3D0;
 
+  /* Color de intención por categoría (decisión 2.32, data/categorias.ts). Solo como relleno con texto --ink
+     (8,3:1 o más) o como marca junto al nombre escrito; nunca como texto sobre la crema */
+  --cat-rumba: var(--pink);
+  --cat-conciertos: var(--lilac);
+  --cat-gratis: var(--lime);
+  --cat-deporte: var(--aqua);
+  --cat-teatro: var(--peach);
+  --cat-comida: var(--yellow);
+
   /* Oscuros */
   --hero: #140E10;
   --photo-dark: #2A1A16;
@@ -57,9 +66,6 @@
     var(--hero);
   --degradado-titular: linear-gradient(90deg, var(--peach), var(--pink));
   --degradado-titular-inv: linear-gradient(90deg, var(--pink), var(--peach));
-  /* Durazno y rosado aclarados para el titular minimalista de computador (decisión 2.20) */
-  --peach-suave: #F8D3B6;
-  --pink-suave: #F4C0D8;
 
   /* Tipografía */
   --display: 'Archivo', 'Arial Black', 'Helvetica Neue', sans-serif;

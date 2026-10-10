@@ -9,9 +9,11 @@ import { conVolver } from '../../lib/sesion';
 // su clase (solo-visitante / solo-sesion) y solo uno visible.
 interface Props {
   class?: string;
+  // La Bienvenida lo apaga porque el buscador va dentro de su héroe (decisión 2.32)
+  buscador?: boolean;
 }
 
-const { class: clase } = Astro.props;
+const { class: clase, buscador = true } = Astro.props;
 const ruta = Astro.url.pathname.replace(/\/$/, '') || '/';
 const enBienvenida = ruta === '/';
 // "Entrar" y "Crear cuenta" devuelven a esta misma página (el script suma los filtros de la URL al tocarlos)
@@ -24,21 +26,25 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
   <div class="fila">
     <Logo href="/" />
 
-    <form class="buscador" role="search" action="/agenda" method="get" data-buscador-app>
-      <Icono nombre="lupa" tamano={18} class="lupa" />
-      <input type="search" name="q" placeholder="¿Qué plan buscas?" aria-label="Buscar planes" />
-      <label class="ciudad">
-        <Icono nombre="pin" tamano={16} />
-        <span class="solo-lectores">Ciudad</span>
-        <select name="ciudad" data-selector-ciudad>
-          <option value="all">Toda Colombia</option>
-          {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
-        </select>
-      </label>
-      <button type="submit" class="ir" aria-label="Buscar">
-        <Icono nombre="lupa" tamano={16} grosor={2.5} />
-      </button>
-    </form>
+    {
+      buscador && (
+        <form class="buscador" role="search" action="/agenda" method="get" data-buscador-app>
+          <Icono nombre="lupa" tamano={18} class="lupa" />
+          <input type="search" name="q" placeholder="¿Qué plan buscas?" aria-label="Buscar planes" />
+          <label class="ciudad">
+            <Icono nombre="pin" tamano={16} />
+            <span class="solo-lectores">Ciudad</span>
+            <select name="ciudad" data-selector-ciudad>
+              <option value="all">Toda Colombia</option>
+              {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
+            </select>
+          </label>
+          <button type="submit" class="ir" aria-label="Buscar">
+            <Icono nombre="lupa" tamano={16} grosor={2.5} />
+          </button>
+        </form>
+      )
+    }
 
     <!-- En celular el menú se pliega detrás de un botón; sin JavaScript queda abierto -->
     <button type="button" class="abrir-menu" aria-expanded="false" aria-controls="menu-visitante" hidden data-abrir-menu>
@@ -61,24 +67,19 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
 
 <script>
   import { conVolver, rutaActual } from '../../lib/sesion';
+  import { bajarSiVacio } from '../../lib/buscador';
 
   document.querySelectorAll<HTMLElement>('[data-encabezado-visitante]').forEach((encabezado) => {
     // Mientras no exista la pantalla de resultados (H41), buscar lleva a la agenda con lo escrito y la ciudad
-    // elegida (decisión 2.15). En la Agenda filtra sin recargar (AgendaApp). En la Bienvenida, con texto va a
-    // la agenda con los resultados (decisión 2.31); sin texto baja a "Este finde".
+    // elegida (decisión 2.15). En la Agenda filtra sin recargar (AgendaApp). Con "Este finde" en la página, sin
+    // texto baja a esa sección (decisión 2.31, lib/buscador.ts). La Bienvenida no lo trae (decisión 2.32).
     const buscador = encabezado.querySelector<HTMLFormElement>('[data-buscador-app]');
-    buscador?.addEventListener('submit', (ev) => {
-      if (document.querySelector('[data-agenda-app]')) {
-        ev.preventDefault();
-        return;
-      }
-      const texto = String(new FormData(buscador).get('q') ?? '').trim();
-      const agenda = document.querySelector<HTMLElement>('#agenda');
-      if (texto || !agenda) return;
-      ev.preventDefault();
-      agenda.scrollIntoView();
-      document.querySelector<HTMLElement>('#agenda-titulo')?.focus();
-    });
+    if (buscador) {
+      buscador.addEventListener('submit', (ev) => {
+        if (document.querySelector('[data-agenda-app]')) ev.preventDefault();
+      });
+      bajarSiVacio(buscador);
+    }
 
     // "Entrar" y "Crear cuenta" vuelven al mismo punto, con los filtros que tenga la URL en ese momento
     encabezado.querySelectorAll<HTMLAnchorElement>('[data-volver-actual]').forEach((a) =>

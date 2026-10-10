@@ -82,7 +82,16 @@ Reglas y orden:
 2. **Avatares de parches nuevos** (Chat, al crear un parche): `['#F3B27E', '#EE93BC', '#8FD3D0', '#B9E07A', '#F6DC6A', '#A3A8F0'][seq % 6]`. Es otro orden; en producción conviene un solo orden y asignar el color de forma estable (por ejemplo, por el identificador).
 3. **Organizadores:** fondo `#17120F` con iniciales `#F6DC6A` (13,60:1), en Archivo 900, con radio de cuadrado redondeado (14 px). En Registro, el avatar "GC" tiene fondo `#17120F` y las iniciales heredan `#17120F` (1:1, invisibles): es un error (Auditoría H52).
 4. **Personas:** círculo (`border-radius: 50%`), iniciales DM Sans 700. **Parches y organizadores:** cuadrado redondeado (10–14 px; 20 px a 72 px de tamaño), iniciales Archivo 900.
-5. **No hay un color fijo por categoría.** La etiqueta de categoría ("RUMBA", "CONCIERTOS") siempre es `#C23A24`, y los acentos se reparten por posición, no por significado. Si el negocio quiere asociar color y categoría, es una decisión nueva.
+5. **Color fijo por categoría (decisión 2.32).** Hasta el 10 de octubre no había color por categoría y los acentos se repartían por posición. Desde la decisión 2.32 cada categoría tiene su color de intención, con fuente única en `src/data/categorias.ts` y tokens `--cat-*`. Se usa como relleno con texto `--ink` (chips del héroe) o como marca junto al nombre escrito (filas de "Este finde"); nunca como texto sobre la crema ni como único indicador. La etiqueta de categoría sobre las tarjetas ("RUMBA", "CONCIERTOS") sigue siendo `#C23A24` hasta la fase 2.
+
+   | Categoría | Token | Color | Texto `--ink` encima |
+   |---|---|---|---|
+   | Rumba | `--cat-rumba` | `--pink` `#EE93BC` | 8,44:1 |
+   | Conciertos | `--cat-conciertos` | `--lilac` `#A3A8F0` | 8,33:1 |
+   | Gratis | `--cat-gratis` | `--lime` `#B9E07A` | 12,40:1 |
+   | Deporte | `--cat-deporte` | `--aqua` `#8FD3D0` | 10,97:1 |
+   | Arte y teatro | `--cat-teatro` | `--peach` `#F3B27E` | 10,16:1 |
+   | Comida | `--cat-comida` | `--yellow` `#F6DC6A` | 13,60:1 |
 6. **Sobre fondos oscuros**, los acentos funcionan como color de ícono: amarillo 13,97:1, rosado 8,67:1 y aguamarina 11,27:1 sobre `#140E10`; dentro de la caja `rgba(255,255,255,.08)` dan 11,57, 7,18 y 9,33:1.
 
 #### Oscuros

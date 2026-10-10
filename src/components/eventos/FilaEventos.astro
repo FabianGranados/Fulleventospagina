@@ -4,7 +4,8 @@
 // dedo y la fila llega al borde de la pantalla, sin desvanecido (decisión 2.28).
 // Quien la usa puede ocultar tarjetas (li[hidden]) y luego emitir el evento "fila-eventos:reiniciar" sobre la raíz
 // ([data-fila-eventos]) para volver al inicio y recalcular las flechas. El enlace "Ver todos" es `a.ver-todos`
-// y el conteo, `[data-fila-cantidad]`.
+// y el conteo, `[data-fila-cantidad]`. Con `color` (valor CSS, p. ej. "var(--cat-rumba)") el h3 lleva la marca del
+// color de su categoría (decisión 2.32); es decorativa: el nombre de la categoría siempre está escrito.
 import Icono from '../ui/Icono.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import TarjetaEvento from './TarjetaEvento.astro';
@@ -16,15 +17,16 @@ interface Props {
   titulo: string;
   eventos: Evento[];
   href: string;
+  color?: string;
 }
 
-const { id, titulo, eventos, href } = Astro.props;
+const { id, titulo, eventos, href, color } = Astro.props;
 ---
 
 <div class="fila-eventos" data-fila-eventos>
   <div class="cabecera">
-    <h3 id={`${id}-titulo`}>
-      {titulo}{' '}<span class="cantidad"><span aria-hidden="true">·</span> <span data-fila-cantidad>{planes(eventos.length)}</span></span>
+    <h3 id={`${id}-titulo`} class:list={{ 'con-color': color }} style={color ? `--color-fila: ${color}` : undefined}>
+      {color && <span class="marca" aria-hidden="true"></span>}{titulo}{' '}<span class="cantidad"><span aria-hidden="true">·</span> <span data-fila-cantidad>{planes(eventos.length)}</span></span>
     </h3>
     <div class="acciones">
       <EnlaceSubrayado href={href} class="ver-todos">
@@ -136,6 +138,18 @@ const { id, titulo, eventos, href } = Astro.props;
     letter-spacing: -0.02em;
     line-height: 1.15;
     text-wrap: balance;
+  }
+
+  /* Marca del color de la categoría: un punto con un filo sutil para que el pastel no se pierda en la crema */
+  .marca {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 10px;
+    border-radius: 50%;
+    vertical-align: .14em;
+    background: var(--color-fila);
+    box-shadow: inset 0 0 0 1px rgba(23, 18, 15, .14);
   }
 
   .cantidad {

@@ -1,5 +1,6 @@
 import { HOY_DEMO } from './demo';
 import { parchePorId, totalMiembros } from './parches';
+import { categoria } from './categorias';
 // Datos de ejemplo de la Agenda (handoff 4.6, "Datos de ejemplo"). En producción vienen del backend (H53).
 // Línea social de cada evento: quién aparece, reposts totales (incluye a "quien"), colores de los
 // 2 avatares y si lo repostearon tus amigos cercanos (filtro "Lo que repostea tu gente").
@@ -38,16 +39,12 @@ export const socialAgenda: Record<string, SocialAgenda> = {
 // Estado inicial del prototipo: "Festival de jazz al parque" ya reposteado por la usuaria
 export const reposteadosIniciales = ['e2'];
 
-// Categorías de la Agenda (textos exactos del prototipo)
+// Categorías de la Agenda (textos exactos del prototipo). Los nombres salen de data/categorias.ts (decisión 2.32);
+// el orden es el del prototipo (Comida antes de Deporte).
 export const categoriasAgenda = [
   { id: 'all', texto: 'Para ti' },
   { id: 'amigos', texto: 'Lo que repostea tu gente' },
-  { id: 'rumba', texto: 'Rumba' },
-  { id: 'conciertos', texto: 'Conciertos' },
-  { id: 'gratis', texto: 'Gratis' },
-  { id: 'comida', texto: 'Comida' },
-  { id: 'deporte', texto: 'Deporte' },
-  { id: 'teatro', texto: 'Arte y teatro' },
+  ...['rumba', 'conciertos', 'gratis', 'comida', 'deporte', 'teatro'].map((id) => ({ id, texto: categoria(id)!.texto })),
 ];
 
 // Fechas (H39: filtran de verdad). "Hoy" es el del demo (src/data/demo.ts), común a todas las pantallas;
