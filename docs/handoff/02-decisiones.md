@@ -616,3 +616,8 @@ Viene de la auditoría de UX del perfil (hallazgos PF1–PF14) y de la propuesta
 - **Filtro de ciudad:** se mantienen los chips de ciudad, su sincronización con el selector de ciudad de los encabezados y la actualización de "Ver en el mapa". Al elegir una ciudad cada fila muestra solo sus planes, actualiza su conteo y vuelve al inicio; las filas que quedan vacías se ocultan. El anuncio para lectores dice, por ejemplo, "Bogotá: 6 planes en 6 categorías." (los planes se cuentan una sola vez aunque estén en dos filas). Si no queda ninguna fila, se muestra el estado vacío de siempre: "No hay planes en {ciudad} este finde." con "Ver todos los planes del país".
 - **Guardar (demo):** si un evento está en dos filas, marcar uno marca también su copia.
 - **No cambia** la página `/agenda` ni el resto de la Bienvenida.
+
+### 2.31 La búsqueda de la Bienvenida lleva a resultados (10 de octubre de 2026)
+
+- **Qué:** en la Bienvenida, buscar con texto en el encabezado lleva a `/agenda?q=<texto>&ciudad=<ciudad>`, que ya filtra por lo escrito ("2 planes para «salsa»…"). Sin texto, sigue bajando a "Este finde".
+- **Por qué:** el cliente buscó desde el celular y la lupa "no lo llevaba a nada": la decisión 2.15 hacía que en la Bienvenida la búsqueda solo bajara a "Este finde" e ignorara lo escrito. Con sesión ya iba a la agenda; ahora los dos encabezados se comportan igual.

@@ -63,16 +63,18 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
   import { conVolver, rutaActual } from '../../lib/sesion';
 
   document.querySelectorAll<HTMLElement>('[data-encabezado-visitante]').forEach((encabezado) => {
-    // Mientras no exista la pantalla de resultados (H41), buscar lleva a la agenda con la ciudad elegida
-    // (decisión 2.15). En la Bienvenida baja a "Este finde"; en la Agenda filtra sin recargar (AgendaApp).
+    // Mientras no exista la pantalla de resultados (H41), buscar lleva a la agenda con lo escrito y la ciudad
+    // elegida (decisión 2.15). En la Agenda filtra sin recargar (AgendaApp). En la Bienvenida, con texto va a
+    // la agenda con los resultados (decisión 2.31); sin texto baja a "Este finde".
     const buscador = encabezado.querySelector<HTMLFormElement>('[data-buscador-app]');
     buscador?.addEventListener('submit', (ev) => {
       if (document.querySelector('[data-agenda-app]')) {
         ev.preventDefault();
         return;
       }
+      const texto = String(new FormData(buscador).get('q') ?? '').trim();
       const agenda = document.querySelector<HTMLElement>('#agenda');
-      if (!agenda) return;
+      if (texto || !agenda) return;
       ev.preventDefault();
       agenda.scrollIntoView();
       document.querySelector<HTMLElement>('#agenda-titulo')?.focus();
