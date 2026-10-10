@@ -6,9 +6,12 @@ import { cifra, pesos, placaFecha, rutaEvento } from '../../lib/formato';
 
 interface Props {
   evento: Evento;
+  // Nivel del título: 3 por defecto; 4 dentro de las filas por categoría de "Este finde" (que llevan su h3)
+  nivel?: 3 | 4;
 }
 
-const { evento: e } = Astro.props;
+const { evento: e, nivel = 3 } = Astro.props;
+const Titulo = `h${nivel}`;
 const { dia, mes } = placaFecha(e.fecha);
 const ciudad = nombreCiudad(e.ciudad);
 const href = rutaEvento(e.ciudad, e.titulo);
@@ -20,6 +23,7 @@ const social =
 <article
   class="tarjeta"
   data-tarjeta
+  data-id={e.id}
   data-ciudad={e.ciudad}
   data-etiquetas={e.etiquetas.join(' ')}
   data-parches={e.parches}
@@ -32,7 +36,7 @@ const social =
   </div>
   <div class="cuerpo">
     <span class="categoria">{e.categoria}</span>
-    <h3 class="titulo"><a href={href}>{e.titulo}</a></h3>
+    <Titulo class="titulo"><a href={href}>{e.titulo}</a></Titulo>
     <span class="lugar">{e.lugar} · <b>{ciudad}</b></span>
     <span class="social"><Icono nombre="persona" tamano={14} />{social}</span>
     <div class="compra">

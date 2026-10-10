@@ -2,33 +2,35 @@
 import Icono from '../ui/Icono.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
-import TarjetaEvento from '../eventos/TarjetaEvento.astro';
+import FilaEventos from '../eventos/FilaEventos.astro';
 import { ciudades } from '../../data/ciudades';
-import { eventos, conteoCiudad } from '../../data/eventos';
+import { eventos, conteoCiudad, type Evento } from '../../data/eventos';
 
-const LIMITE = 8;
-
+// Una fila deslizable por categoría (decisión 2.30, pedido del cliente). Los id son las `etiquetas` de los eventos
+// y los que acepta `?categoria=` de /agenda. Un evento puede estar en dos filas (un concierto gratis).
 const categorias = [
-  { id: 'all', texto: 'Todo' },
   { id: 'rumba', texto: 'Rumba' },
   { id: 'conciertos', texto: 'Conciertos' },
-  { id: 'amigos', texto: 'Con parches abiertos' },
   { id: 'gratis', texto: 'Gratis este finde' },
-  { id: 'comida', texto: 'Comida' },
   { id: 'deporte', texto: 'Deporte' },
   { id: 'teatro', texto: 'Arte y teatro' },
+  { id: 'comida', texto: 'Comida' },
 ];
 
-// Orden intercalado por ciudad: el 1.º de cada ciudad, luego el 2.º… (4.3, 6.5)
-const porCiudad = ciudades.map((c) => eventos.filter((e) => e.ciudad === c.id));
-const intercalados = [];
-for (let i = 0; porCiudad.some((g) => g[i]); i++) {
-  for (const grupo of porCiudad) if (grupo[i]) intercalados.push(grupo[i]);
-}
-const ocultos = eventos.length - LIMITE;
+// Orden intercalado por ciudad dentro de cada fila: el 1.º de cada ciudad, luego el 2.º… (4.3, 6.5)
+const intercalar = (lista: Evento[]) => {
+  const grupos = ciudades.map((c) => lista.filter((e) => e.ciudad === c.id));
+  const salida: Evento[] = [];
+  for (let i = 0; grupos.some((g) => g[i]); i++) for (const g of grupos) if (g[i]) salida.push(g[i]);
+  return salida;
+};
+
+const filas = categorias
+  .map((c) => ({ ...c, eventos: intercalar(eventos.filter((e) => e.etiquetas.includes(c.id))) }))
+  .filter((c) => c.eventos.length > 0);
 ---
 
-<section id="agenda" class="agenda" aria-labelledby="agenda-titulo" data-agenda data-limite={LIMITE}>
+<section id="agenda" class="agenda" aria-labelledby="agenda-titulo" data-agenda>
   <EncabezadoSeccion antetitulo="Agenda" titulo="Este finde en Colombia" id="agenda-titulo" enfocable margenInferior={20}>
     <div class="enlaces" slot="aside">
       <span class="ejemplo">Contenido de ejemplo</span>
@@ -50,16 +52,6 @@ const ocultos = eventos.length - LIMITE;
     }
   </div>
 
-  <div class="chips categorias" role="group" aria-label="Filtrar por categoría">
-    {
-      categorias.map((c) => (
-        <button type="button" class="chip" data-categoria={c.id} aria-pressed={c.id === 'all' ? 'true' : 'false'}>
-          {c.texto}
-        </button>
-      ))
-    }
-  </div>
-
   <p class="solo-lectores" role="status" data-anuncio></p>
 
   <div class="vacio" data-vacio hidden>
@@ -67,20 +59,14 @@ const ocultos = eventos.length - LIMITE;
     <button type="button" class="boton-contorno" data-limpiar>Ver todos los planes del país</button>
   </div>
 
-  <div class="rejilla" id="agenda-rejilla" data-rejilla>
+  <div class="filas" data-filas>
     {
-      intercalados.map((e, i) => (
-        <div class="celda" data-celda data-orden={eventos.indexOf(e)} hidden={i >= LIMITE}>
-          <TarjetaEvento evento={e} />
+      filas.map((c) => (
+        <div class="fila" data-categoria-fila={c.id}>
+          <FilaEventos id={`finde-${c.id}`} titulo={c.texto} eventos={c.eventos} href={`/agenda?categoria=${c.id}`} />
         </div>
       ))
     }
-  </div>
-
-  <div class="mas" data-mas-contenedor>
-    <button type="button" class="boton-contorno grande" aria-expanded="false" aria-controls="agenda-rejilla" data-mas>
-      {`Ver ${ocultos} planes más`}
-    </button>
   </div>
 </section>
 
@@ -92,115 +78,86 @@ const ocultos = eventos.length - LIMITE;
   const raiz = document.querySelector<HTMLElement>('[data-agenda]');
 
   if (raiz) {
-    const LIMITE = Number(raiz.dataset.limite);
-    const rejilla = raiz.querySelector<HTMLElement>('[data-rejilla]')!;
-    const celdas = [...rejilla.querySelectorAll<HTMLElement>('[data-celda]')].sort(
-      (a, b) => Number(a.dataset.orden) - Number(b.dataset.orden),
-    );
-    const chipsCiudad = [...raiz.querySelectorAll<HTMLButtonElement>('[data-ciudad]')].filter((b) => b.classList.contains('chip'));
-    const chipsCategoria = [...raiz.querySelectorAll<HTMLButtonElement>('[data-categoria]')];
+    const filas = [...raiz.querySelectorAll<HTMLElement>('[data-categoria-fila]')];
+    const contenedorFilas = raiz.querySelector<HTMLElement>('[data-filas]')!;
+    const chipsCiudad = [...raiz.querySelectorAll<HTMLButtonElement>('.chips [data-ciudad]')];
     // Selector de ciudad de los dos encabezados (visitante y con sesión, decisión 2.24); solo uno está visible
     const selectores = [...document.querySelectorAll<HTMLSelectElement>('select[data-selector-ciudad]')];
     const vacio = raiz.querySelector<HTMLElement>('[data-vacio]')!;
     const mensajeVacio = raiz.querySelector<HTMLElement>('[data-vacio-mensaje]')!;
-    const botonMas = raiz.querySelector<HTMLButtonElement>('[data-mas]')!;
-    const contenedorMas = raiz.querySelector<HTMLElement>('[data-mas-contenedor]')!;
     const anuncio = raiz.querySelector<HTMLElement>('[data-anuncio]')!;
     const verMapa = raiz.querySelector<HTMLAnchorElement>('[data-ver-mapa]')!;
     const titulo = raiz.querySelector<HTMLElement>('#agenda-titulo')!;
 
-    const estado = { ciudad: 'all', categoria: 'all', todo: false };
-
-    const coincide = (c: HTMLElement) => {
-      const tarjeta = c.querySelector<HTMLElement>('[data-tarjeta]')!;
-      const enCiudad = estado.ciudad === 'all' || tarjeta.dataset.ciudad === estado.ciudad;
-      const cat = estado.categoria;
-      const enCategoria =
-        cat === 'all' ||
-        (cat === 'amigos' ? Number(tarjeta.dataset.parches) > 0 : tarjeta.dataset.etiquetas!.split(' ').includes(cat));
-      return enCiudad && enCategoria;
-    };
-
-    const ordenar = (lista: HTMLElement[]) => {
-      if (estado.ciudad !== 'all') return lista;
-      const grupos = ciudades.map((c) => lista.filter((x) => x.querySelector<HTMLElement>('[data-tarjeta]')!.dataset.ciudad === c.id));
-      const salida: HTMLElement[] = [];
-      for (let i = 0; grupos.some((g) => g[i]); i++) for (const g of grupos) if (g[i]) salida.push(g[i]);
-      return salida;
-    };
-
-    const mensajeVacioTexto = () => {
-      const ciudad = nombres[estado.ciudad];
-      if (estado.ciudad !== 'all' && estado.categoria !== 'all') return `No hay planes de esta categoría en ${ciudad} este finde.`;
-      if (estado.ciudad !== 'all') return `No hay planes en ${ciudad} este finde.`;
-      return 'No hay planes en esta categoría este finde.';
-    };
+    const estado = { ciudad: 'all' };
 
     const pintar = (anunciar = true) => {
-      const visibles = ordenar(celdas.filter(coincide));
-      celdas.forEach((c) => (c.hidden = true));
-      visibles.forEach((c, i) => {
-        rejilla.append(c);
-        c.hidden = !estado.todo && i >= LIMITE;
+      const ids = new Set<string>();
+      let categorias = 0;
+
+      filas.forEach((fila) => {
+        let cuantos = 0;
+        fila.querySelectorAll<HTMLElement>('li[data-ciudad]').forEach((li) => {
+          const entra = estado.ciudad === 'all' || li.dataset.ciudad === estado.ciudad;
+          li.hidden = !entra;
+          if (!entra) return;
+          cuantos++;
+          ids.add(li.querySelector<HTMLElement>('[data-tarjeta]')!.dataset.id!);
+        });
+        fila.hidden = cuantos === 0;
+        if (cuantos) categorias++;
+        fila.querySelector('[data-fila-cantidad]')!.textContent = planes(cuantos);
+        const p = new URLSearchParams({ categoria: fila.dataset.categoriaFila! });
+        if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
+        fila.querySelector<HTMLAnchorElement>('a.ver-todos')!.href = `/agenda?${p}`;
+        // Cada fila vuelve al inicio y recalcula sus flechas (FilaEventos)
+        fila.querySelector('[data-fila-eventos]')!.dispatchEvent(new Event('fila-eventos:reiniciar'));
       });
 
-      const ocultos = visibles.length - LIMITE;
-      vacio.hidden = visibles.length > 0;
-      mensajeVacio.textContent = mensajeVacioTexto();
-      contenedorMas.hidden = ocultos <= 0;
-      if (ocultos > 0) {
-        botonMas.setAttribute('aria-expanded', String(estado.todo));
-        botonMas.textContent = estado.todo ? 'Ver menos planes' : ocultos === 1 ? 'Ver 1 plan más' : `Ver ${ocultos} planes más`;
-      }
+      const nombre = estado.ciudad === 'all' ? 'Toda Colombia' : nombres[estado.ciudad];
+      const hay = ids.size > 0;
+      contenedorFilas.hidden = !hay;
+      vacio.hidden = hay;
+      mensajeVacio.textContent = `No hay planes en ${nombre} este finde.`;
 
       chipsCiudad.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ciudad === estado.ciudad)));
-      chipsCategoria.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
       selectores.forEach((s) => (s.value = estado.ciudad));
       verMapa.href = estado.ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${estado.ciudad}`;
 
       if (anunciar) {
-        anuncio.textContent = visibles.length
-          ? `Mostrando ${planes(estado.todo ? visibles.length : Math.min(visibles.length, LIMITE))}` +
-            (estado.ciudad !== 'all' ? ` en ${nombres[estado.ciudad]}` : '')
-          : mensajeVacioTexto();
+        anuncio.textContent = hay
+          ? `${nombre}: ${planes(ids.size)} en ${categorias} ${categorias === 1 ? 'categoría' : 'categorías'}.`
+          : mensajeVacio.textContent;
       }
     };
 
     chipsCiudad.forEach((b) =>
       b.addEventListener('click', () => {
         estado.ciudad = b.dataset.ciudad!;
-        estado.todo = false;
-        pintar();
-      }),
-    );
-    chipsCategoria.forEach((b) =>
-      b.addEventListener('click', () => {
-        estado.categoria = b.dataset.categoria!;
-        estado.todo = false;
         pintar();
       }),
     );
     selectores.forEach((selector) =>
       selector.addEventListener('change', () => {
         estado.ciudad = selector.value || 'all';
-        estado.todo = false;
         pintar();
       }),
     );
-    botonMas.addEventListener('click', () => {
-      estado.todo = !estado.todo;
-      pintar();
-      if (!estado.todo) botonMas.scrollIntoView({ block: 'nearest' });
-    });
     raiz.querySelector('[data-limpiar]')!.addEventListener('click', () => {
-      Object.assign(estado, { ciudad: 'all', categoria: 'all', todo: false });
+      estado.ciudad = 'all';
       pintar();
       titulo.focus();
     });
 
+    // Guardar (demo): un evento puede estar en dos filas, así que se marcan todas sus copias
     raiz.addEventListener('click', (ev) => {
       const guardar = (ev.target as HTMLElement).closest<HTMLButtonElement>('.guardar');
-      if (guardar) guardar.setAttribute('aria-pressed', String(guardar.getAttribute('aria-pressed') !== 'true'));
+      if (!guardar) return;
+      const id = guardar.closest<HTMLElement>('[data-tarjeta]')!.dataset.id;
+      const valor = String(guardar.getAttribute('aria-pressed') !== 'true');
+      raiz
+        .querySelectorAll<HTMLElement>(`[data-tarjeta][data-id="${id}"] .guardar`)
+        .forEach((b) => b.setAttribute('aria-pressed', valor));
     });
 
     pintar(false);
@@ -250,12 +207,8 @@ const ocultos = eventos.length - LIMITE;
     overflow-x: auto;
     padding-block: 6px;
     margin-top: -6px;
-    margin-bottom: 8px;
-    scroll-padding-inline: 8px 40px;
-  }
-
-  .categorias {
     margin-bottom: 22px;
+    scroll-padding-inline: 8px 40px;
   }
 
   .chip {
@@ -348,30 +301,16 @@ const ocultos = eventos.length - LIMITE;
     font-weight: 700;
   }
 
-  .boton-contorno.grande {
-    height: 48px;
-    padding: 0 24px;
-    font-size: .92rem;
-  }
-
-  .rejilla {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 22px;
-  }
-
-  .celda {
+  /* Una fila por categoría (decisión 2.30); las vacías se ocultan y no dejan hueco */
+  .filas {
     display: flex;
+    flex-direction: column;
+    gap: 40px;
   }
 
-  .celda > :global(*) {
-    flex: 1;
+  @media (max-width: 767px) {
+    .filas {
+      gap: 32px;
+    }
   }
-
-  .mas {
-    display: flex;
-    justify-content: center;
-    margin-top: 28px;
-  }
-
 </style>

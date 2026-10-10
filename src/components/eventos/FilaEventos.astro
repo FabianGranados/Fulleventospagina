@@ -1,0 +1,248 @@
+---
+// Fila de tarjetas de evento con desplazamiento lateral (decisión 2.30): cabecera con h3, conteo y "Ver todos";
+// en computador, flechas "Anterior"/"Siguiente" que se desactivan en cada extremo. En celular se desliza con el
+// dedo y la fila llega al borde de la pantalla, sin desvanecido (decisión 2.28).
+// Quien la usa puede ocultar tarjetas (li[hidden]) y luego emitir el evento "fila-eventos:reiniciar" sobre la raíz
+// ([data-fila-eventos]) para volver al inicio y recalcular las flechas. El enlace "Ver todos" es `a.ver-todos`
+// y el conteo, `[data-fila-cantidad]`.
+import Icono from '../ui/Icono.astro';
+import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+import TarjetaEvento from './TarjetaEvento.astro';
+import type { Evento } from '../../data/eventos';
+import { planes } from '../../lib/formato';
+
+interface Props {
+  id: string;
+  titulo: string;
+  eventos: Evento[];
+  href: string;
+}
+
+const { id, titulo, eventos, href } = Astro.props;
+---
+
+<div class="fila-eventos" data-fila-eventos>
+  <div class="cabecera">
+    <h3 id={`${id}-titulo`}>
+      {titulo}{' '}<span class="cantidad"><span aria-hidden="true">·</span> <span data-fila-cantidad>{planes(eventos.length)}</span></span>
+    </h3>
+    <div class="acciones">
+      <EnlaceSubrayado href={href} class="ver-todos">
+        Ver todos<span class="solo-lectores"> los planes de {titulo}</span>
+      </EnlaceSubrayado>
+      <div class="flechas" data-fila-flechas>
+        <button type="button" class="flecha" aria-controls={id} aria-label={`Ver planes anteriores de ${titulo}`} data-fila-anterior disabled>
+          <Icono nombre="volver" tamano={20} />
+        </button>
+        <button type="button" class="flecha" aria-controls={id} aria-label={`Ver más planes de ${titulo}`} data-fila-siguiente>
+          <Icono nombre="siguiente" tamano={20} />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ul class="pista" id={id} role="list" aria-labelledby={`${id}-titulo`} data-fila-pista>
+    {
+      eventos.map((e) => (
+        <li data-ciudad={e.ciudad}>
+          <TarjetaEvento evento={e} nivel={4} />
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<script>
+  const suave = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
+  document.querySelectorAll<HTMLElement>('[data-fila-eventos]').forEach((fila) => {
+    const pista = fila.querySelector<HTMLElement>('[data-fila-pista]')!;
+    const flechas = fila.querySelector<HTMLElement>('[data-fila-flechas]')!;
+    const anterior = fila.querySelector<HTMLButtonElement>('[data-fila-anterior]')!;
+    const siguiente = fila.querySelector<HTMLButtonElement>('[data-fila-siguiente]')!;
+
+    const desactivar = (boton: HTMLButtonElement, valor: boolean, otro: HTMLButtonElement) => {
+      if (boton.disabled === valor) return;
+      // Si el botón con el foco se desactiva, el foco pasa a la otra flecha para no perderse en la página
+      const teniaFoco = document.activeElement === boton;
+      boton.disabled = valor;
+      if (valor && teniaFoco && !otro.disabled) otro.focus();
+    };
+
+    const actualizar = () => {
+      const max = pista.scrollWidth - pista.clientWidth;
+      // Sin nada que desplazar (filas de 1 a 4 planes en computador), las flechas no se muestran
+      flechas.hidden = max <= 2;
+      const enInicio = pista.scrollLeft <= 2;
+      const enFinal = pista.scrollLeft >= max - 2;
+      // Primero se activa la flecha que corresponda, para que el foco tenga a dónde pasar
+      if (enInicio) {
+        desactivar(siguiente, enFinal, anterior);
+        desactivar(anterior, true, siguiente);
+      } else {
+        desactivar(anterior, false, siguiente);
+        desactivar(siguiente, enFinal, anterior);
+      }
+    };
+
+    // Avanza o retrocede las tarjetas que se ven enteras (al menos una)
+    const mover = (sentido: 1 | -1) => {
+      const primera = pista.querySelector<HTMLElement>('li:not([hidden])');
+      if (!primera) return;
+      const espacio = parseFloat(getComputedStyle(pista).columnGap) || 0;
+      const paso = primera.offsetWidth + espacio;
+      const cuantas = Math.max(1, Math.floor((pista.clientWidth + espacio) / paso));
+      pista.scrollBy({ left: sentido * cuantas * paso, behavior: suave() });
+    };
+
+    anterior.addEventListener('click', () => mover(-1));
+    siguiente.addEventListener('click', () => mover(1));
+
+    let pendiente = 0;
+    pista.addEventListener(
+      'scroll',
+      () => {
+        cancelAnimationFrame(pendiente);
+        pendiente = requestAnimationFrame(actualizar);
+      },
+      { passive: true },
+    );
+    new ResizeObserver(actualizar).observe(pista);
+
+    fila.addEventListener('fila-eventos:reiniciar', () => {
+      pista.scrollLeft = 0;
+      actualizar();
+    });
+
+    actualizar();
+  });
+</script>
+
+<style>
+  .cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .cantidad {
+    font-family: var(--ui);
+    font-size: .88rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .acciones {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .acciones :global(.ver-todos) {
+    font-size: .9rem;
+  }
+
+  /* En celular se desliza con el dedo: sin flechas */
+  .flechas {
+    display: none;
+  }
+
+  .flecha {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    transition-property: background-color, border-color, color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  .flecha:hover:not(:disabled) {
+    background: var(--surface-sunken);
+  }
+
+  .flecha:active:not(:disabled) {
+    transform: scale(.96);
+  }
+
+  .flecha:disabled {
+    cursor: default;
+    color: var(--muted);
+    border-color: var(--line);
+    opacity: .55;
+  }
+
+  /* position: relative contiene el texto oculto de los lectores (8.1 #4). El relleno vertical deja ver el anillo
+     de foco (patrón de la decisión 2.14) y el margen negativo lo compensa */
+  .pista {
+    position: relative;
+    list-style: none;
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block: 6px 10px;
+    margin-block: -6px -10px;
+  }
+
+  .pista::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pista li {
+    flex: 0 0 280px;
+    display: flex;
+    scroll-snap-align: start;
+  }
+
+  .pista li > :global(*) {
+    flex: 1;
+  }
+
+  @media (min-width: 768px) {
+    .flechas:not([hidden]) {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    h3 {
+      font-size: 1.15rem;
+    }
+
+    .pista {
+      gap: 12px;
+      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y la tarjeta siguiente se asoma */
+      margin-right: calc(-1 * var(--margen-lateral));
+      padding-right: var(--margen-lateral);
+    }
+
+    .pista li {
+      flex-basis: min(260px, 80vw);
+    }
+  }
+</style>
