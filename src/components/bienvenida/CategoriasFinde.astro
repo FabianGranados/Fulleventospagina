@@ -1,0 +1,195 @@
+---
+// Chips de intención (decisión 2.32), en su propia franja justo debajo del héroe (decisión 2.33: el héroe quedaba
+// cargado). Cada chip lleva a la agenda filtrada con el color de su categoría y cuenta los planes reales del finde.
+// La ciudad elegida en "Este finde" la avisa AgendaFinde con el evento "finde:ciudad"; este script solo repinta.
+import { eventos, type Evento } from '../../data/eventos';
+import { ciudades } from '../../data/ciudades';
+import { categorias, colorCategoria, rutaCategoria } from '../../data/categorias';
+import { fechasAgenda, socialAgenda } from '../../data/agenda';
+
+// Conteos del finde (el mismo rango que "Este finde" de la Agenda), por ciudad y en todo el país
+const finde = fechasAgenda.find((f) => f.id === 'finde')!;
+const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
+const conteos = (lista: Evento[]) =>
+  Object.fromEntries([['all', lista.length], ...ciudades.map((c) => [c.id, lista.filter((e) => e.ciudad === c.id).length])]);
+
+const chips = categorias
+  .map((c) => ({
+    id: c.id,
+    texto: c.texto,
+    color: colorCategoria(c),
+    conteos: conteos(enFinde.filter((e) => e.etiquetas.includes(c.id))),
+  }))
+  .filter((c) => c.conteos.all > 0);
+
+// "Lo que repostea tu gente" (solo con sesión): el mismo filtro `amigos` de la Agenda
+const conteosAmigos = conteos(enFinde.filter((e) => socialAgenda[e.id]?.amigos));
+---
+
+<nav class="intenciones" aria-label="Planes por categoría" data-intenciones>
+  <ul role="list">
+    {
+      chips.map((c) => (
+        <li>
+          <a
+            href={rutaCategoria(c.id)}
+            class="chip"
+            style={`--chip: ${c.color}`}
+            data-chip-categoria={c.id}
+            data-conteos={JSON.stringify(c.conteos)}
+          >
+            {c.texto}{' '}
+            <span class="conteo">
+              <span data-conteo>{c.conteos.all}</span>
+              <span class="solo-lectores" data-conteo-palabra>{c.conteos.all === 1 ? ' plan' : ' planes'}</span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+    {
+      conteosAmigos.all > 0 && (
+        <li class="solo-sesion">
+          <a
+            href={rutaCategoria('amigos')}
+            class="chip neutro"
+            data-chip-categoria="amigos"
+            data-conteos={JSON.stringify(conteosAmigos)}
+          >
+            Lo que repostea tu gente{' '}
+            <span class="conteo">
+              <span data-conteo>{conteosAmigos.all}</span>
+              <span class="solo-lectores" data-conteo-palabra>{conteosAmigos.all === 1 ? ' plan' : ' planes'}</span>
+            </span>
+          </a>
+        </li>
+      )
+    }
+  </ul>
+</nav>
+
+<script>
+  import { rutaCategoria } from '../../data/categorias';
+
+  const raiz = document.querySelector<HTMLElement>('[data-intenciones]');
+
+  if (raiz) {
+    const chips = [...raiz.querySelectorAll<HTMLAnchorElement>('[data-chip-categoria]')];
+    let actual = 'all';
+
+    document.addEventListener('finde:ciudad', (ev) => {
+      const ciudad = (ev as CustomEvent<string>).detail;
+      if (ciudad === actual) return;
+      actual = ciudad;
+
+      chips.forEach((chip) => {
+        const n = (JSON.parse(chip.dataset.conteos!) as Record<string, number>)[ciudad] ?? 0;
+        // Un chip sin planes en la ciudad elegida no se muestra (como en la carga)
+        chip.parentElement!.hidden = n === 0;
+        chip.href = rutaCategoria(chip.dataset.chipCategoria!, ciudad);
+        chip.querySelector('[data-conteo]')!.textContent = String(n);
+        chip.querySelector('[data-conteo-palabra]')!.textContent = n === 1 ? ' plan' : ' planes';
+      });
+    });
+  }
+</script>
+
+<style>
+  .intenciones {
+    margin-top: 16px;
+  }
+
+  .intenciones ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 8px;
+  }
+
+  .chip,
+  .chip:hover {
+    /* Ancla el texto para lectores (absoluto) dentro de la fila con scroll */
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 8px 0 16px;
+    border-radius: var(--radius-pill);
+    background: var(--chip);
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition-property: background-color, border-color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  .chip:hover {
+    background: color-mix(in srgb, var(--chip) 88%, var(--ink));
+  }
+
+  .chip:active {
+    transform: scale(.97);
+  }
+
+  .chip:focus-visible {
+    outline-offset: 3px;
+  }
+
+  .conteo {
+    display: inline-grid;
+    place-items: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: rgba(23, 18, 15, .1);
+    font-size: .78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* "Lo que repostea tu gente": contorno sobre la crema, sin color de categoría */
+  .chip.neutro {
+    --chip: var(--surface);
+    border: 1px solid var(--line-input);
+  }
+
+  .chip.neutro:hover {
+    background: var(--light-hover);
+  }
+
+  /* En celular se deslizan de lado y llegan al borde de la pantalla (sin desvanecido, decisión 2.28); el
+     relleno vertical deja ver el anillo de foco dentro de la fila con scroll */
+  @media (max-width: 767px) {
+    .intenciones ul {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      margin: -8px calc(-1 * var(--margen-lateral));
+      padding: 8px var(--margen-lateral);
+      scroll-padding-inline: var(--margen-lateral);
+    }
+
+    .intenciones ul::-webkit-scrollbar {
+      display: none;
+    }
+
+    .intenciones li {
+      flex-shrink: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip {
+      transition: none;
+    }
+
+    .chip:active {
+      transform: none;
+    }
+  }
+</style>

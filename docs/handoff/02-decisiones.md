@@ -655,3 +655,13 @@ El cliente dijo del héroe anterior: "me gusta pero no entiendo bien el fin y no
   El botón "Buscar" lleva texto blanco sobre `--brand` (5,35:1).
 - **Textos:** "Tu plan de este finde, con tu gente" lo eligió el cliente. Están por aprobar: la línea de apoyo, el marcador del buscador, los nombres de los chips ("Gratis" sin "este finde"), la cifra y "Ir a mi inicio" en este lugar.
 - **Descartado:** carrusel de destacados (insinúa diapositivas y aleja del objetivo), botón principal "Crear mi cuenta gratis" (la cuenta no es lo primero que se pide) y el titular con pregunta del boceto ("¿Qué hacemos este finde?").
+
+### 2.33 Hero más liviano: las categorías bajan a su propia franja (11 de octubre de 2026)
+
+Pedido del cliente: "Esta muy cargado el hero, las categorías deberían ir debajo del hero y que tenga menos palabras". Cambia 2.32 así:
+
+- **El héroe queda con tres cosas:** el `h1` "Tu plan de este finde, con tu gente", el buscador y el enlace "Crear mi cuenta gratis" (con sesión, "Ir a mi inicio"). El relleno de computador sube a 56/48 px para que respire.
+- **Se quitan del héroe:** la línea de apoyo ("Planes en toda Colombia, quién va y parche para ir.") y la cifra ("19 planes este finde en 11 ciudades"). Los conteos siguen en cada chip y en los chips de ciudad de "Este finde".
+- **Chips de categoría** en `components/bienvenida/CategoriasFinde.astro`, justo debajo del héroe (16 px), sobre la crema: mismo `nav` "Planes por categoría", mismos colores, conteos, enlaces y recálculo por ciudad (`finde:ciudad`). En celular la fila se desliza y llega al borde de la pantalla, sin desvanecido (2.28); desde 768 px baja de línea. "Lo que repostea tu gente" (solo con sesión) va con fondo blanco y borde `--line-input`.
+- **Se quita el chip "Ver en el mapa"** de la franja: "Este finde" ya lo tiene a pocos píxeles.
+- **Medidas:** a 390 × 844 el héroe ocupa 74–339 px, los chips 355–399 px y el título "Este finde en Colombia" se ve en el primer pantallazo.
