@@ -9,6 +9,7 @@
 // "social" (reemplaza la línea "N van").
 // Marcado común para los scripts: [data-tarjeta][data-id], .guardar y el enlace del título.
 import Icono from '../ui/Icono.astro';
+import FotoEvento from './FotoEvento.astro';
 import type { Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
 import { cifra, fechaCorta, pesos, placaFecha, rutaEvento } from '../../lib/formato';
@@ -47,6 +48,7 @@ const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
   data-ciudad={e.ciudad}
   {...datos}
 >
+  <FotoEvento id={e.id} velo="abajo" />
   <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
   <div class="botones">
     <slot name="acciones" />
@@ -91,6 +93,8 @@ const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
     justify-content: flex-end;
     border-radius: var(--radius-field);
     overflow: hidden;
+    /* La foto de R2 (FotoEvento, capa de fondo) queda debajo del texto y encima de este degradado */
+    isolation: isolate;
     /* Capa oscura abajo (para que el texto blanco tenga contraste sobre cualquier imagen) sobre la imagen */
     background:
       linear-gradient(180deg, rgba(20, 14, 16, 0) 35%, rgba(20, 14, 16, .6) 62%, rgba(20, 14, 16, .92) 100%),

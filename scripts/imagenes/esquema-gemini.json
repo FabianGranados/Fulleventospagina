@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.fulleventos.com.co/esquemas/imagen-evento-v1.json",
+  "title": "Imagen de evento para Fulleventos (un registro por línea JSONL)",
+  "description": "Equivale a scripts/imagenes/esquema.mjs, que es el que valida de verdad. Guía en docs/imagenes-gemini.md.",
+  "type": "object",
+  "required": ["evento", "imagen", "fuente", "derechos"],
+  "additionalProperties": false,
+  "properties": {
+    "evento": {
+      "description": "Cómo encontrar el evento: id, o ciudad + slug, o titulo + fecha (+ ciudad).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_-]{1,64}$" },
+        "ciudad": { "type": "string", "maxLength": 40 },
+        "slug": { "type": "string", "maxLength": 160 },
+        "titulo": { "type": "string", "maxLength": 200 },
+        "fecha": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      },
+      "anyOf": [{ "required": ["id"] }, { "required": ["ciudad", "slug"] }, { "required": ["titulo", "fecha"] }]
+    },
+    "imagen": {
+      "type": "object",
+      "required": ["url", "texto_alternativo"],
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string", "format": "uri", "pattern": "^https://", "description": "URL directa del archivo (jpg, png, webp o avif), no de la página." },
+        "tipo": { "enum": ["principal", "afiche", "galeria"], "default": "principal" },
+        "texto_alternativo": { "type": "string", "minLength": 10, "maxLength": 300, "description": "Qué se ve en la imagen, en español." },
+        "credito": { "type": "string", "maxLength": 200 }
+      }
+    },
+    "fuente": {
+      "type": "object",
+      "required": ["nombre", "url", "oficial"],
+      "additionalProperties": false,
+      "properties": {
+        "nombre": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "url": { "type": "string", "format": "uri", "pattern": "^https://", "description": "Página oficial donde aparece la imagen." },
+        "oficial": { "type": "boolean", "description": "true solo si es el sitio o red oficial del organizador, el escenario o la boletera del evento." }
+      }
+    },
+    "derechos": {
+      "type": "object",
+      "required": ["estado"],
+      "additionalProperties": false,
+      "properties": {
+        "estado": { "enum": ["confirmado", "pendiente", "rechazado", "desconocido"] },
+        "licencia": { "type": "string", "maxLength": 200, "description": "Kit de prensa, licencia CC, permiso escrito…" },
+        "evidencia": { "type": "string", "maxLength": 1000, "description": "URL o texto que demuestra el permiso de reutilización." },
+        "verificado_en": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "verificado_por": { "enum": ["persona", "agente"], "default": "agente", "description": "Informativo: el importador lo trata siempre como agente; solo el comando aprobar marca persona." }
+      }
+    },
+    "reemplazar": { "type": "boolean", "default": false },
+    "motivo_reemplazo": { "type": "string", "minLength": 5, "maxLength": 300 }
+  }
+}

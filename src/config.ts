@@ -9,3 +9,10 @@
 // parche" y el pago dividido del chat) se conserva apagado. Con `false` esas piezas no se renderizan ni se
 // carga su JavaScript. Al ponerlo en `true` vuelve la compra dentro de Fulleventos tal como estaba.
 export const VENTA_PROPIA = false;
+
+// IMAGENES_URL · Dominio público del bucket R2 con las fotos de los eventos (docs/imagenes-r2.md).
+// Se lee de la variable PUBLIC_IMAGENES_URL al compilar (archivo .env, que no se sube a GitHub). Vacía = apagado:
+// las tarjetas muestran el degradado de siempre y el navegador no pide nada a R2. Con el dominio puesto, cada
+// página pide un solo índice (indice/eventos-v1.json) y pinta las fotos publicadas, sin volver a desplegar.
+// No es un secreto: es una URL pública. Las claves de Cloudflare nunca van en el frontend.
+export const IMAGENES_URL: string = (import.meta.env.PUBLIC_IMAGENES_URL ?? '').trim().replace(/\/+$/, '');

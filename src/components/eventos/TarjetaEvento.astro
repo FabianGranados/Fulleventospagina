@@ -1,5 +1,6 @@
 ---
 import Icono from '../ui/Icono.astro';
+import FotoEvento from './FotoEvento.astro';
 import type { Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
 import { cifra, pesos, placaFecha, rutaEvento } from '../../lib/formato';
@@ -29,6 +30,7 @@ const social =
   data-parches={e.parches}
 >
   <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}>
+    <FotoEvento id={e.id} capa="normal" />
     <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
     <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`}>
       <Icono nombre="marcador" tamano={18} />

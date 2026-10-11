@@ -1,6 +1,7 @@
 ---
 // N22 · Tarjeta compacta horizontal de evento (lista del mapa). Miniatura de 88 px.
 import Icono from '../ui/Icono.astro';
+import FotoEvento from '../eventos/FotoEvento.astro';
 import type { Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
 import { pesos, placaFecha, rutaEvento } from '../../lib/formato';
@@ -35,6 +36,7 @@ const href = rutaEvento(e.ciudad, e.titulo);
 >
   <div class="miniatura">
     <span class="foto" role="img" aria-label="[Foto del evento]" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}></span>
+    <FotoEvento id={e.id} tamano="mini" capa="normal" />
     <span class="placa"><b>{dia}</b><span>{mes}</span></span>
   </div>
   <div class="texto">

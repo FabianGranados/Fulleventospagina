@@ -1,6 +1,7 @@
 ---
 // N25 · Héroe del evento. La foto real del evento (H57) reemplaza al marcador cuando exista.
 import Icono from '../ui/Icono.astro';
+import FotoEvento from '../eventos/FotoEvento.astro';
 import Etiqueta from '../ui/Etiqueta.astro';
 import Titular from '../ui/Titular.astro';
 import { lineasTitulo, textoVan, type ModeloEvento } from './modelo';
@@ -20,6 +21,7 @@ const fondo = d
 ---
 
 <section class:list={['heroe', 'superficie-oscura', { propio: !d }]} aria-labelledby="titulo-evento" style={fondo}>
+  <FotoEvento id={e.id} tamano="detalle" velo="completo" conAlt />
   <span class="nota-foto" role="img" aria-label="[Foto del evento]">[Foto del evento]</span>
   <Etiqueta tamano="md" class="etiqueta-heroe">{e.categoria} · {m.fechaCorta}</Etiqueta>
   <div id="titulo-evento" class="titulo">
@@ -48,6 +50,8 @@ const fondo = d
     position: relative;
     border-radius: var(--radius-2xl);
     overflow: hidden;
+    /* La foto de R2 (FotoEvento) va debajo del texto y encima del degradado */
+    isolation: isolate;
     min-height: 380px;
     padding: clamp(28px, 5vw, 48px) clamp(20px, 5vw, 56px);
     display: flex;
@@ -69,6 +73,11 @@ const fondo = d
       radial-gradient(circle at 90% 80%, color-mix(in srgb, var(--bg2) 60%, transparent) 0, transparent 30%),
       radial-gradient(ellipse at 8% 40%, rgba(70, 30, 80, .55) 0, transparent 45%),
       var(--hero);
+  }
+
+  /* Con la foto real ya no hace falta el aviso del marcador */
+  .heroe:has(:global(.foto-evento.cargada)) .nota-foto {
+    display: none;
   }
 
   .nota-foto {

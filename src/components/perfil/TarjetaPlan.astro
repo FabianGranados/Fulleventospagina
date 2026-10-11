@@ -2,6 +2,7 @@
 // N64 · Tarjeta de plan con estado (variante "perfil" de la tarjeta de evento): sin guardar,
 // amigos ni compra. El título es un h3 con enlace al evento real (H36, H59) y toda la tarjeta es ese enlace
 // (::after, PF10, decisión 2.29). En celular el Perfil usa FilaPlan.
+import FotoEvento from '../eventos/FotoEvento.astro';
 import type { Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
 import { placaFecha, rutaEvento } from '../../lib/formato';
@@ -22,7 +23,7 @@ const fechaLarga = new Date(`${e.fecha}T12:00:00-05:00`).toLocaleDateString('es-
 
 <article class="plan">
   <!-- Foto de marcador, decorativa. La fecha y el estado van como hermanos, no dentro de la imagen (8.2.8) -->
-  <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}></div>
+  <div class="imagen" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}><FotoEvento id={e.id} capa="normal" /></div>
   <time class="fecha" datetime={e.fecha}>
     <span aria-hidden="true"><b>{dia}</b><span>{mes}</span></span>
     <span class="solo-lectores">{fechaLarga}</span>
@@ -74,6 +75,8 @@ const fechaLarga = new Date(`${e.fecha}T12:00:00-05:00`).toLocaleDateString('es-
   }
 
   .imagen {
+    position: relative;
+    overflow: hidden;
     aspect-ratio: 4 / 3;
     background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 55%), var(--bg2);
   }

@@ -3,6 +3,7 @@
 // Los alternadores (Voy, Unirme, Me gusta, Guardar) los maneja el script de la página por data-alternar.
 import Icono from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
+import FotoEvento from '../eventos/FotoEvento.astro';
 import type { Publicacion } from '../../data/inicio';
 import { eventos } from '../../data/eventos';
 import { persona, usuaria } from '../../data/personas';
@@ -79,6 +80,7 @@ const idTitulo = `publicacion-${p.id}`;
 
   <div class="adjunto">
     <div class="foto" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} aria-hidden="true">
+      <FotoEvento id={e.id} tamano="media" capa="normal" />
       <span class="placa"><b>{dia}</b><span>{mes}</span></span>
     </div>
     <div class="info">

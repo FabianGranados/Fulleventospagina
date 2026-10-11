@@ -11,3 +11,6 @@ dist/
 test-results/
 playwright-report/
 .claude/worktrees/
+
+# Importador de imágenes: registros de ejecución, SQLite local y bucket local de prueba
+registros/

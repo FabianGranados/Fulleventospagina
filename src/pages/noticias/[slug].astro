@@ -10,6 +10,7 @@ import BarraNavegacion from '../../components/layout/BarraNavegacion.astro';
 import Icono from '../../components/ui/Icono.astro';
 import EnlaceSubrayado from '../../components/ui/EnlaceSubrayado.astro';
 import TarjetaAfiche from '../../components/eventos/TarjetaAfiche.astro';
+import FotoEvento from '../../components/eventos/FotoEvento.astro';
 import TarjetaNoticia from '../../components/noticias/TarjetaNoticia.astro';
 import { TEMAS } from '../../data/noticias';
 import {
@@ -110,7 +111,9 @@ const esquema = {
         d.imagen ? (
           <img class="imagen" src={d.imagen.src} alt={d.imagen.alt} />
         ) : (
-          <div class="imagen" style={fondoNoticia(n)} aria-hidden="true" />
+          <div class="imagen" style={fondoNoticia(n)} aria-hidden="true">
+            {d.eventos[0] && <FotoEvento id={d.eventos[0]} tamano="detalle" capa="normal" />}
+          </div>
         )
       }
 
@@ -311,6 +314,9 @@ const esquema = {
   }
 
   .imagen {
+    /* Sin foto propia, la del primer evento relacionado (FotoEvento) sobre el degradado */
+    position: relative;
+    overflow: hidden;
     display: block;
     width: 100%;
     max-width: 960px;
