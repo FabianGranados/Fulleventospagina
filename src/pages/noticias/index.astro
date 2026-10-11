@@ -1,13 +1,17 @@
 ---
 // Centro de noticias (decisión 2.25). Pública, como Evento, Agenda y Mapa (decisión 2.24): los dos encabezados y
 // solo uno visible. Las noticias salen de la colección src/content/noticias (una sola fuente).
-// Filtros por ciudad y tema en la URL (?ciudad=&tema=, H42). Sin JavaScript se ven todas y no aparecen los filtros.
+// Filtros por ciudad y tema en la URL (?ciudad=&tema=, H42), en botones con hoja (decisión 2.38). Sin JavaScript se
+// ven todas y no aparecen los filtros. Las tarjetas llevan solo la imagen y el titular.
 import Base from '../../layouts/Base.astro';
 import EncabezadoApp from '../../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../../components/layout/EncabezadoVisitante.astro';
 import Pie from '../../components/layout/Pie.astro';
 import BarraNavegacion from '../../components/layout/BarraNavegacion.astro';
 import TarjetaNoticia from '../../components/noticias/TarjetaNoticia.astro';
+import BotonFiltro from '../../components/filtros/BotonFiltro.astro';
+import HojaFiltro from '../../components/filtros/HojaFiltro.astro';
+import OpcionFiltro from '../../components/filtros/OpcionFiltro.astro';
 import { ciudades } from '../../data/ciudades';
 import { TEMAS, temas } from '../../data/noticias';
 import { ciudadesDe, noticiasOrdenadas, separarDestacada } from '../../lib/noticias';
@@ -19,6 +23,9 @@ const { destacada, resto } = separarDestacada(todas);
 const conNoticias = new Set(todas.flatMap(ciudadesDe));
 const ciudadesFiltro = ciudades.filter((c) => conNoticias.has(c.id));
 const temasFiltro = temas.filter((t) => todas.some((n) => n.data.tema === t));
+const porCiudad = (id: string) => todas.filter((n) => ciudadesDe(n).includes(id)).length;
+const porTema = (t: string) => todas.filter((n) => n.data.tema === t).length;
+const unidad: [string, string] = ['noticia', 'noticias'];
 
 const datosFiltro = (n: (typeof todas)[number]) => ({
   'data-noticia': true,
@@ -43,22 +50,37 @@ const descripcion =
       <span class="ejemplo">Contenido de ejemplo</span>
     </div>
 
+    <!-- Filtros de ciudad y tema (decisión 2.38): dos botones con su hoja de opciones, como en la Agenda -->
     <div class="filtros" hidden data-filtros>
-      <div class="grupo" role="group" aria-labelledby="filtro-ciudad">
-        <span class="rotulo" id="filtro-ciudad">Ciudad</span>
-        <div class="chips">
-          <button type="button" class="chip" data-ciudad="all" aria-pressed="true">Toda Colombia</button>
-          {ciudadesFiltro.map((c) => <button type="button" class="chip" data-ciudad={c.id} data-nombre={c.nombre} aria-pressed="false">{c.nombre}</button>)}
-        </div>
-      </div>
-      <div class="grupo" role="group" aria-labelledby="filtro-tema">
-        <span class="rotulo" id="filtro-tema">Tema</span>
-        <div class="chips">
-          <button type="button" class="chip" data-tema="all" aria-pressed="true">Todos</button>
-          {temasFiltro.map((t) => <button type="button" class="chip" data-tema={t} data-nombre={TEMAS[t]} aria-pressed="false">{TEMAS[t]}</button>)}
-        </div>
-      </div>
+      <BotonFiltro hoja="filtro-ciudad" filtro="ciudad" rotulo="Ciudad" icono="pin">Toda Colombia</BotonFiltro>
+      <BotonFiltro hoja="filtro-tema" filtro="tema" rotulo="Tema" icono="filtro">Todos los temas</BotonFiltro>
     </div>
+
+    <HojaFiltro id="filtro-ciudad" titulo="Ciudad" leyenda="Filtrar por ciudad">
+      <OpcionFiltro nombre="noticias-ciudad" valor="all" atributo="ciudad" checked icono="pin" conteo={todas.length} unidad={unidad}>
+        Toda Colombia
+      </OpcionFiltro>
+      {
+        ciudadesFiltro.map((c) => (
+          <OpcionFiltro nombre="noticias-ciudad" valor={c.id} atributo="ciudad" conteo={porCiudad(c.id)} unidad={unidad}>
+            {c.nombre}
+          </OpcionFiltro>
+        ))
+      }
+    </HojaFiltro>
+
+    <HojaFiltro id="filtro-tema" titulo="Tema" leyenda="Filtrar por tema">
+      <OpcionFiltro nombre="noticias-tema" valor="all" atributo="tema" checked icono="filtro" conteo={todas.length} unidad={unidad}>
+        Todos los temas
+      </OpcionFiltro>
+      {
+        temasFiltro.map((t) => (
+          <OpcionFiltro nombre="noticias-tema" valor={t} atributo="tema" conteo={porTema(t)} unidad={unidad}>
+            {TEMAS[t]}
+          </OpcionFiltro>
+        ))
+      }
+    </HojaFiltro>
 
     <p class="solo-lectores" role="status" data-anuncio></p>
 
@@ -92,8 +114,11 @@ const descripcion =
 
 <script>
   const filtros = document.querySelector<HTMLElement>('[data-filtros]')!;
-  const chipsCiudad = [...filtros.querySelectorAll<HTMLButtonElement>('[data-ciudad]')];
-  const chipsTema = [...filtros.querySelectorAll<HTMLButtonElement>('[data-tema]')];
+  const radiosCiudad = [...document.querySelectorAll<HTMLInputElement>('input[data-ciudad]')];
+  const radiosTema = [...document.querySelectorAll<HTMLInputElement>('input[data-tema]')];
+  const botonCiudad = filtros.querySelector<HTMLElement>('[data-filtro="ciudad"]')!;
+  const botonTema = filtros.querySelector<HTMLElement>('[data-filtro="tema"]')!;
+  const botonesVer = [...document.querySelectorAll<HTMLElement>('[data-ver-resultados]')];
   const items = [...document.querySelectorAll<HTMLElement>('li[data-noticia]')];
   const copiaDestacada = document.querySelector<HTMLElement>('[data-copia-destacada]');
   const bloqueDestacada = document.querySelector<HTMLElement>('[data-bloque-destacada]');
@@ -101,40 +126,66 @@ const descripcion =
   const mensajeVacio = document.querySelector<HTMLElement>('[data-vacio-mensaje]')!;
   const anuncio = document.querySelector<HTMLElement>('[data-anuncio]')!;
 
-  const valido = (chips: HTMLButtonElement[], clave: 'ciudad' | 'tema', valor: string | null) =>
-    valor && chips.some((c) => c.dataset[clave] === valor) ? valor : 'all';
+  const valido = (radios: HTMLInputElement[], valor: string | null) =>
+    valor && radios.some((r) => r.value === valor) ? valor : 'all';
 
   const params = new URLSearchParams(location.search);
   const estado = {
-    ciudad: valido(chipsCiudad, 'ciudad', params.get('ciudad')),
-    tema: valido(chipsTema, 'tema', params.get('tema')),
+    ciudad: valido(radiosCiudad, params.get('ciudad')),
+    tema: valido(radiosTema, params.get('tema')),
   };
 
-  const nombre = (chips: HTMLButtonElement[], clave: 'ciudad' | 'tema', valor: string) =>
-    chips.find((c) => c.dataset[clave] === valor)?.dataset.nombre ?? '';
+  const etiqueta = (r: HTMLInputElement) => r.closest('label')!.querySelector<HTMLElement>('[data-nombre]')!;
+  const nombre = (radios: HTMLInputElement[], valor: string) =>
+    etiqueta(radios.find((r) => r.value === valor)!).textContent!.trim();
+
+  // Una noticia (de la lista, sin la copia de la destacada) pasa los filtros dados
+  const unicas = items.filter((li) => li !== copiaDestacada);
+  const pasa = (li: HTMLElement, ciudad: string, tema: string) =>
+    (ciudad === 'all' || li.dataset.ciudades!.split(' ').includes(ciudad)) && (tema === 'all' || li.dataset.tema === tema);
+  const contar = (ciudad: string, tema: string) =>
+    unicas.filter((li) => pasa(li, ciudad, tema)).length + (copiaDestacada && pasa(copiaDestacada, ciudad, tema) ? 1 : 0);
+
+  // Conteo de cada opción: sigue al otro filtro; las opciones sin noticias se atenúan
+  const pintarConteos = (radios: HTMLInputElement[], calcular: (valor: string) => number) =>
+    radios.forEach((r) => {
+      const n = calcular(r.value);
+      const caja = document.querySelector(`[name="${r.name}"][value="${r.value}"]`)!.closest('label')!.querySelector('.conteo');
+      if (caja) {
+        caja.firstChild!.textContent = String(n);
+        caja.querySelector('.solo-lectores')!.textContent = n === 1 ? ' noticia' : ' noticias';
+      }
+      r.closest('label')!.classList.toggle('vacia', n === 0);
+    });
 
   const aplicar = (anunciar: boolean) => {
-    chipsCiudad.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.ciudad === estado.ciudad)));
-    chipsTema.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.tema === estado.tema)));
+    radiosCiudad.forEach((r) => (r.checked = r.value === estado.ciudad));
+    radiosTema.forEach((r) => (r.checked = r.value === estado.tema));
+    botonCiudad.querySelector('[data-filtro-texto]')!.textContent = nombre(radiosCiudad, estado.ciudad);
+    botonTema.querySelector('[data-filtro-texto]')!.textContent = nombre(radiosTema, estado.tema);
+    botonCiudad.classList.toggle('activo', estado.ciudad !== 'all');
+    botonTema.classList.toggle('activo', estado.tema !== 'all');
+    pintarConteos(radiosCiudad, (c) => contar(c, estado.tema));
+    pintarConteos(radiosTema, (t) => contar(estado.ciudad, t));
 
     const filtrando = estado.ciudad !== 'all' || estado.tema !== 'all';
     // Con un filtro la destacada deja de ir aparte y entra en la lista, en su orden por fecha
     if (bloqueDestacada) bloqueDestacada.hidden = filtrando;
     let visibles = 0;
     items.forEach((li) => {
-      const coincide =
-        (estado.ciudad === 'all' || li.dataset.ciudades!.split(' ').includes(estado.ciudad)) &&
-        (estado.tema === 'all' || li.dataset.tema === estado.tema);
-      const mostrar = coincide && (li !== copiaDestacada || filtrando);
+      const mostrar = pasa(li, estado.ciudad, estado.tema) && (li !== copiaDestacada || filtrando);
       li.hidden = !mostrar;
       if (mostrar) visibles++;
     });
     if (!filtrando && bloqueDestacada) visibles++;
 
+    const texto = visibles ? `Ver ${visibles} ${visibles === 1 ? 'noticia' : 'noticias'}` : 'Ver resultados';
+    botonesVer.forEach((b) => (b.textContent = texto));
+
     vacio.hidden = visibles > 0;
     if (!visibles) {
-      const tema = estado.tema === 'all' ? '' : ` de ${nombre(chipsTema, 'tema', estado.tema).toLowerCase()}`;
-      const ciudad = estado.ciudad === 'all' ? '' : ` en ${nombre(chipsCiudad, 'ciudad', estado.ciudad)}`;
+      const tema = estado.tema === 'all' ? '' : ` de ${nombre(radiosTema, estado.tema).toLowerCase()}`;
+      const ciudad = estado.ciudad === 'all' ? '' : ` en ${nombre(radiosCiudad, estado.ciudad)}`;
       mensajeVacio.textContent = `Todavía no hay noticias${tema}${ciudad}.`;
     }
     if (anunciar) anuncio.textContent = visibles ? `Mostrando ${visibles} ${visibles === 1 ? 'noticia' : 'noticias'}` : mensajeVacio.textContent!;
@@ -147,15 +198,17 @@ const descripcion =
     history.replaceState(null, '', url);
   };
 
-  chipsCiudad.forEach((c) =>
-    c.addEventListener('click', () => {
-      estado.ciudad = c.dataset.ciudad!;
+  radiosCiudad.forEach((r) =>
+    r.addEventListener('change', () => {
+      if (!r.checked) return;
+      estado.ciudad = r.value;
       aplicar(true);
     }),
   );
-  chipsTema.forEach((c) =>
-    c.addEventListener('click', () => {
-      estado.tema = c.dataset.tema!;
+  radiosTema.forEach((r) =>
+    r.addEventListener('change', () => {
+      if (!r.checked) return;
+      estado.tema = r.value;
       aplicar(true);
     }),
   );
@@ -163,7 +216,7 @@ const descripcion =
     estado.ciudad = 'all';
     estado.tema = 'all';
     aplicar(true);
-    chipsCiudad[0].focus();
+    botonCiudad.focus();
   });
 
   filtros.hidden = false;
@@ -221,85 +274,8 @@ const descripcion =
 
   .filtros {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .grupo {
-    display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-  }
-
-  .rotulo {
-    min-width: 4.5em;
-    font-size: .74rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    height: 42px;
-    border-radius: var(--radius-pill);
-    padding: 0 16px;
-    font-size: .9rem;
-    font-weight: 500;
-    white-space: nowrap;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--ink);
-  }
-
-  .chip:hover {
-    border-color: var(--ink);
-  }
-
-  .chip[aria-pressed='true'] {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--on-dark);
-  }
-
-  /* En celular (decisión 2.27) cada grupo es una fila con desplazamiento lateral, como los chips de la Agenda
-     y "Este finde" (decisión 2.14): relleno para el anillo de foco, desplazamiento hasta el borde de la pantalla y position: relative
-     para que nada oculto desborde. Chips de 44 px de alto. */
-  @media (max-width: 767px) {
-    /* Sin wrap: en columna, un flex de varias líneas toma el ancho de su contenido y desbordaría */
-    .grupo {
-      flex-direction: column;
-      flex-wrap: nowrap;
-      align-items: stretch;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .chips {
-      position: relative;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding: 6px 24px 6px 6px;
-      margin: 0 calc(-1 * var(--margen-lateral)) 0 -6px;
-      scroll-padding-inline: 6px 40px;
-      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
-      margin-right: calc(-1 * var(--margen-lateral));
-      padding-right: var(--margen-lateral);
-    }
-
-    .chip {
-      flex-shrink: 0;
-      height: 44px;
-    }
+    gap: 10px;
   }
 
   .rejilla {

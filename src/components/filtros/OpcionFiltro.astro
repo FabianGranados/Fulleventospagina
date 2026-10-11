@@ -1,0 +1,120 @@
+---
+// Una opción de una hoja de filtro (decisión 2.35): radio nativo oculto en una fila de 52 px, con ícono o punto de
+// color opcional, el nombre (en [data-nombre], que la página copia al botón) y un conteo opcional que la página
+// puede actualizar ([data-conteo="<valor>"]). Con la clase "vacia" (conteo 0) se atenúa.
+import Icono, { type NombreIcono } from '../ui/Icono.astro';
+
+interface Props {
+  nombre: string;
+  valor: string;
+  // Atributo data-* del radio que usa el script de la página (p. ej. "ciudad" → data-ciudad)
+  atributo: string;
+  checked?: boolean;
+  icono?: NombreIcono;
+  // Valor CSS del punto de color (categorías)
+  color?: string;
+  conteo?: number;
+  // Unidad del conteo para los lectores: ["plan", "planes"]
+  unidad?: [string, string];
+  class?: string;
+}
+
+const { nombre, valor, atributo, checked = false, icono, color, conteo, unidad = ['plan', 'planes'], class: clase } = Astro.props;
+---
+
+<label class:list={['opcion', clase]}>
+  <input type="radio" name={nombre} value={valor} checked={checked} {...{ [`data-${atributo}`]: '' }} />
+  {icono && <Icono nombre={icono} tamano={18} class="opcion-icono" />}
+  {color && <span class="punto" style={`--punto: ${color}`} aria-hidden="true"></span>}
+  <span class="opcion-texto" data-nombre><slot /></span>
+  {
+    conteo !== undefined && (
+      <span class="conteo" data-conteo={valor}>
+        {conteo}
+        <span class="solo-lectores">{` ${conteo === 1 ? unidad[0] : unidad[1]}`}</span>
+      </span>
+    )
+  }
+</label>
+
+<style>
+  .opcion {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 0 12px;
+    border-radius: var(--radius-field);
+    cursor: pointer;
+  }
+
+  .opcion:hover {
+    background: var(--light-hover);
+  }
+
+  .opcion input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .opcion:has(input:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  .opcion:has(input:checked) {
+    background: var(--surface-sunken);
+    font-weight: 700;
+  }
+
+  .opcion:has(input:checked)::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    margin-left: 4px;
+    border-left: 2.5px solid var(--ink);
+    border-bottom: 2.5px solid var(--ink);
+    transform: rotate(-45deg) translateY(-2px);
+  }
+
+  .opcion.vacia .opcion-texto,
+  .opcion.vacia .conteo {
+    color: var(--muted);
+  }
+
+  .opcion :global(.opcion-icono) {
+    color: var(--muted);
+  }
+
+  .opcion-texto {
+    flex: 1;
+  }
+
+  .punto {
+    width: 14px;
+    height: 14px;
+    margin-inline: 2px;
+    border-radius: 50%;
+    background: var(--punto);
+    box-shadow: inset 0 0 0 1px rgba(23, 18, 15, .14);
+  }
+
+  .conteo {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    display: inline-grid;
+    place-items: center;
+    font-size: .78rem;
+    font-weight: 700;
+    background: var(--surface-sunken);
+    color: var(--ink);
+  }
+
+  .opcion:has(input:checked) .conteo {
+    background: var(--yellow);
+  }
+</style>

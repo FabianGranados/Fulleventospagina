@@ -1,9 +1,10 @@
 ---
 // Noticias de la escena (4.3, bloque 5). Salen de la colección src/content/noticias (decisión 2.25): la destacada
 // y las 3 más recientes, cada una con enlace a su página. Reemplaza "noticias sin enlaces" de la decisión 2.14 (H36).
+// Solo el titular (decisión 2.38): el antetítulo, la bajada y la fecha van dentro de la noticia.
 import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
-import { antetitulo, metaNoticia, noticiasOrdenadas, rutaNoticia, separarDestacada } from '../../lib/noticias';
+import { noticiasOrdenadas, rutaNoticia, separarDestacada } from '../../lib/noticias';
 
 const { destacada, resto } = separarDestacada(await noticiasOrdenadas());
 const lista = resto.slice(0, 3);
@@ -28,10 +29,7 @@ const lista = resto.slice(0, 3);
             <div class="imagen" aria-hidden="true" />
           )}
           <div class="texto">
-            <p class="kicker">{antetitulo(destacada)}</p>
             <h3 class="titulo-destacada"><a href={rutaNoticia(destacada)}>{destacada.data.titulo}</a></h3>
-            <p class="bajada">{destacada.data.bajada}</p>
-            <p class="meta"><time datetime={destacada.data.fecha}>{metaNoticia(destacada)}</time></p>
           </div>
         </article>
       )
@@ -40,9 +38,7 @@ const lista = resto.slice(0, 3);
       {
         lista.map((n) => (
           <article class="item">
-            <p class="kicker">{antetitulo(n)}</p>
             <h3 class="titulo-item"><a href={rutaNoticia(n)}>{n.data.titulo}</a></h3>
-            <p class="tiempo"><time datetime={n.data.fecha}>{metaNoticia(n)}</time></p>
           </article>
         ))
       }
@@ -130,32 +126,12 @@ const lista = resto.slice(0, 3);
     padding: 18px 20px 20px;
   }
 
-  .kicker {
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-
   .titulo-destacada {
-    margin: 4px 0 8px;
     font-family: var(--display);
     font-weight: 800;
     font-size: 1.35rem;
     letter-spacing: -0.02em;
     line-height: 1.12;
-  }
-
-  .bajada {
-    color: var(--muted);
-    font-size: .93rem;
-  }
-
-  .meta {
-    margin-top: 10px;
-    font-size: .8rem;
-    color: var(--muted);
   }
 
   .lista {
@@ -185,9 +161,4 @@ const lista = resto.slice(0, 3);
     line-height: 1.3;
   }
 
-  .tiempo {
-    margin-top: 6px;
-    font-size: .8rem;
-    color: var(--muted);
-  }
 </style>
