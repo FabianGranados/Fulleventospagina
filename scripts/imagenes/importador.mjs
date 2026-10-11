@@ -19,7 +19,7 @@ const COLUMNAS = [
   'evento_id', 'tipo', 'url_origen', 'fuente_nombre', 'fuente_url', 'fuente_oficial', 'derechos_estado', 'licencia',
   'derechos_evidencia', 'verificado_en', 'verificado_por', 'credito', 'texto_alternativo', 'sha256', 'version',
   'ruta_r2', 'variantes', 'url_publica', 'ancho', 'alto', 'formato_original', 'bytes_original', 'bytes_r2', 'estado',
-  'error', 'placeholder', 'motivo_reemplazo', 'importacion_id',
+  'error', 'placeholder', 'motivo_reemplazo', 'importacion_id', 'procedencia', 'ref_externa',
 ];
 
 const repositorio = (db) => ({
@@ -79,6 +79,8 @@ const desdeRegistro = (r, evento) => ({
   credito: r.imagen.credito,
   texto_alternativo: r.imagen.texto_alternativo,
   placeholder: `${evento.bg1} ${evento.bg2}`,
+  procedencia: r.procedencia ? JSON.stringify(r.procedencia) : undefined,
+  ref_externa: r.ref_externa,
   reemplazar: r.reemplazar,
   motivo_reemplazo: r.motivo_reemplazo,
 });

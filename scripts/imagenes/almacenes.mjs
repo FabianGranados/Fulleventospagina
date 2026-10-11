@@ -65,11 +65,11 @@ export const crearAlmacenMemoria = async () => {
   };
 };
 
-export const crearAlmacenLocal = async (raiz = process.cwd()) => {
-  const carpeta = join(raiz, 'registros', 'r2-local');
+export const crearAlmacenLocal = async (raiz = process.cwd(), base = join(raiz, 'registros')) => {
+  const carpeta = join(base, 'r2-local');
   return {
     modo: 'local',
-    db: await abrirSqlite(join(raiz, 'registros', 'imagenes-local.sqlite')),
+    db: await abrirSqlite(join(base, 'imagenes-local.sqlite')),
     r2: {
       carpeta,
       subir: async (clave, buffer) => {

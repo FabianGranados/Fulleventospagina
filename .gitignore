@@ -14,3 +14,5 @@ playwright-report/
 
 # Importador de imágenes: registros de ejecución, SQLite local y bucket local de prueba
 registros/
+# Compilación de la demostración local (npm run demo:imagenes); nunca se despliega
+dist-demo/

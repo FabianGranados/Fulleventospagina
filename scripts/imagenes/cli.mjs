@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Uso: npm run imagenes -- <comando> [opciones]   (guía completa en docs/imagenes-r2.md)
 //
-//   importar <archivo.json|jsonl>   Importa lo que entregó Gemini.
+//   adaptar <fulleventos_event_images.jsonl> [--salida carpeta]   Convierte lo de Gemini (no guarda en Cloudflare).
+//   importar <archivo.json|jsonl>   Importa imágenes (formato del importador).
 //   pendientes                      Lista las imágenes que esperan revisión de derechos.
 //   aprobar <id...> --por "Nombre" [--licencia "…"] [--evidencia "…"] [--reemplazar --motivo "…"]
 //   publicar <id> --motivo "…"       Publica una imagen ya subida (lista o retirada) en lugar de la actual.
@@ -10,12 +11,13 @@
 //
 // Modos: por defecto Cloudflare (lee .env.importador). --local usa SQLite y una carpeta en registros/.
 //        --simular valida el archivo, encuentra los eventos y revisa URL y derechos sin descargar ni guardar nada.
-import { existsSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, appendFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cargarPolitica, ErrorImagen } from './politica.mjs';
 import { crearAlmacenCloudflare, crearAlmacenLocal, crearAlmacenMemoria } from './almacenes.mjs';
 import { cargarEventos, crearCatalogo } from './catalogo.mjs';
+import { adaptar } from './adaptar.mjs';
 import { aprobar, importar, pendientes, publicarExistente, publicarIndice, retirar } from './importador.mjs';
 
 const { values: op, positionals } = parseArgs({
@@ -28,6 +30,7 @@ const { values: op, positionals } = parseArgs({
     evidencia: { type: 'string' },
     reemplazar: { type: 'boolean', default: false },
     motivo: { type: 'string' },
+    salida: { type: 'string' },
     ayuda: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -36,7 +39,7 @@ const [comando, ...args] = positionals;
 const raiz = process.cwd();
 
 const ayuda = () => {
-  const texto = readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 13).map((l) => l.replace(/^\/\/ ?/, ''));
+  const texto = readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 14).map((l) => l.replace(/^\/\/ ?/, ''));
   console.log(texto.join('\n'));
 };
 
@@ -52,6 +55,27 @@ const ICONOS = { publicada: '✔', lista: '•', pendiente: '…', duplicada: '=
 
 const main = async () => {
   if (!comando || op.ayuda) return ayuda();
+
+  // adaptar no toca D1 ni R2: solo lee el archivo de Gemini y escribe tres archivos de trabajo
+  if (comando === 'adaptar') {
+    const ruta = args[0];
+    if (!ruta || !existsSync(ruta)) throw new ErrorImagen('configuracion', 'Indica el archivo: adaptar <fulleventos_event_images.jsonl>');
+    const { ciudades } = await import('../../src/data/ciudades.ts');
+    const salida = op.salida ?? join(raiz, 'registros', `adaptado-${new Date().toISOString().replace(/[:.]/g, '-')}`);
+    mkdirSync(salida, { recursive: true });
+    const r = adaptar({ contenido: readFileSync(ruta, 'utf8'), archivo: basename(ruta), eventos: await cargarEventos(), ciudades });
+    writeFileSync(join(salida, 'imagenes-importador.jsonl'), r.imagenesJsonl);
+    writeFileSync(join(salida, 'eventos-nuevos.jsonl'), r.eventosNuevosJsonl);
+    writeFileSync(join(salida, 'reporte.json'), JSON.stringify(r.reporte, null, 2));
+    const { errores, avisos, ...cifras } = r.reporte;
+    console.log('Adaptación:', cifras);
+    for (const e of errores) console.log(`✘ línea ${e.linea}${e.ref ? ` (${e.ref})` : ''}: ${e.error}`);
+    if (avisos.length) console.log(`${avisos.length} línea(s) con arreglos de formato: ver reporte.json`);
+    console.log(`Archivos en ${salida}
+Siguiente paso: npm run imagenes -- importar ${join(salida, 'imagenes-importador.jsonl')} --simular`);
+    if (errores.length) process.exitCode = 2;
+    return;
+  }
   const politica = cargarPolitica(raiz);
   const almacen = await abrirAlmacen();
   const urlPublica = (process.env.IMAGENES_URL_PUBLICA ?? '').replace(/\/+$/, '') || undefined;

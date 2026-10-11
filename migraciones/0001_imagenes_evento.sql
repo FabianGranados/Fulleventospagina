@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS imagenes_evento (
   verificado_por     TEXT    CHECK (verificado_por IN ('persona', 'agente')), -- quién afirmó los derechos
   credito            TEXT,                         -- "Foto: Juana Pérez / Idartes"
   texto_alternativo  TEXT    NOT NULL,
+  -- Todo lo que entregó la investigación (todas las fuentes, evidencias, URL de la licencia, autor, fechas de
+  -- consulta…) tal cual, en JSON: así no se pierde nada aunque no tenga columna propia
+  procedencia        TEXT,
+  ref_externa        TEXT,                         -- clave estable del evento en la investigación (Gemini)
 
   -- Archivo procesado (vacío mientras no se haya descargado)
   sha256             TEXT,                         -- hash del archivo original: detecta duplicados

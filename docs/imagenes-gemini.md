@@ -1,4 +1,6 @@
-# Formato para Gemini Deep Research
+# Formato de entrada del importador de imágenes
+
+> **Para Gemini usa `docs/gemini-eventos-imagenes.md`** (`fulleventos_event_images.jsonl`, una línea por evento). Este es el formato interno, una línea por imagen, que produce `npm run imagenes -- adaptar` y que lee `importar`. Sirve también para cargar imágenes a mano.
 
 El importador (`npm run imagenes -- importar archivo.jsonl`) recibe **JSONL**, con un objeto por línea. También acepta JSON con una lista o `{ "imagenes": [...] }`. El esquema formal está en `scripts/imagenes/esquema-gemini.json`, y hay un ejemplo con dominios ficticios en `docs/ejemplos/imagenes-gemini.jsonl`.
 

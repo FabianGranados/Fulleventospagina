@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.fulleventos.com.co/esquemas/fulleventos_event_images.v1.json",
+  "title": "fulleventos_event_images.jsonl — una línea por evento (formato fulleventos-eventos-imagenes/1)",
+  "description": "Equivale a scripts/imagenes/formato-gemini.mjs, que es el que valida de verdad. Guía: docs/gemini-eventos-imagenes.md.",
+  "type": "object",
+  "required": ["ref", "evento"],
+  "properties": {
+    "formato": { "const": "fulleventos-eventos-imagenes/1" },
+    "ref": { "type": "string", "minLength": 3, "maxLength": 200, "description": "Clave estable del evento: ciudad-AAAA-MM-DD-slug-del-titulo. La misma en todas las corridas." },
+    "evento": {
+      "type": "object",
+      "required": ["titulo", "ciudad", "fecha", "fuentes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_-]{1,64}$", "description": "Solo si el evento ya existe en Fulleventos y se conoce su id." },
+        "titulo": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "ciudad": { "type": "string", "maxLength": 60 },
+        "departamento": { "type": "string", "maxLength": 60 },
+        "fecha": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "fecha_fin": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "hora": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "description": "24 h, hora de Colombia" },
+        "lugar": { "type": "string", "maxLength": 200 },
+        "direccion": { "type": "string", "maxLength": 300 },
+        "categoria": { "enum": ["Rumba", "Conciertos", "Deporte", "Arte y teatro", "Comida", "Otro"] },
+        "gratis": { "type": "boolean" },
+        "precio_desde": { "type": "number", "minimum": 0, "description": "En pesos colombianos, sin puntos ni signo" },
+        "moneda": { "type": "string", "default": "COP" },
+        "organizador": { "type": "string", "maxLength": 200 },
+        "url_oficial": { "type": "string", "format": "uri" },
+        "url_venta": { "type": "string", "format": "uri" },
+        "resumen": { "type": "string", "maxLength": 1000, "description": "Solo hechos verificables, sin inventar" },
+        "estado_evento": { "enum": ["programado", "aplazado", "cancelado", "agotado"], "default": "programado" },
+        "fuentes": { "type": "array", "minItems": 1, "maxItems": 20, "items": { "$ref": "#/$defs/fuente" } }
+      }
+    },
+    "imagenes": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["url", "texto_alternativo", "fuente", "derechos"],
+        "properties": {
+          "url": { "type": "string", "format": "uri", "pattern": "^https://", "description": "Enlace directo al archivo .jpg, .png, .webp o .avif" },
+          "pagina": { "type": "string", "format": "uri", "description": "Página donde aparece la imagen" },
+          "tipo": { "enum": ["principal", "afiche", "galeria"], "default": "principal" },
+          "texto_alternativo": { "type": "string", "minLength": 10, "maxLength": 300 },
+          "credito": { "type": "string", "maxLength": 200 },
+          "autor": { "type": "string", "maxLength": 200 },
+          "ancho": { "type": "integer" },
+          "alto": { "type": "integer" },
+          "fuente": { "allOf": [{ "$ref": "#/$defs/fuente" }], "required": ["nombre", "url", "oficial"] },
+          "derechos": {
+            "type": "object",
+            "required": ["estado"],
+            "properties": {
+              "estado": { "enum": ["confirmado", "pendiente", "rechazado", "desconocido"], "description": "confirmado solo con un texto que permita reutilizar la imagen" },
+              "licencia": { "type": "string", "maxLength": 500 },
+              "licencia_url": { "type": "string", "format": "uri" },
+              "evidencias": {
+                "type": "array",
+                "maxItems": 20,
+                "items": { "type": "object", "properties": { "url": { "type": "string", "format": "uri" }, "cita": { "type": "string", "maxLength": 1000 }, "texto": { "type": "string", "maxLength": 1000 } } }
+              },
+              "verificado_en": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+            }
+          }
+        }
+      }
+    },
+    "notas": { "type": "string", "maxLength": 2000 }
+  },
+  "$defs": {
+    "fuente": {
+      "type": "object",
+      "required": ["nombre", "url"],
+      "properties": {
+        "nombre": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "url": { "type": "string", "format": "uri" },
+        "tipo": { "enum": ["organizador", "escenario", "boletera", "artista", "gobierno", "prensa", "otro"] },
+        "oficial": { "type": "boolean" },
+        "consultado_en": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      }
+    }
+  }
+}

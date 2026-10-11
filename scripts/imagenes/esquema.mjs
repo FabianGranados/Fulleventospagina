@@ -50,6 +50,9 @@ export const registroGemini = z
       verificado_por: z.enum(['persona', 'agente']).default('agente'),
     }),
     // Reemplazar la foto ya publicada del evento exige decir por qué
+    // Datos completos de la investigación (fuentes, evidencias, licencia_url…); se guardan en D1 sin tocarlos
+    procedencia: z.record(z.string(), z.unknown()).optional().refine((p) => !p || JSON.stringify(p).length <= 16000, 'procedencia supera 16 KB'),
+    ref_externa: z.string().max(200).optional(),
     reemplazar: z.boolean().default(false),
     motivo_reemplazo: z.string().trim().min(5).max(300).optional(),
   })

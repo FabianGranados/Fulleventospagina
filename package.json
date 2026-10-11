@@ -11,7 +11,8 @@
     "test:solo": "playwright test",
     "test:importador": "node --test --test-reporter=spec \"tests/importador/*.prueba.mjs\"",
     "imagenes": "node scripts/imagenes/cli.mjs",
-    "revisar:secretos": "node scripts/revisar-secretos.mjs"
+    "revisar:secretos": "node scripts/revisar-secretos.mjs",
+    "demo:imagenes": "node scripts/demo/demo-imagenes.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.4",

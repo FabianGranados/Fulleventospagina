@@ -75,7 +75,10 @@ Hazlo en este orden. Nada de esto toca el sitio publicado.
 
 ## Uso del importador
 
+Lo que entrega Gemini (`fulleventos_event_images.jsonl`, ver `docs/gemini-eventos-imagenes.md`) se adapta primero. El adaptador no toca Cloudflare: separa las imágenes de eventos que ya existen y deja los eventos nuevos en una cola para la etapa B.
+
 ```bash
+npm run imagenes -- adaptar fulleventos_event_images.jsonl --salida registros/lote-1
 npm run imagenes -- importar resultados-gemini.jsonl --simular   # revisa sin descargar ni guardar
 npm run imagenes -- importar resultados-gemini.jsonl             # importa de verdad (Cloudflare)
 npm run imagenes -- pendientes                                   # lo que espera revisión de derechos
@@ -120,10 +123,24 @@ Fuentes: [precios de R2](https://developers.cloudflare.com/r2/pricing/) (página
 
 **Estimación para Fulleventos:** cada foto ocupa unos 0,4 a 0,5 MB sumando sus tres variantes. Con **5.000 eventos con foto** serían unos **2,5 GB** (dentro de los 10 GB gratis) y unas 20.000 escrituras por carga completa (2 % del millón gratis). Las lecturas solo cuentan cuando la caché no tiene el archivo. Con URL inmutables y el índice cacheado 5 minutos, incluso un millón de visitas al mes debería quedar muy por debajo de los 10 millones. **Costo esperado: US$0 al mes** en ese volumen. Lo que más puede crecer son las lecturas Clase B si se desactiva la caché. Revisa el consumo en *R2* → *Metrics*.
 
+## Demostración local (no toca producción)
+
+`npm run demo:imagenes` hace todo el flujo de punta a punta:
+
+- Genera imágenes de prueba marcadas "DEMO" y un archivo de Gemini de ejemplo.
+- Adapta, importa, aprueba y publica en un bucket local (`registros/demo/`).
+- Compila el sitio en `dist-demo/` con las fotos apuntando a `http://localhost:4580` y lo sirve en `http://localhost:4570`.
+
+No usa credenciales y no toca `dist/`. Además restaura `.wrangler/deploy/config.json`, para que un `wrangler deploy` posterior nunca tome la compilación de la demo.
+
+## Escala
+
+El índice único de la etapa A está pensado para los eventos actuales y los primeros cientos: con 5.000 eventos pesaría unos 1,7 MB por página. Para la carga masiva hay que hacer antes la etapa B (`docs/etapa-b-eventos-d1.md`).
+
 ## Pruebas
 
 ```bash
-npm run test:importador   # 73 pruebas: SSRF, archivos, idempotencia, derechos y revisión humana, reemplazos, fallas de R2/D1…
+npm run test:importador   # 80 pruebas: SSRF, archivos, idempotencia, derechos y revisión humana, reemplazos, fallas de R2/D1, adaptador de Gemini…
 npm run revisar:secretos
 npm test                  # todo lo anterior + build + Playwright (pantallas existentes + fotos)
 ```
