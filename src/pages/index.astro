@@ -5,7 +5,6 @@ import EncabezadoApp from '../components/layout/EncabezadoApp.astro';
 import Pie from '../components/layout/Pie.astro';
 import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import Hero from '../components/bienvenida/Hero.astro';
-import CategoriasFinde from '../components/bienvenida/CategoriasFinde.astro';
 import AgendaFinde from '../components/bienvenida/AgendaFinde.astro';
 import ComoFunciona from '../components/bienvenida/ComoFunciona.astro';
 import BloqueMapa from '../components/bienvenida/BloqueMapa.astro';
@@ -17,10 +16,10 @@ import Noticias from '../components/bienvenida/Noticias.astro';
   <!-- Pública. Con la sesión de demostración (decisión 2.24) el encabezado pasa a ser el de la app -->
   <EncabezadoVisitante class="solo-visitante" buscador={false} />
   <EncabezadoApp variante="completo" class="solo-sesion" />
-  <!-- Orden de la auditoría H44 (decisión 2.13): los planes a la venta justo después del héroe -->
+  <!-- Orden de la auditoría H44 (decisión 2.13): los planes justo después del héroe. La primera pantalla es solo el
+       buscador y las categorías (decisión 2.34) -->
   <main id="contenido" class="contenedor principal">
     <Hero />
-    <CategoriasFinde />
     <AgendaFinde />
     <ComoFunciona />
     <BloqueMapa />

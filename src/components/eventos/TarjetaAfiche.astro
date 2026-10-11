@@ -1,0 +1,263 @@
+---
+// Tarjeta de evento tipo afiche (decisión 2.34), para las filas de "Este finde" de la Bienvenida. La imagen ocupa
+// toda la tarjeta y encima va solo lo esencial: fecha, título, día y ciudad, cuánta gente va y el precio. Toda la
+// tarjeta lleva al evento (el enlace del título se estira sobre ella); "Guardar" queda encima como botón propio.
+// El cargo por servicio y quién vende se ven en la página del evento, junto al botón de compra.
+// Marcado compartido con TarjetaEvento para el script de la Bienvenida: [data-tarjeta][data-id], .guardar.
+import Icono from '../ui/Icono.astro';
+import type { Evento } from '../../data/eventos';
+import { nombreCiudad } from '../../data/ciudades';
+import { cifra, fechaCorta, pesos, placaFecha, rutaEvento } from '../../lib/formato';
+
+interface Props {
+  evento: Evento;
+  // Muestra la etiqueta "N parches abiertos" (fila "Para ir en parche")
+  parches?: boolean;
+}
+
+const { evento: e, parches = false } = Astro.props;
+const { dia, mes } = placaFecha(e.fecha);
+const href = rutaEvento(e.ciudad, e.titulo);
+// Pila decorativa de la gente que va: tres círculos de color, sin nombres ni iniciales (es pública)
+const tonos = ['peach', 'pink', 'lilac', 'lime', 'aqua', 'yellow'];
+const base = parseInt(e.id.replace(/\D/g, ''), 10) || 0;
+const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
+---
+
+<article class="afiche" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} data-tarjeta data-id={e.id} data-ciudad={e.ciudad}>
+  <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
+  <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`}>
+    <Icono nombre="marcador" tamano={18} />
+  </button>
+
+  <div class="cuerpo">
+    {
+      parches && e.parches > 0 && (
+        <span class="parches">
+          {e.parches} {e.parches === 1 ? 'parche abierto' : 'parches abiertos'}
+        </span>
+      )
+    }
+    <h4 class="titulo"><a href={href}>{e.titulo}</a></h4>
+    <p class="meta">{fechaCorta(e.fecha)} · {nombreCiudad(e.ciudad)}</p>
+    <div class="pie">
+      <span class="gente">
+        <span class="pila" aria-hidden="true">{pila.map((c) => <i style={`background: ${c}`}></i>)}</span>
+        {cifra(e.van)} van
+      </span>
+      <span class:list={['precio', { gratis: !e.precio }]}>{e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}</span>
+    </div>
+  </div>
+</article>
+
+<style>
+  .afiche {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    border-radius: var(--radius-field);
+    overflow: hidden;
+    /* Capa oscura abajo (para que el texto blanco tenga contraste sobre cualquier imagen) sobre la imagen */
+    background:
+      linear-gradient(180deg, rgba(20, 14, 16, 0) 35%, rgba(20, 14, 16, .6) 62%, rgba(20, 14, 16, .92) 100%),
+      radial-gradient(circle at 70% 28%, var(--bg1) 0, transparent 58%),
+      var(--bg2);
+    color: var(--on-dark);
+    transition: transform 150ms ease-out;
+  }
+
+  .afiche:active {
+    transform: scale(.985);
+  }
+
+  /* El foco del enlace se marca en toda la tarjeta */
+  .afiche:has(.titulo a:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
+
+  .fecha {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 1;
+    min-width: 46px;
+    padding: 5px 9px 4px;
+    border-radius: var(--radius-xs);
+    background: var(--surface);
+    color: var(--ink);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .fecha b {
+    display: block;
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 900;
+  }
+
+  .fecha span {
+    font-size: .66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+  }
+
+  .guardar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .94);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+
+  .guardar[aria-pressed='true'] {
+    color: var(--brand);
+  }
+
+  .guardar[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
+  }
+
+  .cuerpo {
+    padding: 16px;
+  }
+
+  .parches {
+    display: inline-block;
+    margin-bottom: 8px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  .titulo {
+    font-family: var(--display);
+    font-size: 1.22rem;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .titulo a,
+  .titulo a:hover {
+    color: var(--on-dark);
+  }
+
+  .titulo a:focus-visible {
+    outline: none;
+  }
+
+  /* Toda la tarjeta es el enlace: se estira sobre .afiche, el primer ancestro posicionado */
+  .titulo a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .meta {
+    margin-top: 5px;
+    font-size: .86rem;
+    color: var(--on-dark-muted);
+  }
+
+  .pie {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .gente {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pila {
+    display: flex;
+  }
+
+  .pila i {
+    width: 22px;
+    height: 22px;
+    margin-left: -8px;
+    border: 2px solid var(--hero);
+    border-radius: 50%;
+  }
+
+  .pila i:first-child {
+    margin-left: 0;
+  }
+
+  .precio {
+    padding: 6px 11px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .84rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .precio.gratis {
+    background: var(--cat-gratis);
+  }
+
+  @media (max-width: 767px) {
+    .cuerpo {
+      padding: 14px;
+    }
+
+    .titulo {
+      font-size: 1.08rem;
+    }
+
+    .gente {
+      gap: 5px;
+      font-size: .8rem;
+    }
+
+    .pila i {
+      width: 18px;
+      height: 18px;
+      margin-left: -7px;
+    }
+
+    .precio {
+      padding: 5px 9px;
+      font-size: .76rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .afiche {
+      transition: none;
+    }
+
+    .afiche:active {
+      transform: none;
+    }
+  }
+</style>

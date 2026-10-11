@@ -27,6 +27,9 @@ const { titulo, descripcion = DESCRIPCION, tamanoBase = 16, requiereSesion = fal
     <!-- Sesión de demostración (decisión 2.24, lib/sesion.ts). Va antes de los estilos para que la página se
          pinte de una vez como visitante o con sesión, sin parpadeo. Sin JavaScript queda la versión pública. -->
     <script is:inline define:vars={{ clave: CLAVE_SESION, requiere: requiereSesion }}>
+      // Con JavaScript, la clase "js" deja que las piezas se pinten desde el principio en su estado final (por
+      // ejemplo, el menú plegado del encabezado de visitante), sin saltos al cargar
+      document.documentElement.classList.add('js');
       var leer = function () {
         try {
           return localStorage.getItem(clave) === '1';

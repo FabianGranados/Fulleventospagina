@@ -1,48 +1,68 @@
 ---
 import Icono from '../ui/Icono.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
-import EncabezadoSeccion from '../ui/EncabezadoSeccion.astro';
 import FilaEventos from '../eventos/FilaEventos.astro';
+import FranjaGente from './FranjaGente.astro';
 import { ciudades } from '../../data/ciudades';
-import { eventos, conteoCiudad, type Evento } from '../../data/eventos';
-import { categorias, colorCategoria, rutaCategoria } from '../../data/categorias';
+import { eventos } from '../../data/eventos';
+import { rutaCategoria } from '../../data/categorias';
+import { fechasAgenda } from '../../data/agenda';
 
-// Una fila deslizable por categoría (decisión 2.30, pedido del cliente), con su color de intención (decisión 2.32).
-// Las categorías salen de data/categorias.ts. Un evento puede estar en dos filas (un concierto gratis).
+// "Este finde" de la Bienvenida (decisión 2.34): tres filas de afiches distintas entre sí, no una por categoría
+// (las categorías ya están arriba, en las tarjetas del héroe). La ciudad se elige en un solo lugar: el selector de
+// aquí y el del buscador del héroe son el mismo estado. Entre la primera y la segunda fila va la franja de la cuenta.
+const finde = fechasAgenda.find((f) => f.id === 'finde')!;
+const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
 
-// Orden intercalado por ciudad dentro de cada fila: el 1.º de cada ciudad, luego el 2.º… (4.3, 6.5)
-const intercalar = (lista: Evento[]) => {
-  const grupos = ciudades.map((c) => lista.filter((e) => e.ciudad === c.id));
-  const salida: Evento[] = [];
-  for (let i = 0; grupos.some((g) => g[i]); i++) for (const g of grupos) if (g[i]) salida.push(g[i]);
-  return salida;
+const filas = [
+  {
+    id: 'finde-populares',
+    titulo: 'Lo que más se mueve',
+    subtitulo: 'Los planes con más gente este finde',
+    eventos: [...enFinde].sort((a, b) => b.van - a.van),
+  },
+  {
+    id: 'finde-gratis',
+    titulo: 'Gratis este finde',
+    subtitulo: 'Planes sin costo',
+    categoria: 'gratis',
+    eventos: enFinde.filter((e) => !e.precio).sort((a, b) => b.van - a.van),
+  },
+  {
+    id: 'finde-parche',
+    titulo: 'Para ir en parche',
+    subtitulo: 'Únete a un grupo para ir juntos',
+    parches: true,
+    eventos: enFinde.filter((e) => e.parches > 0).sort((a, b) => b.parches - a.parches),
+  },
+].filter((f) => f.eventos.length > 0);
+
+// "Ver todos" de cada fila: la agenda del finde (o de la categoría), con la ciudad elegida
+const rutaFila = (categoria: string | undefined, ciudad = 'all') => {
+  if (categoria) return rutaCategoria(categoria, ciudad);
+  const p = new URLSearchParams({ fecha: 'finde' });
+  if (ciudad !== 'all') p.set('ciudad', ciudad);
+  return `/agenda?${p}`;
 };
-
-const filas = categorias
-  .map((c) => ({ ...c, titulo: c.fila ?? c.texto, eventos: intercalar(eventos.filter((e) => e.etiquetas.includes(c.id))) }))
-  .filter((c) => c.eventos.length > 0);
 ---
 
 <section id="agenda" class="agenda" aria-labelledby="agenda-titulo" data-agenda>
-  <EncabezadoSeccion antetitulo="Agenda" titulo="Este finde en Colombia" id="agenda-titulo" enfocable margenInferior={20}>
-    <div class="enlaces" slot="aside">
+  <div class="cabecera">
+    <div class="titulo-ciudad">
+      <h2 id="agenda-titulo" tabindex="-1">Este finde</h2>
+      <label class="ciudad">
+        <Icono nombre="pin" tamano={18} class="pin" />
+        <span class="solo-lectores">Ciudad de los planes</span>
+        <select autocomplete="off" data-selector-ciudad>
+          <option value="all">Toda Colombia</option>
+          {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
+        </select>
+      </label>
+    </div>
+    <div class="enlaces">
       <span class="ejemplo">Contenido de ejemplo</span>
-      <a href="/mapa" class="ver-mapa" data-ver-mapa><Icono nombre="mapa" tamano={16} />Ver en el mapa</a>
       <EnlaceSubrayado href="/agenda" class="ver-todo">Ver toda la agenda</EnlaceSubrayado>
     </div>
-  </EncabezadoSeccion>
-
-  <div class="chips" role="group" aria-label="Filtrar por ciudad">
-    <button type="button" class="chip" data-ciudad="all" aria-pressed="true">
-      <Icono nombre="pin" tamano={16} />Toda Colombia{' '}<span class="conteo">{eventos.length}<span class="solo-lectores">{eventos.length === 1 ? ' plan' : ' planes'}</span></span>
-    </button>
-    {
-      ciudades.map((c) => (
-        <button type="button" class="chip" data-ciudad={c.id} aria-pressed="false">
-          {c.nombre}{' '}<span class="conteo">{conteoCiudad(c.id)}<span class="solo-lectores">{conteoCiudad(c.id) === 1 ? ' plan' : ' planes'}</span></span>
-        </button>
-      ))
-    }
   </div>
 
   <p class="solo-lectores" role="status" data-anuncio></p>
@@ -54,16 +74,21 @@ const filas = categorias
 
   <div class="filas" data-filas>
     {
-      filas.map((c) => (
-        <div class="fila" data-categoria-fila={c.id}>
-          <FilaEventos
-            id={`finde-${c.id}`}
-            titulo={c.titulo}
-            eventos={c.eventos}
-            href={rutaCategoria(c.id)}
-            color={colorCategoria(c)}
-          />
-        </div>
+      filas.map((f, i) => (
+        <>
+          <div class="fila" data-fila-finde data-categoria={f.categoria}>
+            <FilaEventos
+              id={f.id}
+              titulo={f.titulo}
+              subtitulo={f.subtitulo}
+              eventos={f.eventos}
+              href={rutaFila(f.categoria)}
+              afiches
+              parches={f.parches}
+            />
+          </div>
+          {i === 0 && <FranjaGente />}
+        </>
       ))
     }
   </div>
@@ -78,22 +103,27 @@ const filas = categorias
   const raiz = document.querySelector<HTMLElement>('[data-agenda]');
 
   if (raiz) {
-    const filas = [...raiz.querySelectorAll<HTMLElement>('[data-categoria-fila]')];
+    const filas = [...raiz.querySelectorAll<HTMLElement>('[data-fila-finde]')];
     const contenedorFilas = raiz.querySelector<HTMLElement>('[data-filas]')!;
-    const chipsCiudad = [...raiz.querySelectorAll<HTMLButtonElement>('.chips [data-ciudad]')];
-    // Selector de ciudad del héroe (decisión 2.32) y del encabezado con sesión (decisión 2.24)
+    // Selector de ciudad de esta cabecera, del héroe (decisión 2.34) y del encabezado con sesión (decisión 2.24)
     const selectores = [...document.querySelectorAll<HTMLSelectElement>('select[data-selector-ciudad]')];
     const vacio = raiz.querySelector<HTMLElement>('[data-vacio]')!;
     const mensajeVacio = raiz.querySelector<HTMLElement>('[data-vacio-mensaje]')!;
     const anuncio = raiz.querySelector<HTMLElement>('[data-anuncio]')!;
-    const verMapa = raiz.querySelector<HTMLAnchorElement>('[data-ver-mapa]')!;
+    const verTodo = raiz.querySelector<HTMLAnchorElement>('.ver-todo')!;
     const titulo = raiz.querySelector<HTMLElement>('#agenda-titulo')!;
 
     const estado = { ciudad: 'all' };
 
+    const rutaFila = (categoria: string | undefined, ciudad: string) => {
+      if (categoria) return rutaCategoria(categoria, ciudad);
+      const p = new URLSearchParams({ fecha: 'finde' });
+      if (ciudad !== 'all') p.set('ciudad', ciudad);
+      return `/agenda?${p}`;
+    };
+
     const pintar = (anunciar = true) => {
       const ids = new Set<string>();
-      let categorias = 0;
 
       filas.forEach((fila) => {
         let cuantos = 0;
@@ -105,10 +135,8 @@ const filas = categorias
           ids.add(li.querySelector<HTMLElement>('[data-tarjeta]')!.dataset.id!);
         });
         fila.hidden = cuantos === 0;
-        if (cuantos) categorias++;
-        fila.querySelector('[data-fila-cantidad]')!.textContent = planes(cuantos);
-        fila.querySelector<HTMLAnchorElement>('a.ver-todos')!.href = rutaCategoria(fila.dataset.categoriaFila!, estado.ciudad);
-        // Cada fila vuelve al inicio y recalcula sus flechas (FilaEventos)
+        fila.querySelector<HTMLAnchorElement>('a.ver-todos')!.href = rutaFila(fila.dataset.categoria, estado.ciudad);
+        // Cada fila vuelve al inicio y recalcula sus flechas (lib/fila.ts)
         fila.querySelector('[data-fila-eventos]')!.dispatchEvent(new Event('fila-eventos:reiniciar'));
       });
 
@@ -118,25 +146,14 @@ const filas = categorias
       vacio.hidden = hay;
       mensajeVacio.textContent = `No hay planes en ${nombre} este finde.`;
 
-      chipsCiudad.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ciudad === estado.ciudad)));
       selectores.forEach((s) => (s.value = estado.ciudad));
-      verMapa.href = estado.ciudad === 'all' ? '/mapa' : `/mapa?ciudad=${estado.ciudad}`;
-      // El héroe (chips de intención y cifra) sigue a la misma ciudad
+      verTodo.href = estado.ciudad === 'all' ? '/agenda' : `/agenda?ciudad=${estado.ciudad}`;
+      // Las tarjetas de categorías del héroe siguen a la misma ciudad
       document.dispatchEvent(new CustomEvent('finde:ciudad', { detail: estado.ciudad }));
 
-      if (anunciar) {
-        anuncio.textContent = hay
-          ? `${nombre}: ${planes(ids.size)} en ${categorias} ${categorias === 1 ? 'categoría' : 'categorías'}.`
-          : mensajeVacio.textContent;
-      }
+      if (anunciar) anuncio.textContent = hay ? `${nombre}: ${planes(ids.size)} este finde.` : mensajeVacio.textContent;
     };
 
-    chipsCiudad.forEach((b) =>
-      b.addEventListener('click', () => {
-        estado.ciudad = b.dataset.ciudad!;
-        pintar();
-      }),
-    );
     selectores.forEach((selector) =>
       selector.addEventListener('change', () => {
         estado.ciudad = selector.value || 'all';
@@ -160,13 +177,76 @@ const filas = categorias
         .forEach((b) => b.setAttribute('aria-pressed', valor));
     });
 
+    // Si el navegador recordó la ciudad de un selector (al volver con "Atrás"), se parte de ella
+    const recordada = selectores.find((s) => s.value && s.value !== 'all');
+    if (recordada) estado.ciudad = recordada.value;
     pintar(false);
   }
 </script>
 
 <style>
   .agenda {
-    padding-top: 72px;
+    padding-top: 56px;
+  }
+
+  .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin-bottom: 20px;
+  }
+
+  .titulo-ciudad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  h2:focus {
+    outline: none;
+  }
+
+  .ciudad {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .ciudad :global(.pin) {
+    position: absolute;
+    left: 16px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  select {
+    appearance: none;
+    height: 48px;
+    padding: 0 40px 0 42px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--radius-pill);
+    background: var(--surface)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E6259' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      no-repeat right 14px center / 16px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  select:hover {
+    background-color: var(--light-hover);
   }
 
   .enlaces {
@@ -181,100 +261,8 @@ const filas = categorias
     color: var(--muted);
   }
 
-  .ver-mapa {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 42px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-pill);
-    padding: 0 16px;
-    font-size: .9rem;
-    font-weight: 700;
-  }
-
   .enlaces :global(.ver-todo) {
     font-size: .9rem;
-  }
-
-  /* position: relative contiene el texto oculto de los contadores (8.1 #4) */
-  /* El relleno superior deja ver completo el anillo de foco dentro de la fila con scroll;
-     el margen negativo lo compensa para conservar el espaciado del prototipo */
-  .chips {
-    position: relative;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-block: 6px;
-    margin-top: -6px;
-    margin-bottom: 22px;
-    scroll-padding-inline: 8px 40px;
-  }
-
-  .chip {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 42px;
-    border-radius: var(--radius-pill);
-    padding: 0 16px;
-    font-size: .9rem;
-    font-weight: 500;
-    white-space: nowrap;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--ink);
-  }
-
-  .chip:has(.conteo) {
-    padding: 0 7px 0 15px;
-  }
-
-  .chip[aria-pressed='true'] {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--on-dark);
-  }
-
-  .conteo {
-    min-width: 28px;
-    height: 28px;
-    padding: 0 8px;
-    border-radius: var(--radius-pill);
-    display: inline-grid;
-    place-items: center;
-    font-size: .78rem;
-    font-weight: 700;
-    background: var(--surface-sunken);
-    color: var(--ink);
-  }
-
-  .chip[aria-pressed='true'] .conteo {
-    background: var(--yellow);
-  }
-
-  /* Pista de que hay más chips (H61): en tableta y escritorio pasan a dos líneas;
-     en celular se desplazan de lado con un desplazamiento hasta el borde de la pantalla */
-  @media (min-width: 768px) {
-    .chips {
-      flex-wrap: wrap;
-      overflow: visible;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .chips {
-      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
-      margin-right: calc(-1 * var(--margen-lateral));
-      padding-right: var(--margen-lateral);
-      padding-right: 24px;
-    }
-
-    /* Objetivo táctil de 44 px en celular (decisión 2.27) */
-    .chip {
-      height: 44px;
-    }
   }
 
   .vacio {
@@ -301,7 +289,7 @@ const filas = categorias
     font-weight: 700;
   }
 
-  /* Una fila por categoría (decisión 2.30); las vacías se ocultan y no dejan hueco */
+  /* Las filas vacías (por la ciudad elegida) se ocultan y no dejan hueco */
   .filas {
     display: flex;
     flex-direction: column;
@@ -309,8 +297,17 @@ const filas = categorias
   }
 
   @media (max-width: 767px) {
+    .agenda {
+      padding-top: 48px;
+    }
+
     .filas {
       gap: 32px;
+    }
+
+    select {
+      height: 44px;
+      font-size: .95rem;
     }
   }
 </style>

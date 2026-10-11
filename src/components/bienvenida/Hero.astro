@@ -1,12 +1,15 @@
 ---
-// Héroe de intención (decisiones 2.32 y 2.33): solo el titular, el buscador y el enlace de la cuenta. Los chips de
-// categoría van debajo, en CategoriasFinde. La ciudad elegida aquí la sincroniza AgendaFinde.
-import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
+// Primera pantalla de la Bienvenida (decisión 2.34): titular, buscador grande y las categorías como tarjetas
+// grandes deslizables. Ocupa justo el alto de la pantalla: lo demás (franja de la cuenta y "Este finde") se ve al
+// bajar. La ciudad elegida aquí la sincroniza AgendaFinde con todos los `select[data-selector-ciudad]` y la avisa
+// con el evento "finde:ciudad"; este script solo repinta los conteos y enlaces de las tarjetas.
 import Icono from '../ui/Icono.astro';
 import PruebaSocial from './PruebaSocial.astro';
-import { Picture } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
+import { eventos, type Evento } from '../../data/eventos';
 import { ciudades } from '../../data/ciudades';
+import { categorias, colorCategoria, rutaCategoria } from '../../data/categorias';
+import { fechasAgenda } from '../../data/agenda';
+import { planes } from '../../lib/formato';
 
 interface Props {
   // Se muestra solo con datos reales (decisión 2.13); sin datos no se pinta.
@@ -15,163 +18,208 @@ interface Props {
 
 const { pruebaSocial } = Astro.props;
 
-// Foto del héroe (P10, decisión 2.18): basta con dejar el archivo en src/assets/hero/ con el nombre
-// "foto" (.jpg, .jpeg, .png o .webp). Sin archivo se usa el fondo con manchas de luz (decisión 2.13).
-const archivos = import.meta.glob<{ default: ImageMetadata }>('../../assets/hero/foto.{jpg,jpeg,png,webp}', {
-  eager: true,
-});
-const foto = Object.values(archivos)[0]?.default;
+// Conteos reales del finde (el mismo rango que "Este finde" de la Agenda), por ciudad y en todo el país
+const finde = fechasAgenda.find((f) => f.id === 'finde')!;
+const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
+const conteos = (lista: Evento[]) =>
+  Object.fromEntries([['all', lista.length], ...ciudades.map((c) => [c.id, lista.filter((e) => e.ciudad === c.id).length])]);
+
+const tarjetas = categorias
+  .map((c) => ({ ...c, fondo: colorCategoria(c), conteos: conteos(enFinde.filter((e) => e.etiquetas.includes(c.id))) }))
+  .filter((c) => c.conteos.all > 0);
+const conteoTexto = (n: number) => `${planes(n)} este finde`;
 ---
 
-<section aria-labelledby="hero-titulo" class:list={['hero', 'superficie-oscura', { 'con-foto': foto }]} data-hero>
-  {
-    foto && (
-      <Picture
-        src={foto}
-        alt=""
-        formats={['avif', 'webp']}
-        widths={[480, 800, 1280, 1920]}
-        sizes="(max-width: 1288px) 100vw, 1240px"
-        loading="eager"
-        fetchpriority="high"
-        class="foto"
-        pictureAttributes={{ class: 'marco-foto' }}
-      />
-    )
-  }
-
-  <div class="contenido">
+<section aria-labelledby="hero-titulo" class="inicio" data-hero>
+  <div class="centro">
     <h1 id="hero-titulo">Tu plan de este finde, con tu gente</h1>
 
-    <!-- Sin JavaScript va a /agenda con lo escrito y la ciudad; con JavaScript, sin texto baja a "Este finde" -->
+    <!-- Sin JavaScript va a /agenda con lo escrito y la ciudad; con JavaScript, sin texto baja a "Este finde".
+         La caja blanca agrupa el campo y el botón; en computador la ciudad va entre los dos, dentro de la misma
+         píldora, y en celular baja a su propia píldora debajo -->
     <form class="buscador" role="search" aria-label="Buscar planes" action="/agenda" method="get" data-buscador-hero>
-      <label class="campo">
-        <Icono nombre="lupa" tamano={20} class="lupa" />
-        <span class="solo-lectores">Buscar planes</span>
-        <input type="search" name="q" placeholder="Salsa, rock, fútbol, teatro…" enterkeyhint="search" />
-      </label>
-      <div class="fila-ciudad">
-        <label class="ciudad">
-          <Icono nombre="pin" tamano={18} class="pin" />
-          <span class="solo-lectores">Ciudad</span>
-          <select name="ciudad" autocomplete="off" data-selector-ciudad>
-            <option value="all">Toda Colombia</option>
-            {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
-          </select>
+      <div class="caja">
+        <label class="campo">
+          <Icono nombre="lupa" tamano={26} class="lupa" />
+          <span class="solo-lectores">Buscar planes</span>
+          <input type="search" name="q" placeholder="Salsa, rock, fútbol, teatro…" enterkeyhint="search" />
         </label>
-        <button type="submit" class="buscar">Buscar</button>
+        <button type="submit" class="buscar">
+          <Icono nombre="lupa" tamano={26} grosor={2.4} />
+          <span class="solo-lectores">Buscar</span>
+        </button>
       </div>
+      <label class="ciudad">
+        <Icono nombre="pin" tamano={18} class="pin" />
+        <span class="solo-lectores">Ciudad</span>
+        <select name="ciudad" autocomplete="off" data-selector-ciudad>
+          <option value="all">Toda Colombia</option>
+          {ciudades.map((c) => <option value={c.id}>{c.nombre}</option>)}
+        </select>
+      </label>
     </form>
 
-    <div class="cierre">
-      <EnlaceSubrayado href="/registro" sobreOscuro class="cta solo-visitante">Crear mi cuenta gratis</EnlaceSubrayado>
-      {/* Con sesión no se invita a crear la cuenta que ya se tiene (decisión 2.27) */}
-      <EnlaceSubrayado href="/inicio" sobreOscuro class="cta solo-sesion">Ir a mi inicio</EnlaceSubrayado>
-    </div>
+    <nav class="categorias" aria-labelledby="categorias-titulo" data-fila-eventos data-categorias>
+      <div class="cabecera">
+        <h2 id="categorias-titulo">¿Qué te provoca?</h2>
+        <div class="flechas" data-fila-flechas>
+          <button type="button" class="flecha" aria-controls="categorias-pista" aria-label="Ver categorías anteriores" data-fila-anterior disabled>
+            <Icono nombre="volver" tamano={20} />
+          </button>
+          <button type="button" class="flecha" aria-controls="categorias-pista" aria-label="Ver más categorías" data-fila-siguiente>
+            <Icono nombre="siguiente" tamano={20} />
+          </button>
+        </div>
+      </div>
+
+      <ul class="pista" id="categorias-pista" role="list" data-fila-pista>
+        {
+          tarjetas.map((c) => (
+            <li>
+              <a
+                href={rutaCategoria(c.id)}
+                class="tarjeta"
+                style={`--fondo: ${c.fondo}`}
+                data-categoria={c.id}
+                data-conteos={JSON.stringify(c.conteos)}
+              >
+                <span class="icono"><Icono nombre={c.icono} tamano={28} /></span>
+                <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
+                <span class="textos">
+                  <span class="nombre">{c.texto}</span>
+                  <span class="conteo" data-conteo>{conteoTexto(c.conteos.all)}</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a href="/mapa" class="tarjeta neutra" data-tarjeta-mapa>
+            <span class="icono"><Icono nombre="mapa" tamano={28} /></span>
+            <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
+            <span class="textos">
+              <span class="nombre">En el mapa</span>
+              <span class="conteo">Planes por ciudad</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="/agenda" class="tarjeta oscura" data-tarjeta-agenda>
+            <span class="icono"><Icono nombre="agenda" tamano={28} /></span>
+            <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
+            <span class="textos">
+              <span class="nombre">Toda la agenda</span>
+              <span class="conteo">Todos los planes</span>
+            </span>
+          </a>
+        </li>
+      </ul>
+    </nav>
     {pruebaSocial && <PruebaSocial {...pruebaSocial} />}
   </div>
 </section>
 
 <script>
+  import { rutaCategoria } from '../../data/categorias';
+  import { planes } from '../../lib/formato';
   import { bajarSiVacio } from '../../lib/buscador';
+  import { activarFila } from '../../lib/fila';
 
-  const formulario = document.querySelector<HTMLFormElement>('[data-buscador-hero]');
-  if (formulario) bajarSiVacio(formulario);
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+
+  if (hero) {
+    bajarSiVacio(hero.querySelector<HTMLFormElement>('[data-buscador-hero]')!);
+
+    const fila = hero.querySelector<HTMLElement>('[data-categorias]')!;
+    activarFila(fila);
+
+    const tarjetas = [...hero.querySelectorAll<HTMLAnchorElement>('[data-categoria]')];
+    const mapa = hero.querySelector<HTMLAnchorElement>('[data-tarjeta-mapa]')!;
+    const agenda = hero.querySelector<HTMLAnchorElement>('[data-tarjeta-agenda]')!;
+    let actual = 'all';
+
+    document.addEventListener('finde:ciudad', (ev) => {
+      const ciudad = (ev as CustomEvent<string>).detail;
+      if (ciudad === actual) return;
+      actual = ciudad;
+
+      tarjetas.forEach((t) => {
+        const n = (JSON.parse(t.dataset.conteos!) as Record<string, number>)[ciudad] ?? 0;
+        // Una categoría sin planes en la ciudad elegida no se muestra (como en la carga)
+        t.parentElement!.hidden = n === 0;
+        t.href = rutaCategoria(t.dataset.categoria!, ciudad);
+        t.querySelector('[data-conteo]')!.textContent = `${planes(n)} este finde`;
+      });
+      const conCiudad = ciudad === 'all' ? '' : `?ciudad=${ciudad}`;
+      mapa.href = `/mapa${conCiudad}`;
+      agenda.href = `/agenda${conCiudad}`;
+      fila.dispatchEvent(new Event('fila-eventos:reiniciar'));
+    });
+  }
 </script>
 
 <style>
-  .hero {
-    position: relative;
-    overflow: hidden;
-    padding: 56px clamp(22px, 5vw, 64px) 48px;
-    border-radius: var(--radius-2xl);
-    background: var(--fondo-heroe);
-    color: var(--on-dark);
+  /* Ocupa la primera pantalla (sin el encabezado ni, con sesión, la barra inferior): al entrar solo se ven el
+     buscador y las categorías. El contenido va un poco por encima del centro, como en un buscador */
+  .inicio {
+    --alto-encabezado: 84px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100svh - var(--alto-encabezado) - var(--espacio-barra-nav, 0px));
+    padding-bottom: 9vh;
   }
 
-  /* La foto va de fondo y la capa oscura asegura el contraste del texto blanco (detalle fino 18):
-     casi opaca a la izquierda, donde va el contenido, y más clara a la derecha, donde se luce la foto */
-  .hero :global(.marco-foto) {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-  }
-
-  .hero :global(.foto) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 70% 40%;
-  }
-
-  .con-foto::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-      90deg,
-      rgba(20, 14, 16, .94) 0%,
-      rgba(20, 14, 16, .86) 38%,
-      rgba(20, 14, 16, .45) 72%,
-      rgba(20, 14, 16, .25) 100%
-    );
-  }
-
-  .contenido {
-    position: relative;
-    z-index: 2;
-    max-width: 780px;
+  .centro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 
   h1 {
-    max-width: 14ch;
+    max-width: 16ch;
     font-family: var(--display);
     font-weight: 900;
-    font-size: clamp(2.1rem, 6.4vw, 4.2rem);
-    line-height: 1;
+    font-size: clamp(1.7rem, 4.4vw, 2.9rem);
+    line-height: 1.02;
     letter-spacing: -0.03em;
     text-wrap: balance;
-    color: var(--on-dark);
   }
 
-  /* Buscador: píldora blanca en una fila (computador); en celular, campo arriba y ciudad + botón debajo */
+  /* Buscador: en computador una sola píldora blanca con el campo, la ciudad y el botón */
   .buscador {
-    --relleno: 6px;
-    margin-top: 26px;
+    width: 100%;
+    max-width: 880px;
+    margin-top: 28px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: var(--relleno);
+    padding: 10px;
+    border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--surface);
-    color: var(--ink);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .12), 0 12px 32px rgba(0, 0, 0, .28);
+    box-shadow: 0 1px 2px rgba(23, 18, 15, .06), 0 16px 40px rgba(23, 18, 15, .12);
+    text-align: left;
   }
 
-  /* El foco del campo se marca en toda la caja (amarillo sobre el fondo oscuro); la ciudad y el botón, que están
-     sobre blanco, llevan el anillo rojo de siempre */
   .buscador:has(input:focus-visible) {
-    outline: 3px solid var(--yellow);
-    outline-offset: 3px;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 1px var(--brand), 0 16px 40px rgba(23, 18, 15, .12);
   }
 
-  .buscador :focus-visible {
-    outline-color: var(--brand);
-  }
-
-  .buscador input:focus-visible {
-    outline: none;
+  .caja {
+    display: contents;
   }
 
   .campo {
+    order: 1;
     flex: 1;
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 48px;
-    padding-left: 16px;
+    gap: 12px;
+    height: 64px;
+    padding-left: 18px;
     cursor: text;
   }
 
@@ -186,8 +234,12 @@ const foto = Object.values(archivos)[0]?.default;
     height: 100%;
     border: 0;
     background: transparent;
-    font-size: 1rem;
+    font-size: 1.3rem;
     color: var(--ink);
+  }
+
+  input:focus-visible {
+    outline: none;
   }
 
   input::placeholder {
@@ -195,57 +247,54 @@ const foto = Object.values(archivos)[0]?.default;
     opacity: 1;
   }
 
-  .fila-ciudad {
+  .ciudad {
+    order: 2;
+    position: relative;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 6px;
-  }
-
-  .ciudad {
-    position: relative;
-    display: flex;
-    align-items: center;
+    margin-right: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--line);
   }
 
   .ciudad :global(.pin) {
     position: absolute;
-    left: 14px;
+    left: 24px;
     color: var(--muted);
     pointer-events: none;
   }
 
   select {
     appearance: none;
-    width: 200px;
-    height: 48px;
-    padding: 0 38px 0 40px;
-    border: 1px solid var(--line);
+    height: 56px;
+    padding: 0 40px 0 44px;
+    border: 0;
     border-radius: var(--radius-pill);
-    background: var(--surface)
+    background: transparent
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E6259' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
       no-repeat right 14px center / 16px;
-    font-size: .95rem;
-    font-weight: 500;
+    font-size: 1.05rem;
+    font-weight: 600;
     color: var(--ink);
     cursor: pointer;
-    transition: border-color 150ms ease-out, background-color 150ms ease-out;
   }
 
   select:hover {
-    border-color: var(--line-input);
     background-color: var(--light-hover);
   }
 
   .buscar {
-    height: 48px;
-    padding: 0 26px;
+    order: 3;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
     border: 0;
-    border-radius: var(--radius-pill);
+    border-radius: 50%;
     background: var(--brand);
     color: var(--on-dark);
-    font-size: 1rem;
-    font-weight: 700;
     transition-property: background-color, transform;
     transition-duration: 150ms;
     transition-timing-function: ease-out;
@@ -256,88 +305,288 @@ const foto = Object.values(archivos)[0]?.default;
   }
 
   .buscar:active {
-    transform: scale(.97);
+    transform: scale(.96);
   }
 
-  .cierre {
-    margin-top: 18px;
+  /* Tarjetas de categorías: una fila deslizable con flechas en computador */
+  .categorias {
+    width: 100%;
+    margin-top: 40px;
+    text-align: left;
+  }
+
+  .cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  .flechas {
+    display: flex;
+    gap: 8px;
+  }
+
+  .flecha {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line-input);
+    background: var(--surface);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    transition: background-color 150ms ease-out;
+  }
+
+  .flecha:hover:not(:disabled) {
+    background: var(--surface-sunken);
+  }
+
+  .flecha:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+
+  /* position: relative contiene el texto oculto de los lectores; el relleno deja ver el anillo de foco */
+  .pista {
+    position: relative;
+    list-style: none;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block: 6px;
+    margin-block: -6px;
+  }
+
+  .pista::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pista li {
+    flex: 0 0 300px;
+    display: flex;
+    scroll-snap-align: start;
+  }
+
+  .tarjeta,
+  .tarjeta:hover {
+    position: relative;
+    flex: 1;
+    min-height: 290px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: var(--radius-field);
+    background: var(--fondo);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px rgba(23, 18, 15, .05);
+    transition: transform 150ms ease-out;
+  }
+
+  .tarjeta:hover {
+    transform: translateY(-2px);
+  }
+
+  .tarjeta:active {
+    transform: scale(.98);
+  }
+
+  .tarjeta:focus-visible {
+    outline-offset: 3px;
+  }
+
+  .icono {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-field);
+    background: rgba(255, 255, 255, .55);
+  }
+
+  .tarjeta :global(.ir) {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    opacity: .75;
+  }
+
+  .textos {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .nombre {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  .conteo {
     font-size: .95rem;
   }
 
-  /* Celular y tableta vertical (decisión 2.13): sin alto mínimo, radio de 22 px; la capa se aclara arriba,
-     donde va el titular sobre la foto, y se oscurece abajo, donde va el formulario */
-  @media (max-width: 820px) {
-    .hero {
-      padding: 28px 20px 24px;
-      border-radius: 22px;
-    }
+  .tarjeta.neutra {
+    --fondo: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-input);
+  }
 
-    .con-foto::before {
-      background: linear-gradient(
-        180deg,
-        rgba(20, 14, 16, .7) 0%,
-        rgba(20, 14, 16, .8) 30%,
-        rgba(20, 14, 16, .9) 55%,
-        rgba(20, 14, 16, .92) 100%
-      );
-    }
+  .tarjeta.neutra .icono {
+    background: var(--surface-sunken);
+  }
 
-    .buscador {
-      margin-top: 20px;
+  .tarjeta.oscura {
+    --fondo: var(--ink);
+    color: var(--on-dark);
+  }
+
+  .tarjeta.oscura .icono {
+    background: rgba(255, 255, 255, .14);
+  }
+
+  /* Computadores con poca altura: las tarjetas se encogen para que quepan completas al entrar */
+  @media (min-width: 768px) and (max-height: 780px) {
+    .tarjeta,
+    .tarjeta:hover {
+      min-height: 220px;
     }
   }
 
-  /* Celular: el campo arriba y la ciudad con el botón en una segunda fila */
-  @media (max-width: 599px) {
+  @media (max-width: 767px) {
+    .inicio {
+      --alto-encabezado: 72px;
+    }
+
     .buscador {
+      margin-top: 24px;
       flex-direction: column;
-      align-items: stretch;
-      gap: 6px;
-      border-radius: var(--radius-lg);
+      padding: 0;
+      border: 0;
+      background: none;
+      box-shadow: none;
+    }
+
+    .buscador:has(input:focus-visible) {
+      box-shadow: none;
+    }
+
+    /* La caja blanca con el campo y el botón; la ciudad baja a su propia píldora */
+    .caja {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(23, 18, 15, .06), 0 16px 40px rgba(23, 18, 15, .12);
+    }
+
+    .caja:has(input:focus-visible) {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 1px var(--brand), 0 16px 40px rgba(23, 18, 15, .12);
     }
 
     .campo {
+      height: 62px;
       padding-left: 12px;
     }
 
-    select {
-      width: 100%;
-      height: 46px;
+    .campo :global(.lupa) {
+      width: 24px;
+      height: 24px;
+    }
+
+    input {
+      font-size: 1.12rem;
+    }
+
+    .buscar {
+      width: 62px;
+      height: 62px;
     }
 
     .ciudad {
-      flex: 1;
-      min-width: 0;
+      margin: 14px 0 0;
+      padding: 0;
+      border: 0;
     }
 
-    .buscar {
-      height: 46px;
-      padding: 0 22px;
-    }
-  }
-
-  /* A 320 px "Toda Colombia" cabe entera sin el pin */
-  @media (max-width: 359px) {
     .ciudad :global(.pin) {
-      display: none;
+      left: 18px;
     }
 
     select {
-      padding: 0 28px 0 14px;
-      background-position: right 10px center;
-      font-size: .9rem;
+      height: 48px;
+      padding: 0 40px 0 44px;
+      border: 1px solid var(--line-input);
+      background-color: var(--surface);
+      font-size: 1rem;
+      font-weight: 500;
     }
 
-    .buscar {
-      padding: 0 16px;
+    .categorias {
+      margin-top: 28px;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+    }
+
+    .flechas {
+      display: none;
+    }
+
+    /* Se ve una tarjeta y media; la fila llega al borde de la pantalla, sin desvanecido (decisión 2.28) */
+    .pista {
+      gap: 12px;
+      margin-inline: calc(-1 * var(--margen-lateral));
+      padding-inline: var(--margen-lateral);
+      scroll-padding-inline: var(--margen-lateral);
+    }
+
+    .pista li {
+      flex-basis: calc((100vw - var(--margen-lateral) - 12px) / 1.5);
+    }
+
+    .tarjeta,
+    .tarjeta:hover {
+      min-height: 270px;
+    }
+  }
+
+  /* Celulares bajos: las tarjetas se encogen para que quepan al entrar */
+  @media (max-width: 767px) and (max-height: 700px) {
+    .tarjeta,
+    .tarjeta:hover {
+      min-height: 210px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .tarjeta,
     .buscar {
       transition: none;
     }
 
+    .tarjeta:hover,
+    .tarjeta:active,
     .buscar:active {
       transform: none;
     }

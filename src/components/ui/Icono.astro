@@ -81,6 +81,16 @@ const trazos = {
   bandera: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   // Hoja de texto (Términos y Política); "documento" es la cédula de Evento
   hoja: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  // Categorías de plan (decisión 2.34, tarjetas del héroe; data/categorias.ts)
+  destellos: '<path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/><path d="M18.5 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>',
+  musica: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  etiqueta: '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  balon:
+    '<circle cx="12" cy="12" r="9"/><path d="M12 7.5l3.8 2.8-1.4 4.4H9.6l-1.4-4.4z"/><path d="M12 3v4.5M20.6 9.6l-4.8.7M17.3 19.4l-2.9-4.7M6.7 19.4l2.9-4.7M3.4 9.6l4.8.7"/>',
+  mascaras:
+    '<path d="M3 4h11v6a5.5 5.5 0 0 1-11 0z"/><path d="M14 9h7v5a5.5 5.5 0 0 1-9.6 3.7"/><path d="M6.5 8.5h.01M10.5 8.5h.01M6.8 12.3a2.6 2.6 0 0 0 3.4 0"/>',
+  cubiertos: '<path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v18"/><path d="M18 3c-2.2 0-3.5 2.2-3.5 6.2 0 3.2 1.3 4.8 3.5 4.8v7"/>',
+  flechaDiagonal: '<path d="M7 17 17 7M8 7h9v9"/>',
 } as const;
 
 export type NombreIcono = keyof typeof trazos;

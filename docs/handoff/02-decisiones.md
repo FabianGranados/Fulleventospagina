@@ -665,3 +665,32 @@ Pedido del cliente: "Esta muy cargado el hero, las categorías deberían ir deba
 - **Chips de categoría** en `components/bienvenida/CategoriasFinde.astro`, justo debajo del héroe (16 px), sobre la crema: mismo `nav` "Planes por categoría", mismos colores, conteos, enlaces y recálculo por ciudad (`finde:ciudad`). En celular la fila se desliza y llega al borde de la pantalla, sin desvanecido (2.28); desde 768 px baja de línea. "Lo que repostea tu gente" (solo con sesión) va con fondo blanco y borde `--line-input`.
 - **Se quita el chip "Ver en el mapa"** de la franja: "Este finde" ya lo tiene a pocos píxeles.
 - **Medidas:** a 390 × 844 el héroe ocupa 74–339 px, los chips 355–399 px y el título "Este finde en Colombia" se ve en el primer pantallazo.
+
+### 2.34 Bienvenida limpia: buscador, categorías grandes y afiches (11 de octubre de 2026)
+
+El cliente pidió una Bienvenida "muy sencilla a la vista" pero que "den ganas de interactuar", tomando como referencia la página de inicio de Google. Se aprobó por mockups, paso a paso. Reemplaza el héroe con foto de 2.32 y la franja de chips de 2.33.
+
+- **Primera pantalla = solo buscador y categorías** (`components/bienvenida/Hero.astro`). Ocupa el alto de la pantalla (`100svh` menos el encabezado y, con sesión, la barra inferior), con el contenido un poco por encima del centro. Todo lo demás se ve al bajar. Sin foto, sin caja oscura y sin línea de apoyo.
+  - `h1` "Tu plan de este finde, con tu gente", centrado y más pequeño (`clamp(1.7rem, 4.4vw, 2.9rem)`).
+  - **Buscador grande:** en computador es una píldora blanca de 84 px (máx. 880 px) con el campo, la ciudad y un botón rojo redondo con la lupa. En celular, el campo y el botón van en la píldora (80 px) y "Toda Colombia" baja a su propia píldora. Mismo envío de 2.31 (`lib/buscador.ts`).
+  - **"¿Qué te provoca?"**: las categorías como tarjetas grandes de color (12 px de radio, 300 × 290 px en computador), cada una con su ícono, nombre, "N planes este finde" y una flecha. Al final van "En el mapa" (blanca) y "Toda la agenda" (negra). Es una fila deslizable: en celular se ve una tarjeta y media y llega al borde de la pantalla (2.28); en computador lleva flechas. En pantallas bajas las tarjetas se encogen para caber al entrar.
+  - Íconos nuevos en `Icono`: `destellos` (Rumba), `musica` (Conciertos), `etiqueta` (Gratis), `balon` (Deporte), `mascaras` (Arte y teatro), `cubiertos` (Comida) y `flechaDiagonal`. Cada categoría tiene su `icono` en `data/categorias.ts`.
+- **"Este finde"** (`AgendaFinde.astro`):
+  - **Cabecera:** el título "Este finde" con un selector de ciudad en píldora, más "Contenido de ejemplo" y "Ver toda la agenda". Salen el antetítulo, "Ver en el mapa" (ya es una tarjeta arriba) y la fila de 12 chips de ciudad.
+  - **Una sola ciudad:** el selector del buscador y el de aquí son el mismo estado; cambiar uno cambia el otro y filtra todo.
+  - **Tres filas distintas en vez de una por categoría:**
+    - "Lo que más se mueve · Los planes con más gente este finde": por gente que va, de mayor a menor;
+    - "Gratis este finde · Planes sin costo";
+    - "Para ir en parche · Únete a un grupo para ir juntos": por parches abiertos, con la etiqueta "N parches abiertos".
+    Las categorías ya están arriba.
+  - **Franja de la cuenta** (`FranjaGente.astro`) después de la primera fila. Sin sesión: "Mira a qué va tu gente y armen parche para ir juntos" y el botón "Crear mi cuenta gratis". Con sesión: "Mira a qué va tu gente este finde" e "Ir a mi inicio". Los avatares solo llevan iniciales y son decorativos.
+- **Tarjeta tipo afiche** (`components/eventos/TarjetaAfiche.astro`, en `FilaEventos` con `afiches`):
+  - **Contenido:** la imagen ocupa toda la tarjeta (4:5) y encima van el título, "Dom 11 oct · Bogotá", tres círculos de color con "2.100 van" y el precio en pastilla ("Desde $60.000" o "Gratis" en verde). Sin nombres de personas.
+  - **Interacción:** toda la tarjeta es el enlace al evento; "Guardar" es un botón aparte.
+  - **Cargo y vendedor:** "+ cargo por servicio" y quién vende ya no van en la tarjeta. Se ven en la página del evento, junto al botón de compra, antes de pagar.
+  - **Tamaño:** en celular se ve una y media, como las categorías.
+  - `FilaEventos` acepta además `subtitulo` (en vez del conteo) y `parches`. Su desplazamiento y flechas pasan a `lib/fila.ts` (`activarFila`), que también usan las tarjetas de categorías.
+- **Sin salto al cargar (CLS):** el menú del encabezado de visitante en celular se pintaba abierto y se plegaba al cargar el JavaScript, lo que movía la página 80 px (CLS 0,20). Ahora el script temprano de Base pone la clase `js` en `<html>` y el menú se pinta plegado desde el principio: CLS 0,0006. Sin JavaScript el menú sigue abierto.
+- **Medidas:** a 390 × 844 y a 1280 × 800 la primera pantalla muestra completos el buscador y las categorías. La carga del elemento más grande (LCP) es de 1,1 s con 4G lento.
+- **Textos por aprobar:** "¿Qué te provoca?", "En el mapa · Planes por ciudad", "Toda la agenda · Todos los planes", los títulos y subtítulos de las tres filas, y los dos textos de la franja.
+- **Queda sin usar** la foto del héroe (`src/assets/hero/foto.jpg`); no entra en la compilación.

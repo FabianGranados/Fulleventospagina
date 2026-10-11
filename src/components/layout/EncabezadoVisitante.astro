@@ -47,7 +47,7 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
     }
 
     <!-- En celular el menú se pliega detrás de un botón; sin JavaScript queda abierto -->
-    <button type="button" class="abrir-menu" aria-expanded="false" aria-controls="menu-visitante" hidden data-abrir-menu>
+    <button type="button" class="abrir-menu" aria-expanded="false" aria-controls="menu-visitante" data-abrir-menu>
       <Icono nombre="menu" tamano={22} class="icono-abrir" />
       <Icono nombre="cerrar" tamano={22} class="icono-cerrar" />
       <span class="solo-lectores">Menú</span>
@@ -90,8 +90,6 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
     const botonMenu = encabezado.querySelector<HTMLButtonElement>('[data-abrir-menu]');
     const menu = encabezado.querySelector<HTMLElement>('[data-menu-visitante]');
     if (botonMenu && menu) {
-      botonMenu.hidden = false;
-      menu.classList.add('plegable');
       const alternar = (abrir: boolean) => {
         botonMenu.setAttribute('aria-expanded', String(abrir));
         menu.classList.toggle('abierto', abrir);
@@ -290,7 +288,9 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
       max-width: none;
     }
 
-    .abrir-menu:not([hidden]) {
+    /* Con JavaScript (clase "js" del script temprano de Base) el menú se pinta plegado desde el principio, sin el
+       salto de 80 px que había cuando se plegaba al cargar el script */
+    :global(html.js) .abrir-menu {
       order: 2;
       display: grid;
       place-items: center;
@@ -312,15 +312,15 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
       display: block;
     }
 
-    .nav.plegable {
+    :global(html.js) .nav {
       display: contents;
     }
 
-    .nav.plegable > a:not(.entrar) {
+    :global(html.js) .nav > a:not(.entrar) {
       display: none;
     }
 
-    .nav.plegable > .entrar {
+    :global(html.js) .nav > .entrar {
       order: 1;
       display: inline-flex;
       align-items: center;
@@ -329,7 +329,7 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
     }
 
     /* Menú abierto: panel a todo el ancho entre la primera fila y el buscador */
-    .nav.plegable.abierto {
+    :global(html.js) .nav.abierto {
       order: 3;
       flex-basis: 100%;
       display: flex;
@@ -343,7 +343,7 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
     }
 
     /* Abierto, "Entrar" pasa de la primera fila a la lista del panel */
-    .nav.plegable.abierto > a {
+    :global(html.js) .nav.abierto > a {
       order: 0;
       display: flex;
       padding-inline: 0;
@@ -352,7 +352,7 @@ const actual = (destino: string) => (ruta === destino ? 'page' : undefined);
       border-bottom: 1px solid var(--line-soft);
     }
 
-    .nav.plegable.abierto > .crear {
+    :global(html.js) .nav.abierto > .crear {
       justify-content: center;
       padding-inline: 18px;
       margin-top: 10px;
