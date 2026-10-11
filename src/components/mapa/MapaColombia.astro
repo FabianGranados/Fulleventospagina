@@ -115,6 +115,15 @@ const islaY = (lat: number) => (13.6 - lat) * 40;
       <text x="30" y="5.5">N</text>
     </svg>
 
+    <!-- Con zoom: flechas para moverse sin arrastrar (decisión 2.37, WCAG 2.5.7); el script las muestra -->
+    <div class="mover" role="group" aria-label="Moverse por el mapa" hidden data-mover>
+      <button type="button" class="mover-boton arriba-f" aria-label="Ver más al norte" data-mover-dir="0,-1"><Icono nombre="siguiente" tamano={16} grosor={2.4} /></button>
+      <button type="button" class="mover-boton izquierda-f" aria-label="Ver más al occidente" data-mover-dir="-1,0"><Icono nombre="siguiente" tamano={16} grosor={2.4} /></button>
+      <span class="mover-pista">Arrastra para moverte</span>
+      <button type="button" class="mover-boton derecha-f" aria-label="Ver más al oriente" data-mover-dir="1,0"><Icono nombre="siguiente" tamano={16} grosor={2.4} /></button>
+      <button type="button" class="mover-boton abajo-f" aria-label="Ver más al sur" data-mover-dir="0,1"><Icono nombre="siguiente" tamano={16} grosor={2.4} /></button>
+    </div>
+
     <!-- San Andrés, Providencia y Santa Catalina: fuera del recuadro continental, en su propio recuadro -->
     <div class="islas" aria-hidden="true">
       <svg viewBox="0 0 34 52" focusable="false">
@@ -278,6 +287,96 @@ const islaY = (lat: number) => (13.6 - lat) * 40;
   .escala i[data-nivel='3'] {
     fill: var(--mapa-planes-3);
     background: var(--mapa-planes-3);
+  }
+
+  /* Con zoom el mapa se arrastra (decisión 2.37): el dedo mueve el mapa, no la página */
+  .mapa[data-movible] .marco {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .mapa[data-arrastrando] .marco {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  .mapa[data-arrastrando] :is(.capa, .ancla) {
+    transition: none;
+  }
+
+  /* Flechas para moverse: una cruz abajo a la derecha, con la pista en el centro */
+  .mover {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 70;
+    display: grid;
+    grid-template-columns: 44px auto 44px;
+    grid-template-areas: '. arriba .' 'izquierda pista derecha' '. abajo .';
+    align-items: center;
+    justify-items: center;
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 6px 18px rgba(23, 18, 15, .14);
+    cursor: default;
+  }
+
+  .mover-boton {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+
+  .mover-boton:hover {
+    background: var(--light-hover);
+  }
+
+  .arriba-f { grid-area: arriba; }
+  .izquierda-f { grid-area: izquierda; }
+  .derecha-f { grid-area: derecha; }
+  .abajo-f { grid-area: abajo; }
+
+  .arriba-f :global(svg) { transform: rotate(-90deg); }
+  .izquierda-f :global(svg) { transform: rotate(180deg); }
+  .abajo-f :global(svg) { transform: rotate(90deg); }
+
+  .mover-pista {
+    grid-area: pista;
+    max-width: 9ch;
+    font-size: .68rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* En celular la cruz es compacta y sin la pista: arrastrar con el dedo es lo natural */
+  @media (max-width: 767px) {
+    .mover {
+      right: 8px;
+      bottom: 8px;
+      grid-template-columns: 34px 10px 34px;
+      gap: 0;
+      padding: 3px;
+      border-radius: var(--radius-md);
+    }
+
+    .mover-boton {
+      width: 34px;
+      height: 34px;
+    }
+
+    .mover-pista {
+      display: none;
+    }
   }
 
   /* Brújula y recuadro de las islas: fijos en el marco, no se mueven con el zoom */

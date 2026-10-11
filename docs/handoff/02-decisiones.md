@@ -739,3 +739,18 @@ El cliente pidió cambiar el mapa por uno con los departamentos, al estilo de un
   - texto en tinta y botón "Abrir el mapa de eventos" en negro;
   - nuevo texto de la leyenda: "Planes este finde por ciudad; en verde, los departamentos con planes".
 - **Sin bandera** (estaba en la opción azul): queda disponible si el cliente la pide.
+
+### 2.37 Moverse por el mapa con zoom (11 de octubre de 2026)
+
+Pedido del cliente: con zoom, poder moverse por el mapa.
+
+- **Arrastrar:** con el mapa acercado (más de 1×) se arrastra con el mouse o con el dedo (`/mapa`).
+  - En celular el dedo mueve el mapa y no la página (`touch-action: none` solo mientras hay zoom).
+  - Un toque sin moverse sigue eligiendo la ciudad; si hubo arrastre, soltar no elige nada.
+  - El mapa no se puede sacar del marco: su borde nunca entra.
+  - El desplazamiento se borra al volver a "Toda Colombia" o al elegir otra ciudad (que centra el mapa en ella).
+- **Flechas para moverse** (alternativa sin arrastre, WCAG 2.5.7; sirven con teclado):
+  - con zoom aparece abajo a la derecha una cruz con "Ver más al norte / sur / oriente / occidente"; cada paso mueve un quinto del marco;
+  - en computador lleva en el centro la pista "Arrastra para moverte";
+  - en celular es compacta y sin pista (34 px por botón).
+- Al soltar, los pines que quedan fuera del marco salen del orden de Tab, como con el zoom (H50).

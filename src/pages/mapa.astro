@@ -58,7 +58,8 @@ import { categoriasMapa } from '../data/mapa';
   import { destinosRepost } from '../data/agenda';
   import { haySesion } from '../lib/sesion';
 
-  type Estado = { ciudad: string | null; zoom: number; categoria: string; fecha: string; todo: boolean };
+  // dx/dy: desplazamiento del mapa al arrastrarlo con zoom (decisión 2.37), en % del lienzo
+  type Estado = { ciudad: string | null; zoom: number; categoria: string; fecha: string; todo: boolean; dx: number; dy: number };
 
   const $ = <T extends Element = HTMLElement>(sel: string, raiz: ParentNode = document) => raiz.querySelector<T>(sel)!;
   const $$ = <T extends Element = HTMLElement>(sel: string, raiz: ParentNode = document) => [...raiz.querySelectorAll<T>(sel)];
@@ -91,11 +92,11 @@ import { categoriasMapa } from '../data/mapa';
   const celdas = $$('[data-celda]', lista);
   const chipsRanking = $$<HTMLButtonElement>('[data-ranking-ciudad]', ranking);
 
-  const estado: Estado = { ciudad: null, zoom: 1, categoria: 'all', fecha: 'finde', todo: false };
+  const estado: Estado = { ciudad: null, zoom: 1, categoria: 'all', fecha: 'finde', todo: false, dx: 0, dy: 0 };
 
   // --- Reglas de estado (6.2.5) ---
-  const reiniciar = () => Object.assign(estado, { ciudad: null, zoom: 1, todo: false });
-  const elegir = (id: string) => Object.assign(estado, { ciudad: id, zoom: Math.max(estado.zoom, 2), todo: false });
+  const reiniciar = () => Object.assign(estado, { ciudad: null, zoom: 1, todo: false, dx: 0, dy: 0 });
+  const elegir = (id: string) => Object.assign(estado, { ciudad: id, zoom: Math.max(estado.zoom, 2), todo: false, dx: 0, dy: 0 });
 
   const filtrados = () => {
     const f = fechaPorId[estado.fecha];
@@ -114,7 +115,27 @@ import { categoriasMapa } from '../data/mapa';
     const px = sel ? sel.left : 50;
     const py = sel ? sel.top : 50;
     const k = sel ? Math.min(1, Math.max(0, Z - 1)) : 0;
-    return { tx: px * (1 - Z) + k * (50 - px), ty: py * (1 - Z) + k * (50 - py) };
+    const bx = px * (1 - Z) + k * (50 - px);
+    const by = py * (1 - Z) + k * (50 - py);
+    // El arrastre (dx/dy) no deja que el mapa se salga del marco; se recorta y se guarda ya recortado
+    const tx = limitar(bx, estado.dx, Z);
+    const ty = limitar(by, estado.dy, Z);
+    estado.dx = tx - bx;
+    estado.dy = ty - by;
+    return { tx, ty };
+  };
+
+  // El mapa cubre el marco mientras su borde no entre: tx entre 100 − 100·Z y 0 (o donde ya estaba la ciudad)
+  const limitar = (base: number, extra: number, Z: number) => {
+    const min = Math.min(base, 100 - 100 * Z);
+    const max = Math.max(base, 0);
+    return Math.min(max, Math.max(min, base + extra));
+  };
+
+  // Mueve solo la capa (al arrastrar no hace falta repintar el panel)
+  const moverCapa = () => {
+    const { tx, ty } = transformacion();
+    capa.style.transform = `translate(${tx.toFixed(2)}%, ${ty.toFixed(2)}%) scale(${estado.zoom})`;
   };
 
   // Sin ciudad: "Toda Colombia"; con ciudad: su nombre
@@ -165,6 +186,9 @@ import { categoriasMapa } from '../data/mapa';
     capa.style.transform = `translate(${tx.toFixed(2)}%, ${ty.toFixed(2)}%) scale(${Z})`;
     capa.style.setProperty('--inv', (1 / Z).toFixed(4));
     capa.style.setProperty('--f', String(f));
+    // Con zoom el mapa se puede arrastrar y aparecen las flechas para moverlo (decisión 2.37)
+    mapa.toggleAttribute('data-movible', Z > 1);
+    $('[data-mover]', mapa).hidden = Z <= 1;
     for (const pin of pines) {
       const id = pin.dataset.pin!;
       const n = conteo[id] ?? 0;
@@ -421,6 +445,62 @@ import { categoriasMapa } from '../data/mapa';
 
   // Con sesión, los reposts de la usuaria del demo (el servidor pinta las tarjetas como las ve el visitante)
   if (haySesion()) $$<HTMLElement>('[data-reposteado-sesion]', lista).forEach((b) => marcarRepost(b, true));
+
+  // --- Moverse por el mapa con zoom (decisión 2.37) ---
+  // Arrastrar con el mouse o el dedo. Un toque sin moverse sigue eligiendo la ciudad; si hubo arrastre, el clic que
+  // llega al soltar no elige nada. Las flechas son la alternativa sin arrastre (WCAG 2.5.7) y sirven con teclado.
+  let arrastre: { x: number; y: number; dx: number; dy: number; id: number } | null = null;
+  let movido = false;
+
+  marco.addEventListener('pointerdown', (ev) => {
+    movido = false;
+    if (estado.zoom <= 1 || ev.button !== 0 || (ev.target as HTMLElement).closest('[data-mover]')) return;
+    arrastre = { x: ev.clientX, y: ev.clientY, dx: estado.dx, dy: estado.dy, id: ev.pointerId };
+  });
+  marco.addEventListener('pointermove', (ev) => {
+    if (!arrastre || ev.pointerId !== arrastre.id) return;
+    const mx = ev.clientX - arrastre.x;
+    const my = ev.clientY - arrastre.y;
+    if (!movido && Math.hypot(mx, my) < 6) return;
+    if (!movido) {
+      movido = true;
+      marco.setPointerCapture(ev.pointerId);
+      mapa.dataset.arrastrando = '';
+    }
+    const r = lienzo.getBoundingClientRect();
+    estado.dx = arrastre.dx + (mx / r.width) * 100;
+    estado.dy = arrastre.dy + (my / r.height) * 100;
+    moverCapa();
+  });
+  const soltar = () => {
+    if (!arrastre) return;
+    arrastre = null;
+    delete mapa.dataset.arrastrando;
+    if (movido) ajustarTabulacion();
+  };
+  marco.addEventListener('pointerup', soltar);
+  marco.addEventListener('pointercancel', soltar);
+  marco.addEventListener(
+    'click',
+    (ev) => {
+      if (!movido) return;
+      movido = false;
+      ev.stopPropagation();
+      ev.preventDefault();
+    },
+    true,
+  );
+
+  $$<HTMLButtonElement>('[data-mover-dir]', mapa).forEach((b) =>
+    b.addEventListener('click', () => {
+      const [x, y] = b.dataset.moverDir!.split(',').map(Number);
+      // Un paso es un quinto del marco; el mapa va al lado contrario de la flecha (como al arrastrar)
+      estado.dx -= x * 20;
+      estado.dy -= y * 20;
+      moverCapa();
+      ajustarTabulacion();
+    }),
+  );
 
   new ResizeObserver(() => ajustarTabulacion()).observe(lienzo);
 
