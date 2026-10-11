@@ -51,6 +51,7 @@ import { categoriasMapa } from '../data/mapa';
 </Base>
 
 <script>
+  import { planesPorDepartamento, nivelPlanes } from '../data/departamentos';
   import { eventos } from '../data/eventos';
   import { ciudadesMapa, categoriasMapa, fechasMapa, miCiudad, LIMITE_LISTA } from '../data/mapa';
   import { planes, ciudadesTexto } from '../lib/formato';
@@ -83,6 +84,10 @@ import { categoriasMapa } from '../data/mapa';
   const vistaLista = $<HTMLAnchorElement>('[data-vista-lista]');
 
   const pines = $$<HTMLButtonElement>('[data-pin]', mapa);
+
+  // Departamentos del mapa de tierra y mar (decisión 2.36): su color sigue los planes filtrados
+
+  const dptos = [...mapa.querySelectorAll<SVGPathElement>('[data-dpto]')];
   const celdas = $$('[data-celda]', lista);
   const chipsRanking = $$<HTMLButtonElement>('[data-ranking-ciudad]', ranking);
 
@@ -176,6 +181,8 @@ import { categoriasMapa } from '../data/mapa';
       }
       pin.setAttribute('aria-pressed', String(elegido));
     }
+    const porDpto = planesPorDepartamento(conteo);
+    for (const d of dptos) d.dataset.nivel = String(nivelPlanes(porDpto[d.dataset.dpto!] ?? 0));
 
     $$('[data-accion="todo"]', mapa).forEach((b) => b.setAttribute('aria-pressed', String(!estado.ciudad)));
     $('[data-accion="mi-ciudad"]', mapa).setAttribute('aria-pressed', String(estado.ciudad === miCiudad));

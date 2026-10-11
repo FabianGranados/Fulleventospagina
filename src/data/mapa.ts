@@ -29,22 +29,8 @@ export interface CiudadMapa extends Ciudad {
 
 export const ciudadesMapa: CiudadMapa[] = ciudades.map((c) => ({ ...c, ...ajustes[c.id] }));
 
-// Proyección equirectangular (decisión 2.8): x = (lon + 79.5) × 10, y = (13 − lat) × 10, viewBox 0 0 130 175.
-export const contornoColombia =
-  'M21.4 43.2 L26.5 46.0 L27.5 49.5 L27.2 45.5 L30.7 41.5 L38.2 36.0 L39.2 34.5 L38.5 30.0 L39.5 26.0 L42.5 22.0 L46.5 20.0 L51.0 19.0 L52.9 17.6 L58.0 17.0 L65.9 14.6 L70.0 12.0 L73.3 8.0 L78.3 5.4 L81.0 8.0 L81.7 11.5 L75.5 14.5 L72.5 19.0 L66.5 25.5 L64.5 33.0 L61.5 39.0 L67.5 43.5 L71.0 47.0 L70.3 51.0 L73.0 56.0 L83.0 59.5 L94.0 59.2 L101.0 60.5 L120.2 68.0 L117.0 78.0 L116.5 86.0 L119.0 91.3 L123.0 102.0 L124.0 111.0 L126.3 118.3 L116.0 119.0 L113.0 113.0 L101.0 112.0 L96.0 117.5 L94.5 123.5 L94.5 131.0 L99.0 137.5 L100.5 144.0 L97.0 152.0 L95.5 163.0 L95.6 172.2 L91.0 168.0 L92.0 158.0 L84.0 154.0 L75.0 153.0 L66.0 154.5 L60.0 151.0 L53.0 142.0 L47.2 132.0 L41.0 129.0 L32.0 127.0 L26.0 126.0 L18.5 121.5 L14.0 118.0 L6.5 115.5 L7.0 112.0 L9.0 108.0 L16.0 104.3 L20.0 98.0 L23.0 91.2 L21.0 85.0 L20.5 75.0 L20.5 68.0 L17.0 60.0 L17.5 55.0 L20.5 50.5 L22.0 47.0 Z';
-
-export const cordilleras = [
-  {
-    d: 'M31 112 L36.5 106 L42 101 L45 94 L47 87 L47.5 78 L49.5 71 L51 65 L56.5 59.3 L56 50 L55 41 L51 37.6 L47.5 36 L46.5 31 L46 27.5 L47 20.5',
-    opacidad: 0.32,
-    grosor: 1.2,
-  },
-  {
-    d: 'M28 108 L29.6 96 L33 89 L36 82.5 L38 76 L39 69 L40.5 62 L43 50 L46.5 42 L49 38.5',
-    opacidad: 0.26,
-    grosor: 1,
-  },
-];
+// La silueta y las cordilleras dibujadas a mano se reemplazaron por los departamentos reales (decisión 2.36,
+// data/departamentos.ts), con la misma proyección equirectangular de la decisión 2.8.
 
 // "mar": siempre visible (más pequeño en mapas angostos); "pais": se oculta en mapas angostos.
 export const rotulosGeo = [

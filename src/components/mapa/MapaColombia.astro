@@ -1,18 +1,26 @@
 ---
 // N20 · Mapa de Colombia con pines y zoom. SVG propio (el proveedor de mapas es la decisión pendiente P5).
+// Mapa de tierra y mar (decisión 2.36): los departamentos reales (DANE) se colorean según los planes del finde; el
+// script de la página les cambia el nivel (data-nivel) cuando cambian los filtros.
 // Los pines son botones HTML sobre el SVG (decisión 2.8); el script de la página calcula zoom, centrado,
 // tamaños y conteos. El estado inicial es "Toda Colombia", "Todo", "Este finde", 1×.
 import Icono from '../ui/Icono.astro';
-import { ciudadesMapa, contornoColombia, cordilleras, rotulosGeo, miCiudad } from '../../data/mapa';
+import { ciudadesMapa, rotulosGeo, miCiudad } from '../../data/mapa';
+import { departamentos, islas, nivelPlanes, planesPorDepartamento, escalaPlanes } from '../../data/departamentos';
+import { ciudades } from '../../data/ciudades';
 import { nombreCiudad } from '../../data/ciudades';
 import { eventos, conteoCiudad } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
 
 const activas = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).length;
 const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
+const porDepartamento = planesPorDepartamento(Object.fromEntries(ciudades.map((c) => [c.id, conteoCiudad(c.id)])));
+// Recuadro de las islas: 1 grado = 40 unidades, alrededor del archipiélago
+const islaX = (lon: number) => (lon + 82.05) * 40;
+const islaY = (lat: number) => (13.6 - lat) * 40;
 ---
 
-<section class="mapa superficie-oscura" aria-label="Mapa de Colombia con los eventos" data-mapa>
+<section class="mapa" aria-label="Mapa de Colombia con los eventos" data-mapa>
   <div class="controles">
     <div class="alcance">
       <button type="button" class="alcance-boton" aria-pressed="true" data-accion="todo">
@@ -39,26 +47,14 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
   <div class="marco" data-marco>
     <div class="lienzo" data-lienzo>
       <div class="capa" data-capa>
-        <div class="reticula" aria-hidden="true"></div>
         <svg viewBox="0 0 130 175" aria-hidden="true" focusable="false">
-          <path
-            d={contornoColombia}
-            fill="#2E2220"
-            stroke="#8A6A55"
-            stroke-width="1.4"
-            stroke-linejoin="round"
-            vector-effect="non-scaling-stroke"
-          />
           {
-            cordilleras.map((c) => (
+            departamentos.map((d) => (
               <path
-                d={c.d}
-                fill="none"
-                stroke="#8FD3D0"
-                stroke-opacity={c.opacidad}
-                stroke-width={c.grosor}
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                class="dpto"
+                d={d.d}
+                data-dpto={d.cod}
+                data-nivel={nivelPlanes(porDepartamento[d.cod] ?? 0)}
                 vector-effect="non-scaling-stroke"
               />
             ))
@@ -111,9 +107,28 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
         }
       </div>
     </div>
+
+    <svg class="brujula" viewBox="0 0 60 60" aria-hidden="true" focusable="false">
+      <circle cx="30" cy="30" r="13" />
+      <path class="aguja" d="M30 8 L33 30 L30 52 L27 30Z M8 30 L30 27 L52 30 L30 33Z" />
+      <path class="aguja-luz" d="M30 8 L33 30 L30 30Z M52 30 L30 33 L30 30Z M30 52 L27 30 L30 30Z M8 30 L30 27 L30 30Z" />
+      <text x="30" y="5.5">N</text>
+    </svg>
+
+    <!-- San Andrés, Providencia y Santa Catalina: fuera del recuadro continental, en su propio recuadro -->
+    <div class="islas" aria-hidden="true">
+      <svg viewBox="0 0 34 52" focusable="false">
+        {islas.map((i) => <circle cx={islaX(i.lon)} cy={islaY(i.lat)} r="3.2" />)}
+      </svg>
+      <span>San Andrés y Providencia</span>
+    </div>
   </div>
 
   <div class="leyenda">
+    <div class="escala" aria-hidden="true">
+      <span class="escala-titulo">Planes por departamento</span>
+      {escalaPlanes.map((e) => <span class="escala-paso"><i data-nivel={e.nivel}></i>{e.texto}</span>)}
+    </div>
     <span class="leyenda-texto">
       <span class="puntos" aria-hidden="true"><span></span><span></span><span></span></span>
       El tamaño del punto indica cuántos planes hay
@@ -129,17 +144,12 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     min-width: 0;
     border-radius: var(--radius-2xl);
     overflow: hidden;
-    color: var(--on-dark);
+    color: var(--ink);
     padding: clamp(14px, 2vw, 20px);
     display: flex;
     flex-direction: column;
     gap: 14px;
-    background:
-      radial-gradient(circle at 80% 16%, rgba(214, 140, 70, .32) 0, transparent 30%),
-      radial-gradient(circle at 14% 90%, rgba(190, 70, 80, .3) 0, transparent 34%),
-      radial-gradient(ellipse at 4% 8%, rgba(70, 30, 80, .6) 0, transparent 45%),
-      radial-gradient(circle at 50% 55%, rgba(230, 170, 80, .1) 0, transparent 42%),
-      var(--hero);
+    background: var(--mapa-mar);
   }
 
   .controles {
@@ -165,23 +175,24 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     display: flex;
     align-items: center;
     gap: 7px;
-    border: 1px solid rgba(255, 255, 255, .3);
-    background: rgba(255, 255, 255, .08);
-    color: var(--on-dark);
+    border: 1px solid var(--line-input);
+    background: var(--surface);
+    color: var(--ink);
   }
 
   .alcance-boton[aria-pressed='true'] {
-    border-color: var(--surface);
-    background: var(--surface);
-    color: var(--ink);
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-dark);
   }
 
   .zoom {
     display: flex;
     align-items: center;
     gap: 2px;
-    border: 1px solid rgba(255, 255, 255, .3);
+    border: 1px solid var(--line-input);
     border-radius: var(--radius-pill);
+    background: var(--surface);
     padding: 2px;
   }
 
@@ -191,7 +202,7 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     border: 0;
     border-radius: 50%;
     background: transparent;
-    color: var(--on-dark);
+    color: var(--ink);
     display: grid;
     place-items: center;
     padding: 0;
@@ -207,7 +218,7 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     text-align: center;
     font-size: .8rem;
     font-weight: 700;
-    color: var(--on-dark-muted);
+    color: var(--ink);
   }
 
   .marco {
@@ -215,7 +226,7 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     overflow: clip;
     border-radius: var(--radius-lg);
     padding: 16px 0;
-    border: 1px solid rgba(255, 255, 255, .07);
+    border: 1px solid rgba(23, 18, 15, .08);
   }
 
   .lienzo {
@@ -233,20 +244,108 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     transition: transform 460ms cubic-bezier(.22, .8, .24, 1);
   }
 
-  .reticula {
-    position: absolute;
-    inset: -60% -45%;
-    background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1.5px);
-    background-size: 16px 16px;
-  }
-
-  svg {
+  .capa > svg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     overflow: visible;
-    filter: drop-shadow(0 0 22px rgba(243, 178, 126, .18));
+    filter: drop-shadow(0 10px 18px rgba(23, 18, 15, .18));
+  }
+
+  /* Departamentos según los planes (escala de la leyenda, data/departamentos.ts) */
+  .dpto {
+    fill: var(--mapa-sin-planes);
+    stroke: var(--mapa-borde);
+    stroke-width: .6;
+    stroke-linejoin: round;
+    transition: fill 300ms ease;
+  }
+
+  .dpto[data-nivel='1'],
+  .escala i[data-nivel='1'] {
+    fill: var(--mapa-planes-1);
+    background: var(--mapa-planes-1);
+  }
+
+  .dpto[data-nivel='2'],
+  .escala i[data-nivel='2'] {
+    fill: var(--mapa-planes-2);
+    background: var(--mapa-planes-2);
+  }
+
+  .dpto[data-nivel='3'],
+  .escala i[data-nivel='3'] {
+    fill: var(--mapa-planes-3);
+    background: var(--mapa-planes-3);
+  }
+
+  /* Brújula y recuadro de las islas: fijos en el marco, no se mueven con el zoom */
+  .brujula {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 52px;
+    pointer-events: none;
+  }
+
+  .brujula circle {
+    fill: none;
+    stroke: var(--mapa-rotulo-pais);
+    stroke-opacity: .5;
+  }
+
+  .brujula .aguja {
+    fill: var(--mapa-rotulo-mar);
+  }
+
+  .brujula .aguja-luz {
+    fill: var(--mapa-planes-1);
+  }
+
+  @media (max-width: 767px) {
+    .brujula {
+      display: none;
+    }
+  }
+
+  .brujula text {
+    font: 700 7px var(--ui);
+    fill: var(--mapa-rotulo-mar);
+    text-anchor: middle;
+  }
+
+  .islas {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    width: 92px;
+    padding: 6px 8px 8px;
+    border: 1px solid rgba(23, 18, 15, .12);
+    border-radius: var(--radius-xs);
+    background: rgba(255, 255, 255, .35);
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .islas svg {
+    display: block;
+    width: 26px;
+    margin: 0 auto 4px;
+  }
+
+  .islas circle {
+    fill: var(--mapa-sin-planes);
+    stroke: var(--mapa-rotulo-pais);
+    stroke-width: .8;
+  }
+
+  .islas span {
+    display: block;
+    font-size: .62rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--mapa-rotulo-pais);
   }
 
   /* Anclas de 0 × 0 que se contraescalan (scale(1/Z)) para conservar el tamaño en pantalla */
@@ -274,13 +373,13 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
   }
 
   .mar span {
-    color: #7FA3A6;
+    color: var(--mapa-rotulo-mar);
     font-size: .72rem;
     letter-spacing: .22em;
   }
 
   .pais span {
-    color: #9C8B80;
+    color: var(--mapa-rotulo-pais);
     font-size: .66rem;
     letter-spacing: .14em;
   }
@@ -411,7 +510,33 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
     justify-content: space-between;
     gap: 8px 20px;
     font-size: .84rem;
-    color: var(--on-dark-muted);
+    color: var(--ink);
+  }
+
+  .escala {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  .escala-titulo {
+    font-weight: 700;
+  }
+
+  .escala-paso {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .escala i {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--mapa-sin-planes);
+    box-shadow: inset 0 0 0 1px rgba(23, 18, 15, .12);
   }
 
   .leyenda-texto {
@@ -445,7 +570,7 @@ const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
   }
 
   .leyenda b {
-    color: var(--on-dark);
+    color: var(--ink);
     font-size: .9rem;
   }
 </style>

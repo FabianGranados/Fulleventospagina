@@ -712,3 +712,30 @@ Pedido del cliente: al entrar a una categoría (la Agenda), las tarjetas "se ven
   - Los radios, la URL y el resto de la lógica no cambian.
 - **"Publicar evento":** la vista previa de `/crear-evento` imita ahora el afiche.
 - **Siguen con su formato propio:** la lista compacta del mapa (`TarjetaCompacta`) y las filas de planes del perfil (`FilaPlan`, `TarjetaPlan`), que son listas y no rejillas de tarjetas. `TarjetaEvento` solo queda para `FilaEventos` sin `afiches`, que hoy no se usa en ninguna página.
+
+### 2.36 Mapa de tierra y mar con los departamentos (11 de octubre de 2026)
+
+El cliente pidió cambiar el mapa por uno con los departamentos, al estilo de una referencia de mapa político. Se vieron tres opciones en mockups y eligió la que colorea los departamentos según los planes, con colores de tierra y mar.
+
+- **Departamentos reales:**
+  - **Origen:** los límites de los 32 departamentos continentales y Bogotá salen de la capa MGN_DPTO_POLITICO del Marco Geoestadístico Nacional 2018 del DANE (datos abiertos).
+  - **Archivo:** están simplificados y proyectados al mismo viewBox de los mapas (decisión 2.8) en `src/data/departamentos.ts`, que es generado y no se edita a mano.
+  - **Reemplazos:** sustituyen la silueta y las cordilleras dibujadas a mano.
+- **Colores** (tokens nuevos `--mapa-*`):
+  - el mar es el fondo (`--mapa-mar`, azul agua);
+  - los departamentos van en café claro sin planes, verde claro con 1, verde medio con 2–3 y verde bosque con 4 o más;
+  - los bordes van en crema;
+  - "Mar Caribe", "Océano Pacífico" y los países vecinos llevan rótulos en azul petróleo y gris verdoso, con contraste AA.
+  `nivelPlanes()` y `escalaPlanes` dan la escala, y `departamentoDeCiudad` une cada ciudad del demo con su departamento.
+- **Página del mapa** (`MapaColombia.astro`):
+  - el color de cada departamento sigue los filtros de categoría y fecha (`data-nivel`, en el script de `/mapa`);
+  - la leyenda "Planes por departamento" va debajo del mapa;
+  - los puntos amarillos de las ciudades no cambian;
+  - la brújula va arriba a la derecha (no se muestra en celular, donde taparía ciudades);
+  - los controles pasan a blanco sobre el mar.
+- **San Andrés y Providencia:** quedan fuera del recuadro continental. En esa capa del DANE las islas quedan reducidas a un triángulo, así que van como dos puntos en su posición real, en un recuadro abajo a la izquierda.
+- **Bienvenida** (`BloqueMapa` y `MiniMapaColombia`):
+  - el bloque pasa de oscuro a mar, con los mismos departamentos y colores;
+  - texto en tinta y botón "Abrir el mapa de eventos" en negro;
+  - nuevo texto de la leyenda: "Planes este finde por ciudad; en verde, los departamentos con planes".
+- **Sin bandera** (estaba en la opción azul): queda disponible si el cliente la pide.

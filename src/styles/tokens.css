@@ -47,6 +47,15 @@
   --map-land: #2E2220;
   --map-border: #8A6A55;
   --map-placeholder: #EDE5DC;
+  /* Mapa de tierra y mar (decisión 2.36): el mar de fondo y los departamentos según los planes del finde */
+  --mapa-mar: #BFDDE2;
+  --mapa-borde: #F7F1E6;
+  --mapa-sin-planes: #DCC7A3;
+  --mapa-planes-1: #A9CF8E;
+  --mapa-planes-2: #6FA65C;
+  --mapa-planes-3: #356E45;
+  --mapa-rotulo-mar: #235A66;
+  --mapa-rotulo-pais: #344F55;
 
   /* Hover recuperado del código base (decisión 2.13) */
   --light-hover: #F3ECE6;
