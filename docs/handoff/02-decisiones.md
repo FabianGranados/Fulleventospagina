@@ -694,3 +694,21 @@ El cliente pidió una Bienvenida "muy sencilla a la vista" pero que "den ganas d
 - **Medidas:** a 390 × 844 y a 1280 × 800 la primera pantalla muestra completos el buscador y las categorías. La carga del elemento más grande (LCP) es de 1,1 s con 4G lento.
 - **Textos por aprobar:** "¿Qué te provoca?", "En el mapa · Planes por ciudad", "Toda la agenda · Todos los planes", los títulos y subtítulos de las tres filas, y los dos textos de la franja.
 - **Queda sin usar** la foto del héroe (`src/assets/hero/foto.jpg`); no entra en la compilación.
+
+### 2.35 Una sola tarjeta de evento (afiche) y filtros de la Agenda en botones (11 de octubre de 2026)
+
+Pedido del cliente: al entrar a una categoría (la Agenda), las tarjetas "se ven como antes" y las dos filas de chips de ciudad y categoría se ven desordenadas. Pidió actualizar todas las tarjetas como las de la Bienvenida y hacer un botón para las categorías y los lugares.
+
+- **Tarjeta afiche en todas las páginas públicas.** `TarjetaAfiche` (2.34) es ahora la tarjeta de evento de la Bienvenida, la Agenda, los eventos de cada noticia y "Planes parecidos en otras ciudades" del evento. Acepta el nivel del título (`nivel`), atributos extra (`datos`, `guardar`), `guardable={false}` donde la página no maneja "Guardar", y los espacios "acciones", "marca" y "social".
+- **Agenda** (`TarjetaMarketplace`, sobre `TarjetaAfiche`):
+  - "Repostear" es un botón redondo junto a "Guardar"; su nombre accesible es "Repostear {evento}" o "Reposteado {evento}", y con repost se pinta de verde lima.
+  - La marca "Reposteaste" va sobre el título.
+  - **Línea social:** con sesión, los avatares y "Laura y 13 más lo repostearon"; sin sesión, "14 reposts".
+  - En celular la tarjeta es cuadrada, una por fila.
+  - Sale "Enviar a un amigo", que era un botón "Próximamente" (H38); vuelve cuando exista la hoja de enviar.
+- **Filtros de la Agenda:** en vez de dos filas de chips, dos botones en píldora, "Ciudad" (con lo elegido, p. ej. "Toda Colombia" o "Bogotá") y "Categoría" ("Todas las categorías" o "Para ti" con sesión, "Rumba"…). Con un filtro puesto, el botón se rellena de tinta.
+  - Cada botón abre una hoja (`Modal` forma `hoja`) con las opciones en filas de 52 px: las ciudades con su conteo (las que tienen 0 se atenúan) y las categorías con su punto de color.
+  - El filtro se aplica al elegir y abajo va "Ver N planes", que cierra la hoja.
+  - Los radios, la URL y el resto de la lógica no cambian.
+- **"Publicar evento":** la vista previa de `/crear-evento` imita ahora el afiche.
+- **Siguen con su formato propio:** la lista compacta del mapa (`TarjetaCompacta`) y las filas de planes del perfil (`FilaPlan`, `TarjetaPlan`), que son listas y no rejillas de tarjetas. `TarjetaEvento` solo queda para `FilaEventos` sin `afiches`, que hoy no se usa en ninguna página.

@@ -9,7 +9,7 @@ import Pie from '../../components/layout/Pie.astro';
 import BarraNavegacion from '../../components/layout/BarraNavegacion.astro';
 import Icono from '../../components/ui/Icono.astro';
 import EnlaceSubrayado from '../../components/ui/EnlaceSubrayado.astro';
-import TarjetaEvento from '../../components/eventos/TarjetaEvento.astro';
+import TarjetaAfiche from '../../components/eventos/TarjetaAfiche.astro';
 import TarjetaNoticia from '../../components/noticias/TarjetaNoticia.astro';
 import { TEMAS } from '../../data/noticias';
 import {
@@ -126,7 +126,7 @@ const esquema = {
           <ul class="rejilla">
             {planes.map((e) => (
               <li>
-                <TarjetaEvento evento={e} />
+                <TarjetaAfiche evento={e} nivel={3} />
               </li>
             ))}
           </ul>

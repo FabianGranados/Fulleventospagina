@@ -1,9 +1,13 @@
 ---
-// Tarjeta de evento tipo afiche (decisión 2.34), para las filas de "Este finde" de la Bienvenida. La imagen ocupa
-// toda la tarjeta y encima va solo lo esencial: fecha, título, día y ciudad, cuánta gente va y el precio. Toda la
-// tarjeta lleva al evento (el enlace del título se estira sobre ella); "Guardar" queda encima como botón propio.
-// El cargo por servicio y quién vende se ven en la página del evento, junto al botón de compra.
-// Marcado compartido con TarjetaEvento para el script de la Bienvenida: [data-tarjeta][data-id], .guardar.
+// Tarjeta de evento tipo afiche (decisiones 2.34 y 2.35): la tarjeta pública de los eventos (Bienvenida, Agenda,
+// noticias y "Planes parecidos"). La imagen ocupa toda la tarjeta y encima va solo lo esencial: fecha, título, día y
+// ciudad, cuánta gente va y el precio. Toda la tarjeta lleva al evento (el enlace del título se estira sobre ella);
+// "Guardar" queda encima como botón propio. El cargo por servicio y quién vende se ven en la página del evento,
+// junto al botón de compra.
+// Para otras variantes (la de la Agenda): `nivel` del título, `tituloId`, atributos extra del artículo (`datos`) y
+// de "Guardar" (`guardar`), y los espacios "acciones" (botones junto a Guardar), "marca" (sobre el título) y
+// "social" (reemplaza la línea "N van").
+// Marcado común para los scripts: [data-tarjeta][data-id], .guardar y el enlace del título.
 import Icono from '../ui/Icono.astro';
 import type { Evento } from '../../data/eventos';
 import { nombreCiudad } from '../../data/ciudades';
@@ -13,9 +17,18 @@ interface Props {
   evento: Evento;
   // Muestra la etiqueta "N parches abiertos" (fila "Para ir en parche")
   parches?: boolean;
+  // Nivel del título: 4 dentro de las filas con h3; 3 en rejillas bajo un h2; 2 si cuelga del h1 de la página
+  nivel?: 2 | 3 | 4;
+  tituloId?: string;
+  oculta?: boolean;
+  datos?: Record<string, string | number | undefined>;
+  guardar?: Record<string, string>;
+  // Sin "Guardar" donde la página no lo maneja ("Planes parecidos" del evento)
+  guardable?: boolean;
 }
 
-const { evento: e, parches = false } = Astro.props;
+const { evento: e, parches = false, nivel = 4, tituloId, oculta = false, datos = {}, guardar = {}, guardable = true } = Astro.props;
+const Titulo = `h${nivel}`;
 const { dia, mes } = placaFecha(e.fecha);
 const href = rutaEvento(e.ciudad, e.titulo);
 // Pila decorativa de la gente que va: tres círculos de color, sin nombres ni iniciales (es pública)
@@ -24,11 +37,27 @@ const base = parseInt(e.id.replace(/\D/g, ''), 10) || 0;
 const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
 ---
 
-<article class="afiche" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} data-tarjeta data-id={e.id} data-ciudad={e.ciudad}>
+<article
+  class="afiche"
+  style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`}
+  aria-labelledby={tituloId}
+  hidden={oculta}
+  data-tarjeta
+  data-id={e.id}
+  data-ciudad={e.ciudad}
+  {...datos}
+>
   <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
-  <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`}>
-    <Icono nombre="marcador" tamano={18} />
-  </button>
+  <div class="botones">
+    <slot name="acciones" />
+    {
+      guardable && (
+        <button type="button" class="guardar" aria-pressed="false" aria-label={`Guardar ${e.titulo}`} {...guardar}>
+          <Icono nombre="marcador" tamano={18} />
+        </button>
+      )
+    }
+  </div>
 
   <div class="cuerpo">
     {
@@ -38,13 +67,16 @@ const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
         </span>
       )
     }
-    <h4 class="titulo"><a href={href}>{e.titulo}</a></h4>
+    <slot name="marca" />
+    <Titulo class="titulo" id={tituloId}><a href={href}>{e.titulo}</a></Titulo>
     <p class="meta">{fechaCorta(e.fecha)} · {nombreCiudad(e.ciudad)}</p>
     <div class="pie">
-      <span class="gente">
-        <span class="pila" aria-hidden="true">{pila.map((c) => <i style={`background: ${c}`}></i>)}</span>
-        {cifra(e.van)} van
-      </span>
+      <slot name="social">
+        <span class="gente">
+          <span class="pila" aria-hidden="true">{pila.map((c) => <i style={`background: ${c}`}></i>)}</span>
+          {cifra(e.van)} van
+        </span>
+      </slot>
       <span class:list={['precio', { gratis: !e.precio }]}>{e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}</span>
     </div>
   </div>
@@ -107,11 +139,17 @@ const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
     color: var(--muted);
   }
 
-  .guardar {
+  /* Botones arriba a la derecha, por encima del enlace estirado */
+  .botones {
     position: absolute;
     top: 10px;
     right: 10px;
     z-index: 2;
+    display: flex;
+    gap: 8px;
+  }
+
+  .guardar {
     width: 44px;
     height: 44px;
     border: 0;
@@ -180,6 +218,7 @@ const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
   .pie {
     margin-top: 12px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 8px;

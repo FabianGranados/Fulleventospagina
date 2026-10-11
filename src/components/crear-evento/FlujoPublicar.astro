@@ -266,24 +266,22 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
       <div class="revision">
         <div class="vista-previa">
           <h3 class="subtitulo">Así se verá en la agenda</h3>
-          {/* Imita la tarjeta pública (TarjetaEvento, N15) sin enlaces: es solo una vista previa */}
+          {/* Imita la tarjeta pública tipo afiche (TarjetaAfiche, decisión 2.35) sin enlaces: es solo una vista previa.
+              Los datos que el afiche no muestra (categoría, lugar, cargo, vendedor y botón) siguen en el marcado,
+              ocultos, porque el script de la vista previa los llena */}
           <div class="tarjeta-evento" data-previa-evento>
             <div class="te-imagen" data-te-imagen>
               <img alt="" data-te-foto hidden />
               <span class="te-fecha" data-te-placa hidden><b data-te-dia></b><span data-te-mes></span></span>
             </div>
             <div class="te-cuerpo">
-              <span class="te-categoria" data-te-categoria></span>
               <p class="te-titulo" data-te-titulo></p>
-              <span class="te-lugar"><span data-te-lugar></span> · <b data-te-ciudad></b></span>
-              <div class="te-compra">
-                <span class="te-precio">
-                  <span data-te-precio></span>
-                  <small data-te-cargo>+ cargo por servicio</small>
-                  <small data-te-vende></small>
-                </span>
-                <span class="te-cta" aria-hidden="true" data-te-cta></span>
-              </div>
+              <span class="te-lugar" data-te-ciudad></span>
+              <span class="te-precio" data-te-precio></span>
+              <span hidden>
+                <span data-te-categoria></span><span data-te-lugar></span><small data-te-cargo></small>
+                <small data-te-vende></small><span data-te-cta></span>
+              </span>
             </div>
           </div>
         </div>
@@ -1050,21 +1048,23 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
     gap: 12px;
   }
 
-  /* Imitación de TarjetaEvento (N15): mismos tamaños, sin guardar ni enlace */
+  /* Imitación de la tarjeta afiche (TarjetaAfiche, decisión 2.35): mismos tamaños, sin guardar ni enlace */
   .tarjeta-evento {
-    max-width: 340px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
-    overflow: hidden;
+    position: relative;
+    max-width: 300px;
+    aspect-ratio: 4 / 5;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
+    border-radius: var(--radius-field);
+    overflow: hidden;
+    color: var(--on-dark);
   }
 
   .te-imagen {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    background: radial-gradient(circle at 70% 30%, var(--peach) 0, transparent 55%), var(--photo-dark);
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 70% 28%, var(--peach) 0, transparent 58%), var(--photo-dark);
   }
 
   .te-imagen img {
@@ -1075,11 +1075,21 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
     object-fit: cover;
   }
 
+  /* Capa oscura abajo, como en el afiche, para que el texto blanco se lea sobre cualquier foto */
+  .te-imagen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(20, 14, 16, 0) 35%, rgba(20, 14, 16, .6) 62%, rgba(20, 14, 16, .92) 100%);
+  }
+
   .te-fecha {
     position: absolute;
+    z-index: 1;
     top: 12px;
     left: 12px;
     background: var(--surface);
+    color: var(--ink);
     border-radius: var(--radius-xs);
     padding: 5px 9px 4px;
     text-align: center;
@@ -1103,71 +1113,35 @@ const pasosB = ['Elige el evento', 'Escribe', 'Revisa y publica'];
   }
 
   .te-cuerpo {
-    padding: 14px 16px 16px;
+    position: relative;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-  }
-
-  .te-categoria {
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--brand);
+    align-items: flex-start;
   }
 
   .te-titulo {
-    margin: 4px 0 6px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    line-height: 1.25;
+    font-family: var(--display);
+    font-size: 1.22rem;
+    font-weight: 800;
+    line-height: 1.12;
     overflow-wrap: anywhere;
   }
 
   .te-lugar {
-    font-size: .85rem;
-    color: var(--muted);
-  }
-
-  .te-lugar b {
-    color: var(--ink);
-  }
-
-  .te-compra {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding-top: 14px;
+    margin-top: 5px;
+    font-size: .86rem;
+    color: var(--on-dark-muted);
   }
 
   .te-precio {
-    font-weight: 700;
-    font-size: .95rem;
-  }
-
-  .te-precio small {
-    display: block;
-    font-weight: 400;
-    font-size: .72rem;
-    color: var(--muted);
-  }
-
-  .te-precio small[hidden] {
-    display: none;
-  }
-
-  .te-cta {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    background: var(--brand);
-    color: var(--on-dark);
+    margin-top: 12px;
+    padding: 6px 11px;
     border-radius: var(--radius-pill);
-    padding: 11px 15px;
-    font-size: .82rem;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .84rem;
     font-weight: 700;
-    white-space: nowrap;
   }
 
   .grupo-datos {

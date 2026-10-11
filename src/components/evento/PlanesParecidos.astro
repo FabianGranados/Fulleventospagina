@@ -1,9 +1,8 @@
 ---
 // N34 · Planes parecidos en otras ciudades (+ recuerdos, solo con fotos de ediciones pasadas).
-// Cada tarjeta abre su propio evento (H36).
+// Cada tarjeta abre su propio evento (H36); es la tarjeta afiche común (decisión 2.35).
 import Icono from '../ui/Icono.astro';
-import { nombreCiudad } from '../../data/ciudades';
-import { pesos, placaFecha, rutaEvento } from '../../lib/formato';
+import TarjetaAfiche from '../eventos/TarjetaAfiche.astro';
 import type { ModeloEvento } from './modelo';
 
 interface Props {
@@ -29,28 +28,11 @@ const { detalle: d } = m;
           </a>
         </div>
         <ul class="rejilla">
-          {m.similares.map((e) => {
-            const { dia, mes } = placaFecha(e.fecha);
-            return (
-              <li>
-                <article class="tarjeta">
-                  <div class="imagen">
-                    <span class="foto" role="img" aria-label="[Foto del evento]" style={`--bg1: ${e.bg1}; --bg2: ${e.bg2}`} />
-                    <span class="fecha"><b>{dia}</b><span>{mes}</span></span>
-                  </div>
-                  <div class="cuerpo">
-                    <span class="categoria">{e.categoria}</span>
-                    <h3><a href={rutaEvento(e.ciudad, e.titulo)}>{e.titulo}</a></h3>
-                    <span class="lugar">{e.lugar} · <b>{nombreCiudad(e.ciudad)}</b></span>
-                    <span class="precio">
-                      {e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}
-                      {e.precio > 0 && <small>+ cargo por servicio</small>}
-                    </span>
-                  </div>
-                </article>
-              </li>
-            );
-          })}
+          {m.similares.map((e) => (
+            <li>
+              <TarjetaAfiche evento={e} nivel={3} guardable={false} />
+            </li>
+          ))}
         </ul>
       </section>
     )
@@ -121,7 +103,7 @@ const { detalle: d } = m;
   .rejilla {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
     gap: 16px;
   }
 
@@ -130,97 +112,8 @@ const { detalle: d } = m;
     display: flex;
   }
 
-  .tarjeta {
+  .rejilla li > :global(*) {
     flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-card);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .imagen {
-    position: relative;
-    aspect-ratio: 16 / 10;
-  }
-
-  .foto {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 70% 30%, var(--bg1) 0, transparent 58%), var(--bg2);
-  }
-
-  .fecha {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: var(--surface);
-    border-radius: var(--radius-xs);
-    padding: 5px 9px 4px;
-    text-align: center;
-    line-height: 1;
-    min-width: 44px;
-  }
-
-  .fecha b {
-    display: block;
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 1.2rem;
-  }
-
-  .fecha span {
-    font-size: .64rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--muted);
-  }
-
-  .cuerpo {
-    padding: 12px 14px 14px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    line-height: 1.3;
-  }
-
-  .categoria {
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-
-  h3 {
-    margin: 4px 0;
-    font-size: .98rem;
-    font-weight: 700;
-  }
-
-  .lugar {
-    font-size: .82rem;
-    color: var(--muted);
-  }
-
-  .lugar b {
-    color: var(--ink);
-  }
-
-  .precio {
-    margin-top: auto;
-    padding-top: 10px;
-    font-size: .86rem;
-    font-weight: 700;
-  }
-
-  .precio small {
-    display: block;
-    font-weight: 400;
-    font-size: .72rem;
-    color: var(--muted);
   }
 
   .recuerdos {
