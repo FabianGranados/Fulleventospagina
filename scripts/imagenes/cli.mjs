@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Uso: npm run imagenes -- <comando> [opciones]   (guía completa en docs/imagenes-r2.md)
 //
-//   adaptar <fulleventos_event_images.jsonl> [--salida carpeta]   Convierte lo de Gemini (no guarda en Cloudflare).
+//   adaptar <archivo.jsonl|carpeta...> [--salida carpeta] [--hoy AAAA-MM-DD]   Convierte lo de Gemini (no guarda nada).
 //   importar <archivo.json|jsonl>   Importa imágenes (formato del importador).
 //   pendientes                      Lista las imágenes que esperan revisión de derechos.
 //   aprobar <id...> --por "Nombre" [--licencia "…"] [--evidencia "…"] [--reemplazar --motivo "…"]
@@ -11,7 +11,7 @@
 //
 // Modos: por defecto Cloudflare (lee .env.importador). --local usa SQLite y una carpeta en registros/.
 //        --simular valida el archivo, encuentra los eventos y revisa URL y derechos sin descargar ni guardar nada.
-import { existsSync, mkdirSync, readFileSync, appendFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, appendFileSync, writeFileSync, statSync, readdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cargarPolitica, ErrorImagen } from './politica.mjs';
@@ -31,6 +31,7 @@ const { values: op, positionals } = parseArgs({
     reemplazar: { type: 'boolean', default: false },
     motivo: { type: 'string' },
     salida: { type: 'string' },
+    hoy: { type: 'string' },
     ayuda: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -58,21 +59,31 @@ const main = async () => {
 
   // adaptar no toca D1 ni R2: solo lee el archivo de Gemini y escribe tres archivos de trabajo
   if (comando === 'adaptar') {
-    const ruta = args[0];
-    if (!ruta || !existsSync(ruta)) throw new ErrorImagen('configuracion', 'Indica el archivo: adaptar <fulleventos_event_images.jsonl>');
+    // Uno o varios archivos, o una carpeta (se leen sus .jsonl; los .json y .md de informes se ignoran)
+    if (!args.length || args.some((a) => !existsSync(a))) throw new ErrorImagen('configuracion', 'Indica los archivos o la carpeta: adaptar <archivo.jsonl|carpeta...>');
+    const rutas = args.flatMap((a) => (statSync(a).isDirectory() ? readdirSync(a).filter((f) => f.endsWith('.jsonl')).sort().map((f) => join(a, f)) : [a]));
+    if (op.hoy && !/^\d{4}-\d{2}-\d{2}$/.test(op.hoy)) throw new ErrorImagen('configuracion', '--hoy va como AAAA-MM-DD');
     const { ciudades } = await import('../../src/data/ciudades.ts');
     const salida = op.salida ?? join(raiz, 'registros', `adaptado-${new Date().toISOString().replace(/[:.]/g, '-')}`);
     mkdirSync(salida, { recursive: true });
-    const r = adaptar({ contenido: readFileSync(ruta, 'utf8'), archivo: basename(ruta), eventos: await cargarEventos(), ciudades });
+    const r = adaptar({
+      archivos: rutas.map((f) => ({ archivo: basename(f), contenido: readFileSync(f, 'utf8') })),
+      eventos: await cargarEventos(),
+      ciudades,
+      ...(op.hoy ? { hoy: op.hoy } : {}),
+    });
     writeFileSync(join(salida, 'imagenes-importador.jsonl'), r.imagenesJsonl);
     writeFileSync(join(salida, 'eventos-nuevos.jsonl'), r.eventosNuevosJsonl);
     writeFileSync(join(salida, 'reporte.json'), JSON.stringify(r.reporte, null, 2));
-    const { errores, avisos, ...cifras } = r.reporte;
+    const { errores, avisos, investigacion, alertas, ...cifras } = r.reporte;
     console.log('Adaptación:', cifras);
-    for (const e of errores) console.log(`✘ línea ${e.linea}${e.ref ? ` (${e.ref})` : ''}: ${e.error}`);
+    if (alertas) console.log('Alertas de la cola:', alertas);
+    if (investigacion) console.log('Investigación:', { rechazados_en_origen: investigacion.rechazados_en_origen.length, noticias_ignoradas: investigacion.noticias_ignoradas, imagenes: investigacion.imagenes, imagenes_sin_evento: investigacion.imagenes_sin_evento, correcciones: investigacion.correcciones });
+    for (const e of errores) console.log(`✘ ${e.archivo ? `${e.archivo}:` : 'línea '}${e.linea}${e.ref ? ` (${e.ref})` : ''}: ${e.error}`);
     if (avisos.length) console.log(`${avisos.length} línea(s) con arreglos de formato: ver reporte.json`);
     console.log(`Archivos en ${salida}
-Siguiente paso: npm run imagenes -- importar ${join(salida, 'imagenes-importador.jsonl')} --simular`);
+Siguiente paso: npm run imagenes -- importar ${join(salida, 'imagenes-importador.jsonl')} --simular
+Eventos nuevos: npm run eventos -- importar ${join(salida, 'eventos-nuevos.jsonl')} --simular`);
     if (errores.length) process.exitCode = 2;
     return;
   }

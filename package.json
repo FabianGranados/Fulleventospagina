@@ -9,10 +9,13 @@
     "astro": "astro",
     "test": "npm run test:importador && npm run revisar:secretos && astro build && playwright test",
     "test:solo": "playwright test",
-    "test:importador": "node --test --test-reporter=spec \"tests/importador/*.prueba.mjs\"",
+    "test:importador": "node --test --test-reporter=spec \"tests/importador/*.prueba.mjs\" \"tests/eventos/*.prueba.mjs\"",
     "imagenes": "node scripts/imagenes/cli.mjs",
     "revisar:secretos": "node scripts/revisar-secretos.mjs",
-    "demo:imagenes": "node scripts/demo/demo-imagenes.mjs"
+    "demo:imagenes": "node scripts/demo/demo-imagenes.mjs",
+    "eventos": "node scripts/eventos/cli.mjs",
+    "divipola": "node scripts/eventos/divipola-generar.mjs",
+    "divipola:sql": "node scripts/eventos/divipola-sql.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.4",

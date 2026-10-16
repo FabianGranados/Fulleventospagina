@@ -46,6 +46,75 @@ CREATE TABLE fuentes_evento (id INTEGER PRIMARY KEY, evento_id TEXT NOT NULL REF
 
 **Riesgos:** el render en el servidor cambia cómo se generan Agenda, Mapa y Evento. Las 305 pruebas de pantallas que existen sirven de red de seguridad. La auditoría H34 pide que las páginas de evento sigan siendo indexables, y eso se mantiene con SSR.
 
+## Estado de B1 (16 de octubre de 2026, rama `etapa-b-eventos`)
+
+**B1 está implementado y probado solo en local.** No se ha aplicado ninguna migración en Cloudflare ni se ha desplegado nada.
+
+| Pieza | Archivo |
+|---|---|
+| Migración de eventos, fuentes, alertas, imágenes candidatas, historial y las 14 categorías | `migraciones/0002_eventos.sql` |
+| Municipios DIVIPOLA (1.121 municipios, 33 departamentos), generada | `migraciones/0003_divipola.sql` (`npm run divipola:sql`) |
+| Lista DIVIPOLA y búsqueda por código o por nombre (sin adivinar entre homónimos) | `src/data/divipola.json`, `scripts/eventos/divipola.mjs` |
+| Las 14 categorías oficiales y su equivalencia con los 6 chips actuales | `src/data/categorias-oficiales.ts` |
+| Evento normalizado y reglas de validación | `scripts/eventos/evento.mjs` |
+| Lectura del formato de investigación de Gemini y del formato anterior | `scripts/eventos/normalizar.mjs`, `scripts/eventos/cola.mjs` |
+| Adaptador (acepta los dos formatos, varios archivos o una carpeta) | `scripts/imagenes/adaptar.mjs` |
+| Importador y revisión | `scripts/eventos/importador.mjs`, `npm run eventos` |
+| Pruebas (31 nuevas) | `tests/eventos/` |
+
+### Flujo
+
+```
+carpeta de Gemini (o fulleventos_event_images.jsonl)
+  └─ npm run imagenes -- adaptar <carpeta|archivos…> [--hoy AAAA-MM-DD]
+       ├─ eventos-nuevos.jsonl  → npm run eventos -- importar … (--simular primero; --local por defecto)
+       ├─ imagenes-importador.jsonl (fotos de eventos que ya existen en el sitio)
+       └─ reporte.json (errores, rechazados en origen, correcciones, alertas por tipo)
+npm run eventos -- pendientes | ver <id> | resolver <alerta> | aprobar <id> | publicar <id> | rechazar | retirar | devolver
+```
+
+### Estados y compuertas
+
+`pendiente_revision` → `aprobado` → `publicado`, más `rechazado` y `retirado`. La base (triggers de 0002) impide:
+insertar un evento que no esté pendiente, aprobar sin persona o con alertas que bloquean sin resolver, publicar algo que
+no esté aprobado, cambiar el contenido de un evento aprobado o publicado sin devolverlo a revisión, y borrar uno
+aprobado o publicado. El importador además rechaza aprobaciones a nombre de "agente", "Gemini" o "Claude" y no
+aprueba eventos vencidos. `--forzar` exige un motivo escrito, que queda como resolución de cada alerta.
+
+### Reglas de validación (alertas)
+
+| Tipo | Gravedad | Cuándo |
+|---|---|---|
+| `vencido` | bloquea | Terminó antes de hoy (además, el importador no lo carga salvo `--incluir-vencidos`) |
+| `fuente_insuficiente` | bloquea | Fuente principal en una ayuda o buscador, red social, sitio comercial ajeno o portada; o ninguna fuente útil |
+| `fuente_insuficiente` | revisar | Una sola fuente, o ninguna marcada como oficial |
+| `duplicado` | bloquea | Misma ref o slug en el lote; mismo municipio, fechas cruzadas y título parecido (en el lote, en D1 o en `eventos.ts`) |
+| `municipio` / `categoria` | bloquea | Sin código DIVIPOLA válido (o homónimo sin departamento); categoría fuera de las 14 |
+| `correccion` | bloquea | Gemini trae una corrección que no está aplicada en el evento |
+| `estado_evento` | bloquea | Cancelado o finalizado |
+| `fecha`, `edicion`, `url_venta`, `organizador` | revisar | Fecha provisional; año del título distinto; venta que apunta a imágenes o a la portada; la boletera figura como organizador |
+| `precio` | aviso | Pago o mixto sin cifra ("Consultar precio"); precio desconocido |
+| `derechos_imagen` | aviso | La imagen no tiene licencia o documento enlazado, coincidencia visual confirmada y texto alternativo |
+
+### Precios
+
+`gratis`, `pago`, `mixto` y `desconocido`. Ninguna cifra se inventa: pago y mixto pueden ir sin precio; gratis y
+desconocido no pueden llevar cifra (la base lo valida con CHECK). El "donation" de Gemini se guarda como desconocido con
+una alerta.
+
+### DIVIPOLA
+
+`src/data/divipola.json` sale del paquete npm `divipola` 1.0.3 (MIT), copia de la lista del DANE con 1.121 entradas
+(municipios, Bogotá y áreas no municipalizadas). **Hay que reemplazarla por el CSV oficial vigente del DANE antes de
+producción** (`npm run divipola -- archivo.csv --fuente "DANE, DIVIPOLA, fecha"` y luego `npm run divipola:sql`): los
+municipios creados después de esa copia no estarán. La migración 0003 actualiza nombres sin borrar filas.
+
+### Pendiente para B2 y B3
+
+Ver el diagnóstico de cierre de B1 en el informe de la sesión. En resumen: binding D1 en `wrangler.jsonc`,
+`src/lib/datos-eventos.ts`, páginas bajo demanda con paginación y caché, rutas por municipio, las 14 categorías en la
+interfaz, migrar los 19 eventos de ejemplo como `demo = 1` y, en B3, la foto desde `imagenes_evento` en el HTML.
+
 ## Mientras tanto
 
 - Se puede activar la etapa A con los eventos actuales o los primeros cientos.

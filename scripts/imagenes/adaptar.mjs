@@ -9,8 +9,15 @@
 //   reporte.json               conteos, avisos de lectura y errores por línea.
 //
 // No descarga nada, no escribe en Cloudflare y no cambia ningún dato: solo lee y escribe estos tres archivos.
+//
+// También acepta el formato de la investigación nacional de Gemini (gemini-investigacion/1: eventos, imágenes y
+// correcciones en archivos separados, campos en inglés; ver scripts/eventos/normalizar.mjs). Se pueden pasar varios
+// archivos a la vez (`archivos`). Todo evento nuevo sale en la cola con su versión normalizada y sus alertas.
 import { leerArchivoGemini, limpiar, lineaV1, FORMATO } from './formato-gemini.mjs';
 import { normalizar, slug } from '../../src/lib/formato.ts';
+import { tipoDeLinea, FORMATO_INVESTIGACION } from '../eventos/normalizar.mjs';
+import { adaptarInvestigacion, lineaColaV1, marcarDuplicadosEnLote, resumenAlertas } from '../eventos/cola.mjs';
+import { hoyBogota } from '../eventos/evento.mjs';
 
 const recortar = (texto, max) => (texto && texto.length > max ? `${texto.slice(0, max - 1)}…` : texto);
 
@@ -65,8 +72,17 @@ export const sinPerdida = (imagen, registro) => {
   return recoger(imagen).filter((t) => !destino.includes(JSON.stringify(t).slice(1, -1)));
 };
 
-export const adaptar = ({ contenido, archivo = 'fulleventos_event_images.jsonl', eventos, ciudades }) => {
-  const { entradas, ignoradas } = leerArchivoGemini(contenido);
+export const adaptar = ({ contenido, archivo = 'fulleventos_event_images.jsonl', archivos, eventos, ciudades, hoy = hoyBogota() }) => {
+  // Lectura de uno o varios archivos; cada línea queda marcada con su archivo y su formato
+  const todas = [];
+  let ignoradas = 0;
+  for (const a of archivos ?? [{ archivo, contenido }]) {
+    const leido = leerArchivoGemini(a.contenido);
+    ignoradas += leido.ignoradas;
+    for (const e of leido.entradas) todas.push({ ...e, archivo: a.archivo, tipo: e.error ? 'v1' : tipoDeLinea(e.valor) ?? 'v1' });
+  }
+  const entradas = todas.filter((e) => e.tipo === 'v1');
+  const deInvestigacion = todas.filter((e) => e.tipo !== 'v1');
   const porId = new Map(eventos.map((e) => [e.id, e]));
   const porClave = new Map(eventos.map((e) => [`${e.ciudad}|${e.fecha}|${slug(e.titulo)}`, e]));
   const reporte = {
@@ -141,10 +157,32 @@ export const adaptar = ({ contenido, archivo = 'fulleventos_event_images.jsonl',
     const posibles = eventos
       .filter((e) => e.ciudad === ciudad && e.fecha === linea.evento.fecha)
       .map((e) => ({ id: e.id, titulo: e.titulo }));
-    nuevos.push({ ...linea, formato: FORMATO, ciudad_id: ciudad, linea_origen: entrada.linea, archivo_origen: archivo, posibles_duplicados: posibles });
+    let preparado;
+    try {
+      preparado = lineaColaV1(linea, hoy);
+    } catch (e) {
+      preparado = { normalizado: null, alertas: [{ tipo: 'formato', gravedad: 'bloquea', detalle: `No se pudo normalizar: ${e.message}` }] };
+    }
+    nuevos.push({ ...linea, formato: FORMATO, ciudad_id: ciudad, linea_origen: entrada.linea, archivo_origen: entrada.archivo ?? archivo, posibles_duplicados: posibles, ...preparado });
     reporte.eventos_nuevos++;
     reporte.imagenes_de_eventos_nuevos += linea.imagenes.length;
   }
+
+  // Formato de investigación (si vino) y duplicados entre todas las líneas de la cola
+  if (deInvestigacion.length) {
+    const inv = adaptarInvestigacion({ entradas: deInvestigacion, hoy, existentes: eventos });
+    reporte.formato = entradas.length ? 'mixto' : FORMATO_INVESTIGACION;
+    reporte.investigacion = inv.reporte;
+    reporte.eventos += inv.reporte.eventos;
+    reporte.eventos_existentes += inv.reporte.eventos_existentes;
+    reporte.eventos_nuevos += inv.reporte.eventos_nuevos;
+    for (const e of inv.reporte.errores) reporte.errores.push(e);
+    nuevos.push(...inv.cola);
+  }
+  const validas = nuevos.filter((n) => n.normalizado);
+  reporte.duplicados_en_lote = marcarDuplicadosEnLote(validas);
+  reporte.fecha_corte = hoy;
+  reporte.alertas = resumenAlertas(validas);
 
   return {
     reporte,

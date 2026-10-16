@@ -14,6 +14,16 @@ fulleventos_event_images.jsonl
        └─ reporte.json               → errores, avisos y conteos
 ```
 
+## Formato de la investigación nacional (`gemini-investigacion/1`)
+
+El adaptador también lee el formato que entregó la investigación de octubre de 2026: archivos separados con campos en
+inglés (`fulleventos_events_verified.jsonl`, `_review`, `_rejected`, `fulleventos_event_images.jsonl` con una imagen
+por línea unida por `event_slug`, `fulleventos_images_review.jsonl` y `fulleventos_corrections.jsonl`). Se le puede
+pasar la carpeta entera: `npm run imagenes -- adaptar carpeta/`. Las noticias se cuentan y se ignoran; los
+rechazados no pasan a la cola; las correcciones se comprueban pero no se aplican solas. El estado `verified` de Gemini
+se guarda como dato y no autoriza nada. Detalle de los campos en `scripts/eventos/normalizar.mjs` y reglas en
+`docs/etapa-b-eventos-d1.md`.
+
 ## Qué tolera la lectura
 
 Deep Research escribe informes, no archivos de máquina. El adaptador acepta y deja anotado en `reporte.json`:

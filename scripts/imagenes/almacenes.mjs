@@ -5,12 +5,15 @@
 // db.consultar(sql, params) → filas · db.ejecutar(sql, params) → { cambios, ultimoId } · r2.subir(clave, buffer, op)
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdirSync, readFileSync, rmSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { ErrorImagen } from './politica.mjs';
 
-const MIGRACIONES = [join(import.meta.dirname, '..', '..', 'migraciones', '0001_imagenes_evento.sql')];
+// Todas las migraciones en orden (0001 imágenes, 0002 eventos, 0003 municipios…): la base local y la de memoria
+// quedan iguales a la de D1. Cada migración es segura de repetir.
+const CARPETA_MIGRACIONES = join(import.meta.dirname, '..', '..', 'migraciones');
+export const MIGRACIONES = readdirSync(CARPETA_MIGRACIONES).filter((f) => /^\d{4}_.+\.sql$/.test(f)).sort().map((f) => join(CARPETA_MIGRACIONES, f));
 
 // ---------- Reintentos (fallas temporales de R2, D1 o la red) ----------
 
