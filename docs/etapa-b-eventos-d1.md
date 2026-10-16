@@ -60,7 +60,7 @@ CREATE TABLE fuentes_evento (id INTEGER PRIMARY KEY, evento_id TEXT NOT NULL REF
 | Lectura del formato de investigación de Gemini y del formato anterior | `scripts/eventos/normalizar.mjs`, `scripts/eventos/cola.mjs` |
 | Adaptador (acepta los dos formatos, varios archivos o una carpeta) | `scripts/imagenes/adaptar.mjs` |
 | Importador y revisión | `scripts/eventos/importador.mjs`, `npm run eventos` |
-| Pruebas (31 nuevas) | `tests/eventos/` |
+| Pruebas (36 nuevas) | `tests/eventos/` |
 
 ### Flujo
 
@@ -79,7 +79,12 @@ npm run eventos -- pendientes | ver <id> | resolver <alerta> | aprobar <id> | pu
 insertar un evento que no esté pendiente, aprobar sin persona o con alertas que bloquean sin resolver, publicar algo que
 no esté aprobado, cambiar el contenido de un evento aprobado o publicado sin devolverlo a revisión, y borrar uno
 aprobado o publicado. El importador además rechaza aprobaciones a nombre de "agente", "Gemini" o "Claude" y no
-aprueba eventos vencidos. `--forzar` exige un motivo escrito, que queda como resolución de cada alerta.
+aprueba eventos vencidos. `--forzar` exige un motivo escrito, que queda como resolución de cada alerta. Las alertas que
+bloquean no se pueden borrar (solo resolver con nombre y explicación), `INSERT OR REPLACE` no puede pisar un evento
+aprobado y el contenido aprobado no puede cambiar ni al pasar a publicado.
+
+**Ojo al cambiar triggers después de aplicar 0002:** usan `IF NOT EXISTS`, así que una corrección futura necesita una
+migración nueva con `DROP TRIGGER` y el `CREATE TRIGGER` corregido.
 
 ### Reglas de validación (alertas)
 

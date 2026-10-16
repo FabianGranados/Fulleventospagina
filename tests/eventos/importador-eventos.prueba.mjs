@@ -4,6 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { importarEventos, aprobarEvento, publicarEvento, rechazarEvento, retirarEvento, devolverARevision, resolverAlerta, pendientesEventos, detalleEvento, idEvento } from '../../scripts/eventos/importador.mjs';
 import { HOY, adaptarMuestra, almacen, lineas } from './ayudas.mjs';
+import { resolverMunicipio } from '../../scripts/eventos/divipola.mjs';
 
 const cola = () => adaptarMuestra().eventosNuevosJsonl;
 const importarMuestra = async (a, extra = {}) => importarEventos({ contenido: cola(), almacen: a, hoy: HOY, ...extra });
@@ -189,5 +190,62 @@ describe('La base impide publicar sin aprobación (triggers de 0002)', () => {
     await insertar(a, { id: 'ev_p4', ref_externa: 'p4', slug: 'p4', tipo_precio: 'mixto' }); // mixto sin cifra: permitido
     await rechaza(insertar(a, { id: 'ev_p5', ref_externa: 'p5', slug: 'p5', categoria: 'teatro' }), /FOREIGN KEY/); // solo las 14
     await rechaza(insertar(a, { id: 'ev_p6', ref_externa: 'p6', slug: 'p6', municipio_codigo: '99999' }), /FOREIGN KEY/); // solo DIVIPOLA
+  });
+});
+
+describe('Revisión independiente (hallazgos corregidos)', () => {
+  const insertar = (a, cambios = {}) => {
+    const fila = { id: 'ev_r', ref_externa: 'r', slug: 'evento-r', titulo: 'Evento R', fecha: '2026-12-01', tipo_precio: 'gratis', procedencia: '{}', ...cambios };
+    const cols = Object.keys(fila);
+    return a.db.ejecutar(`INSERT INTO eventos (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`, Object.values(fila));
+  };
+  const aprobar = (a, id = 'ev_r') => a.db.ejecutar("UPDATE eventos SET estado = 'aprobado', aprobado_por = 'Ana Ruiz', aprobado_en = 'x' WHERE id = ?", [id]);
+
+  test('no se publica un contenido distinto del aprobado, ni cambiando columnas secundarias', async () => {
+    const a = await almacen();
+    await insertar(a);
+    await aprobar(a);
+    await rechaza(a.db.ejecutar("UPDATE eventos SET estado = 'publicado', publicado_en = 'x', titulo = 'Otro', tipo_precio = 'pago', precio_desde = 999999 WHERE id = 'ev_r'"), /devolverlo a pendiente_revision/);
+    await a.db.ejecutar("UPDATE eventos SET estado = 'publicado', publicado_en = 'x' WHERE id = 'ev_r'");
+    for (const cambio of ["modalidad = 'virtual'", "url_registro = 'https://x.example'", "hora_fin = '23:00'", "etiquetas = '[\"x\"]'", "ciudad_sitio = 'cali'", 'latitud = 4.6']) {
+      await rechaza(a.db.ejecutar(`UPDATE eventos SET ${cambio} WHERE id = 'ev_r'`), /devolverlo a pendiente_revision/, cambio);
+    }
+  });
+
+  test('las alertas que bloquean no se borran y se resuelven con nombre y explicación', async () => {
+    const a = await almacen();
+    await insertar(a);
+    await a.db.ejecutar("INSERT INTO eventos_alertas (evento_id, tipo, gravedad, detalle) VALUES ('ev_r', 'duplicado', 'bloquea', 'x')");
+    await rechaza(a.db.ejecutar("DELETE FROM eventos_alertas WHERE evento_id = 'ev_r'"), /no se borra/);
+    await rechaza(a.db.ejecutar("UPDATE eventos_alertas SET resuelta_en = 'x', resuelta_por = '', resolucion = '' WHERE evento_id = 'ev_r'"), /CHECK constraint/);
+    await rechaza(a.db.ejecutar("UPDATE eventos SET estado = 'aprobado', aprobado_por = '', aprobado_en = 'x' WHERE id = 'ev_r'"), /alertas que bloquean|CHECK/);
+  });
+
+  test('INSERT OR REPLACE no pisa un evento aprobado', async () => {
+    const a = await almacen();
+    await insertar(a);
+    await aprobar(a);
+    await rechaza(a.db.ejecutar("INSERT OR REPLACE INTO eventos (id, ref_externa, slug, titulo, fecha, tipo_precio, procedencia) VALUES ('ev_r', 'r', 'evento-r', 'T', '2026-12-01', 'gratis', '{}')"), /no se puede reemplazar/);
+    assert.equal(await estado(a, 'ev_r'), 'aprobado');
+  });
+
+  test('reimportar cierra las alertas que ya no aplican y las reabre si vuelven, sin borrarlas', async () => {
+    const a = await almacen();
+    const l = lineaRio();
+    l.normalizado.fuentes = [l.normalizado.fuentes[0]]; // una sola fuente → alerta "revisar"
+    await importarEventos({ contenido: JSON.stringify(l), almacen: a, hoy: HOY });
+    const abiertas = async () => (await a.db.consultar('SELECT tipo FROM eventos_alertas WHERE evento_id = ? AND resuelta_en IS NULL', [RIO])).map((x) => x.tipo);
+    assert.ok((await abiertas()).includes('fuente_insuficiente'));
+    await importarRio(a); // con las dos fuentes
+    assert.ok(!(await abiertas()).includes('fuente_insuficiente'));
+    const [cerrada] = await a.db.consultar("SELECT resuelta_por FROM eventos_alertas WHERE evento_id = ? AND tipo = 'fuente_insuficiente'", [RIO]);
+    assert.match(cerrada.resuelta_por, /^importador/);
+    await importarEventos({ contenido: JSON.stringify(l), almacen: a, hoy: HOY });
+    assert.ok((await abiertas()).includes('fuente_insuficiente'));
+  });
+
+  test('acepta códigos de departamento y municipio sin el cero inicial', () => {
+    const r = resolverMunicipio({ codigo: 5001, departamentoCodigo: 5 });
+    assert.equal(r.municipio?.codigo, '05001');
   });
 });

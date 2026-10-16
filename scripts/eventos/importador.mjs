@@ -87,6 +87,11 @@ export const importarEventos = async ({ contenido, archivo = 'eventos-nuevos.jso
       const alertas = [...reglas, ...(l.alertas ?? []).filter((a) => !tiposReglas.has(`${a.tipo}|${a.detalle}`) && ['duplicado', 'correccion', 'formato', 'precio', 'municipio', 'fecha', 'fuente_insuficiente'].includes(a.tipo))];
       const id = idEvento(n.ref);
 
+      // Sin municipio no se puede comparar por lugar: al menos mismo slug y fecha con otra ref
+      if (!n.municipio_codigo) {
+        const iguales = await db.consultar('SELECT id, titulo FROM eventos WHERE municipio_codigo IS NULL AND slug = ? AND fecha = ? AND ref_externa <> ?', [n.slug, n.fecha, n.ref]);
+        for (const c of iguales) alertas.push({ tipo: 'duplicado', gravedad: 'bloquea', detalle: `Posible duplicado de ${c.id} "${c.titulo}"` });
+      }
       // Duplicados contra lo que ya está en D1 (otra ref, mismo municipio, fechas que se cruzan, título parecido)
       if (n.municipio_codigo) {
         const cercanos = await db.consultar(
@@ -145,10 +150,21 @@ export const importarEventos = async ({ contenido, archivo = 'eventos-nuevos.jso
           eventoId, f.url, f.nombre ?? null, f.tipo ?? null, clasificarFuente(f.url), f.oficial === undefined ? null : Number(f.oficial), Number(Boolean(f.principal)), f.consultado_en ?? null,
         ]);
       }
-      // Alertas: las abiertas se recalculan; las resueltas por una persona se conservan
-      await db.ejecutar('DELETE FROM eventos_alertas WHERE evento_id = ? AND resuelta_en IS NULL', [eventoId]);
+      // Alertas: primero se insertan las de hoy (o se reabren si las había cerrado el importador) y después se cierran
+      // las abiertas que ya no aparecen. Nunca queda un momento sin las alertas que bloquean, y las que resolvió una
+      // persona se conservan.
+      const claves = new Set(alertas.map((a) => `${a.tipo}|${a.detalle}`));
       for (const a of alertas) {
-        await db.ejecutar('INSERT OR IGNORE INTO eventos_alertas (evento_id, tipo, gravedad, detalle) VALUES (?, ?, ?, ?)', [eventoId, a.tipo, a.gravedad, a.detalle]);
+        await db.ejecutar(
+          `INSERT INTO eventos_alertas (evento_id, tipo, gravedad, detalle) VALUES (?, ?, ?, ?)
+           ON CONFLICT (evento_id, tipo, detalle) DO UPDATE SET gravedad = excluded.gravedad, resuelta_en = NULL, resuelta_por = NULL, resolucion = NULL
+           WHERE eventos_alertas.resuelta_por LIKE 'importador%'`,
+          [eventoId, a.tipo, a.gravedad, a.detalle],
+        );
+      }
+      const abiertas = await db.consultar('SELECT id, tipo, detalle FROM eventos_alertas WHERE evento_id = ? AND resuelta_en IS NULL', [eventoId]);
+      for (const x of abiertas.filter((x) => !claves.has(`${x.tipo}|${x.detalle}`))) {
+        await db.ejecutar('UPDATE eventos_alertas SET resuelta_en = ?, resuelta_por = ?, resolucion = ? WHERE id = ?', [ahora(), `importador (${lote})`, 'Ya no aparece al validar la investigación más reciente', x.id]);
       }
       // Imágenes candidatas (no se descargan)
       for (const img of l.imagenes ?? []) {

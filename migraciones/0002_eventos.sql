@@ -123,6 +123,8 @@ CREATE TABLE IF NOT EXISTS eventos (
   CHECK (NOT (tipo_precio = 'desconocido' AND (precio_desde IS NOT NULL OR precio_hasta IS NOT NULL))),
   CHECK (precio_desde IS NULL OR precio_hasta IS NULL OR precio_hasta >= precio_desde),
   CHECK (estado NOT IN ('aprobado', 'publicado') OR (aprobado_por IS NOT NULL AND aprobado_en IS NOT NULL)),
+  CHECK (aprobado_por IS NULL OR length(trim(aprobado_por)) >= 3),
+  CHECK (motivo_estado IS NULL OR length(trim(motivo_estado)) >= 10 OR estado NOT IN ('rechazado', 'retirado')),
   CHECK (estado <> 'publicado' OR publicado_en IS NOT NULL),
   CHECK (estado NOT IN ('rechazado', 'retirado') OR motivo_estado IS NOT NULL)
 );
@@ -156,7 +158,7 @@ CREATE TABLE IF NOT EXISTS eventos_alertas (
   resuelta_en  TEXT,
   resuelta_por TEXT,
   resolucion   TEXT,
-  CHECK (resuelta_en IS NULL OR (resuelta_por IS NOT NULL AND resolucion IS NOT NULL)),
+  CHECK (resuelta_en IS NULL OR (length(trim(resuelta_por)) >= 3 AND length(trim(resolucion)) >= 10)),
   UNIQUE (evento_id, tipo, detalle)
 );
 CREATE INDEX IF NOT EXISTS ix_eventos_alertas_abiertas ON eventos_alertas (evento_id, gravedad) WHERE resuelta_en IS NULL;
@@ -194,6 +196,11 @@ BEFORE INSERT ON eventos
 WHEN NEW.estado <> 'pendiente_revision' OR NEW.aprobado_por IS NOT NULL OR NEW.publicado_en IS NOT NULL
 BEGIN SELECT RAISE(ABORT, 'Todo evento entra como pendiente_revision, sin aprobación ni publicación'); END;
 
+CREATE TRIGGER IF NOT EXISTS eventos_no_reemplazar_aprobados
+BEFORE INSERT ON eventos
+WHEN EXISTS (SELECT 1 FROM eventos WHERE (id = NEW.id OR ref_externa = NEW.ref_externa) AND estado <> 'pendiente_revision')
+BEGIN SELECT RAISE(ABORT, 'Ya existe ese evento y no está pendiente: no se puede reemplazar'); END;
+
 CREATE TRIGGER IF NOT EXISTS eventos_aprobar_desde_pendiente
 BEFORE UPDATE OF estado ON eventos
 WHEN NEW.estado = 'aprobado' AND OLD.estado <> 'aprobado' AND OLD.estado <> 'pendiente_revision'
@@ -210,21 +217,30 @@ BEFORE UPDATE OF estado ON eventos
 WHEN NEW.estado = 'publicado' AND OLD.estado NOT IN ('aprobado', 'publicado')
 BEGIN SELECT RAISE(ABORT, 'Solo un evento aprobado se puede publicar'); END;
 
+-- Cubre también aprobado → publicado: no se puede publicar un contenido distinto del que se aprobó
 CREATE TRIGGER IF NOT EXISTS eventos_aprobado_no_cambia_contenido
 BEFORE UPDATE ON eventos
-WHEN OLD.estado IN ('aprobado', 'publicado') AND NEW.estado = OLD.estado AND (
-  NEW.titulo IS NOT OLD.titulo OR NEW.slug IS NOT OLD.slug OR NEW.categoria IS NOT OLD.categoria OR
-  NEW.fecha IS NOT OLD.fecha OR NEW.fecha_fin IS NOT OLD.fecha_fin OR NEW.hora IS NOT OLD.hora OR
-  NEW.municipio_codigo IS NOT OLD.municipio_codigo OR NEW.lugar IS NOT OLD.lugar OR NEW.direccion IS NOT OLD.direccion OR
-  NEW.tipo_precio IS NOT OLD.tipo_precio OR NEW.precio_desde IS NOT OLD.precio_desde OR NEW.precio_hasta IS NOT OLD.precio_hasta OR
-  NEW.url_venta IS NOT OLD.url_venta OR NEW.url_oficial IS NOT OLD.url_oficial OR NEW.resumen IS NOT OLD.resumen OR
-  NEW.descripcion IS NOT OLD.descripcion OR NEW.estado_evento IS NOT OLD.estado_evento OR NEW.organizador IS NOT OLD.organizador)
+WHEN OLD.estado IN ('aprobado', 'publicado') AND NEW.estado IN ('aprobado', 'publicado') AND (
+  NEW.slug IS NOT OLD.slug OR NEW.titulo IS NOT OLD.titulo OR NEW.categoria IS NOT OLD.categoria OR NEW.categoria_origen IS NOT OLD.categoria_origen OR
+  NEW.subcategoria IS NOT OLD.subcategoria OR NEW.etiquetas IS NOT OLD.etiquetas OR NEW.resumen IS NOT OLD.resumen OR NEW.descripcion IS NOT OLD.descripcion OR
+  NEW.fecha IS NOT OLD.fecha OR NEW.fecha_fin IS NOT OLD.fecha_fin OR NEW.hora IS NOT OLD.hora OR NEW.hora_fin IS NOT OLD.hora_fin OR
+  NEW.estado_fecha IS NOT OLD.estado_fecha OR NEW.estado_evento IS NOT OLD.estado_evento OR NEW.modalidad IS NOT OLD.modalidad OR NEW.municipio_codigo IS NOT OLD.municipio_codigo OR
+  NEW.departamento_codigo IS NOT OLD.departamento_codigo OR NEW.ciudad_sitio IS NOT OLD.ciudad_sitio OR NEW.lugar IS NOT OLD.lugar OR NEW.direccion IS NOT OLD.direccion OR
+  NEW.latitud IS NOT OLD.latitud OR NEW.longitud IS NOT OLD.longitud OR NEW.precision_ubicacion IS NOT OLD.precision_ubicacion OR NEW.organizador IS NOT OLD.organizador OR
+  NEW.url_organizador IS NOT OLD.url_organizador OR NEW.tipo_precio IS NOT OLD.tipo_precio OR NEW.precio_desde IS NOT OLD.precio_desde OR NEW.precio_hasta IS NOT OLD.precio_hasta OR
+  NEW.moneda IS NOT OLD.moneda OR NEW.url_oficial IS NOT OLD.url_oficial OR NEW.url_venta IS NOT OLD.url_venta OR NEW.url_registro IS NOT OLD.url_registro OR
+  NEW.restriccion_edad IS NOT OLD.restriccion_edad OR NEW.apto_familia IS NOT OLD.apto_familia)
 BEGIN SELECT RAISE(ABORT, 'Cambiar un evento aprobado o publicado exige devolverlo a pendiente_revision'); END;
 
 CREATE TRIGGER IF NOT EXISTS eventos_publicados_no_se_borran
 BEFORE DELETE ON eventos
 WHEN OLD.estado IN ('aprobado', 'publicado')
 BEGIN SELECT RAISE(ABORT, 'Un evento aprobado o publicado no se borra: se retira'); END;
+
+CREATE TRIGGER IF NOT EXISTS eventos_alertas_no_se_borran
+BEFORE DELETE ON eventos_alertas
+WHEN OLD.gravedad = 'bloquea' AND OLD.resuelta_en IS NULL
+BEGIN SELECT RAISE(ABORT, 'Una alerta que bloquea no se borra: se resuelve indicando quién y cómo'); END;
 
 -- Al volver a revisión se borra la aprobación anterior, para que nadie publique con una aprobación vieja
 CREATE TRIGGER IF NOT EXISTS eventos_volver_a_revision

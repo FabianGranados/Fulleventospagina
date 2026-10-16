@@ -53,7 +53,8 @@ export const municipioPorCodigo = (codigo) => porCodigo.get(String(codigo ?? '')
 export const ciudadSitio = (codigo) => SITIO_POR_CODIGO.get(codigo) ?? null;
 
 // Resuelve el municipio. Devuelve { municipio } o { error } — nunca adivina entre homónimos.
-export const resolverMunicipio = ({ codigo, nombre, departamento, departamentoCodigo } = {}) => {
+export const resolverMunicipio = ({ codigo, nombre, departamento, departamentoCodigo: depto } = {}) => {
+  const departamentoCodigo = depto ? String(depto).trim().padStart(2, '0') : undefined;
   if (codigo) {
     const m = municipioPorCodigo(codigo);
     if (!m) return { error: `El código DIVIPOLA ${codigo} no existe en la lista de municipios` };
