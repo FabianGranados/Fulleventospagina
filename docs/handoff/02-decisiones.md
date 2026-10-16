@@ -754,3 +754,13 @@ Pedido del cliente: con zoom, poder moverse por el mapa.
   - en computador lleva en el centro la pista "Arrastra para moverte";
   - en celular es compacta y sin pista (34 px por botón).
 - Al soltar, los pines que quedan fuera del marco salen del orden de Tab, como con el zoom (H50).
+
+### 2.38 Noticias: filtros en botones y tarjetas con solo el titular (11 de octubre de 2026)
+
+Pedido del cliente: hacer en Noticias lo mismo que en la Agenda con los filtros, y que las noticias tengan solo el titular porque se veían muy cargadas.
+
+- **Filtros de `/noticias`:** las dos filas de chips (ciudad y tema) pasan a dos botones, "Toda Colombia" y "Todos los temas". Cada uno abre una hoja con las opciones.
+  - Cada opción muestra cuántas noticias tiene, según el otro filtro; las que no tienen ninguna se atenúan.
+  - Abajo va "Ver N noticias". La URL conserva `?ciudad=&tema=`.
+- **Piezas compartidas** en `components/filtros/`: `BotonFiltro`, `HojaFiltro` y `OpcionFiltro`. Las usan la Agenda (2.35) y Noticias, y el marcado y los estilos que antes tenía `AgendaApp` pasan a ellas.
+- **Solo el titular:** `TarjetaNoticia` y el bloque de noticias de la Bienvenida muestran solo la imagen y el titular. El antetítulo (tema · ciudad), la bajada y la fecha siguen dentro de cada noticia.

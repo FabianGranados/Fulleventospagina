@@ -1,8 +1,9 @@
 ---
 // Tarjeta de noticia (decisión 2.25): /noticias y "Más noticias". Toda la tarjeta abre la noticia: el enlace es
 // el título y su área se estira sobre la tarjeta, así hay un solo enlace por noticia para el teclado.
+// Solo la imagen y el titular (decisión 2.38): el antetítulo, la bajada y la fecha van dentro de la noticia.
 import FotoEvento from '../eventos/FotoEvento.astro';
-import { antetitulo, fondoNoticia, metaNoticia, rutaNoticia, type Noticia } from '../../lib/noticias';
+import { fondoNoticia, rutaNoticia, type Noticia } from '../../lib/noticias';
 
 interface Props {
   noticia: Noticia;
@@ -28,10 +29,7 @@ const Titulo = `h${nivel}`;
     )
   }
   <div class="texto">
-    <p class="kicker">{antetitulo(n)}</p>
     <Titulo class="titulo"><a href={rutaNoticia(n)}>{n.data.titulo}</a></Titulo>
-    <p class="bajada">{n.data.bajada}</p>
-    <p class="meta"><time datetime={n.data.fecha}>{metaNoticia(n)}</time></p>
   </div>
 </article>
 
@@ -90,36 +88,15 @@ const Titulo = `h${nivel}`;
     flex: 1;
   }
 
-  .kicker {
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-
   .titulo {
-    margin: 4px 0 8px;
     font-size: 1.08rem;
     font-weight: 700;
     line-height: 1.28;
     text-wrap: balance;
   }
 
-  .bajada {
-    color: var(--muted);
-    font-size: .9rem;
-  }
-
-  .meta {
-    margin-top: auto;
-    padding-top: 12px;
-    font-size: .8rem;
-    color: var(--muted);
-  }
-
-  /* En celular las tarjetas normales se compactan: miniatura a la izquierda y sin bajada, para que la lista
-     no sea una pantalla por noticia */
+  /* En celular las tarjetas normales se compactan: miniatura a la izquierda y el titular al lado, para que la
+     lista no sea una pantalla por noticia */
   @media (max-width: 599px) {
     .normal {
       flex-direction: row;
@@ -130,24 +107,16 @@ const Titulo = `h${nivel}`;
       flex: 0 0 96px;
       width: 96px;
       aspect-ratio: auto;
-      min-height: 112px;
+      min-height: 88px;
     }
 
     .normal .texto {
+      justify-content: center;
       padding: 12px 14px;
     }
 
     .normal .titulo {
       font-size: 1rem;
-      margin-bottom: 6px;
-    }
-
-    .normal .bajada {
-      display: none;
-    }
-
-    .normal .meta {
-      padding-top: 6px;
     }
   }
 
@@ -164,10 +133,6 @@ const Titulo = `h${nivel}`;
     line-height: 1.1;
   }
 
-  .grande .bajada {
-    font-size: 1rem;
-  }
-
   @media (min-width: 820px) {
     .grande {
       flex-direction: row;
@@ -182,10 +147,6 @@ const Titulo = `h${nivel}`;
     .grande .texto {
       padding: 28px 30px;
       justify-content: center;
-    }
-
-    .grande .meta {
-      margin-top: 0;
     }
   }
 </style>

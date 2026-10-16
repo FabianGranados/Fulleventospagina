@@ -1,0 +1,62 @@
+---
+// Botón de filtro en píldora (decisión 2.35, Agenda y Noticias): muestra lo elegido y abre su hoja de opciones
+// (HojaFiltro) con data-abrir-modal. Con un filtro puesto la página le pone la clase "activo" y se rellena de tinta.
+// El texto visible va en [data-filtro-texto]; la página lo cambia al elegir.
+import Icono, { type NombreIcono } from '../ui/Icono.astro';
+
+interface Props {
+  // id de la hoja que abre
+  hoja: string;
+  // Valor de data-filtro, para que el script encuentre el botón
+  filtro: string;
+  // Nombre del filtro para los lectores de pantalla: "Ciudad: Bogotá"
+  rotulo: string;
+  icono: NombreIcono;
+}
+
+const { hoja, filtro, rotulo, icono } = Astro.props;
+---
+
+<button type="button" class="filtro" data-abrir-modal={hoja} data-filtro={filtro}>
+  <Icono nombre={icono} tamano={18} />
+  <span class="solo-lectores">{rotulo}: </span><span class="texto" data-filtro-texto><slot /></span>
+  <Icono nombre="siguiente" tamano={16} grosor={2.4} class="abajo" />
+</button>
+
+<style>
+  .filtro {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    max-width: 100%;
+    padding: 0 16px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .filtro :global(.abajo) {
+    transform: rotate(90deg);
+    opacity: .7;
+  }
+
+  .filtro:hover {
+    background: var(--light-hover);
+  }
+
+  .filtro.activo {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+</style>
