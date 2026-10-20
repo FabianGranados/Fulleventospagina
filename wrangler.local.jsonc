@@ -1,0 +1,17 @@
+// Configuración SOLO para desarrollo local de la etapa B2 (docs/etapa-b-eventos-d1.md): el sitio lee los eventos
+// publicados de una base D1 local (miniflare, en .wrangler/state). Se usa con EVENTOS_D1=local (npm run dev:d1 o
+// npm run build:d1); la compilación normal sigue con wrangler.jsonc, sin binding.
+// El database_id es local y no existe en Cloudflare: este archivo no sirve para desplegar ni para --remote.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fulleventospagina",
+  "compatibility_date": "2026-10-06",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fulleventos",
+      "database_id": "fulleventos-solo-local",
+      "migrations_dir": "migraciones"
+    }
+  ]
+}

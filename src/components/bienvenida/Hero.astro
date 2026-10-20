@@ -4,19 +4,24 @@
 // bajar. La ciudad elegida aquí la sincroniza AgendaFinde con todos los `select[data-selector-ciudad]` y la avisa
 // con el evento "finde:ciudad"; este script solo repinta los conteos y enlaces de las tarjetas.
 import Icono from '../ui/Icono.astro';
+import Modal from '../ui/Modal.astro';
 import PruebaSocial from './PruebaSocial.astro';
-import { eventos, type Evento } from '../../data/eventos';
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { eventos as eventosDemo, categoriaOficialDe, type Evento } from '../../data/eventos';
 import { ciudades } from '../../data/ciudades';
-import { categorias, colorCategoria, rutaCategoria } from '../../data/categorias';
+import { categoriasOficiales, rutaCategoriaOficial } from '../../data/categorias-oficiales';
 import { fechasAgenda } from '../../data/agenda';
 import { planes } from '../../lib/formato';
 
 interface Props {
+  // Eventos publicados (etapa B2: lib/datos-eventos.ts, de D1 o de eventos.ts)
+  eventos?: Evento[];
   // Se muestra solo con datos reales (decisión 2.13); sin datos no se pinta.
   pruebaSocial?: { personas: number; ciudades: number };
 }
 
-const { pruebaSocial } = Astro.props;
+const { eventos = eventosDemo, pruebaSocial } = Astro.props;
 
 // Conteos reales del finde (el mismo rango que "Este finde" de la Agenda), por ciudad y en todo el país
 const finde = fechasAgenda.find((f) => f.id === 'finde')!;
@@ -24,10 +29,16 @@ const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde
 const conteos = (lista: Evento[]) =>
   Object.fromEntries([['all', lista.length], ...ciudades.map((c) => [c.id, lista.filter((e) => e.ciudad === c.id).length])]);
 
-const tarjetas = categorias
-  .map((c) => ({ ...c, fondo: colorCategoria(c), conteos: conteos(enFinde.filter((e) => e.etiquetas.includes(c.id))) }))
-  .filter((c) => c.conteos.all > 0);
-const conteoTexto = (n: number) => `${planes(n)} este finde`;
+// Fotos de las 14 categorías (src/assets/categorias/<id>.jpg, opción C aprobada el 19 oct 2026)
+const archivos = import.meta.glob<{ default: ImageMetadata }>('../../assets/categorias/*.jpg', { eager: true });
+const foto = (id: string) => archivos[`../../assets/categorias/${id}.jpg`]?.default;
+
+// Las 14 categorías con sus planes del finde. En la portada van las que más planes tienen: entre 6 y 8 (etapa B2,
+// opción C); si menos de 6 tienen planes, se completan en el orden oficial. "Ver todas" abre la lista completa.
+const todas = categoriasOficiales.map((c) => ({ ...c, conteos: conteos(enFinde.filter((e) => categoriaOficialDe(e) === c.id)) }));
+const conPlanes = todas.filter((c) => c.conteos.all > 0).sort((a, b) => b.conteos.all - a.conteos.all);
+const portada = [...conPlanes, ...todas.filter((c) => !c.conteos.all)].slice(0, Math.min(8, Math.max(6, conPlanes.length)));
+const conteoTexto = (n: number) => (n ? `${planes(n)} este finde` : 'Sin planes este finde');
 ---
 
 <section aria-labelledby="hero-titulo" class="inicio" data-hero>
@@ -74,53 +85,68 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
 
       <ul class="pista" id="categorias-pista" role="list" data-fila-pista>
         {
-          tarjetas.map((c) => (
-            <li>
-              <a
-                href={rutaCategoria(c.id)}
-                class="tarjeta"
-                style={`--fondo: ${c.fondo}`}
-                data-categoria={c.id}
-                data-conteos={JSON.stringify(c.conteos)}
-              >
-                <span class="icono"><Icono nombre={c.icono} tamano={28} /></span>
-                <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
-                <span class="textos">
-                  <span class="nombre">{c.texto}</span>
-                  <span class="conteo" data-conteo>{conteoTexto(c.conteos.all)}</span>
-                </span>
-              </a>
-            </li>
-          ))
+          portada.map((c) => {
+            const imagen = foto(c.id);
+            return (
+              <li>
+                <a href={rutaCategoriaOficial(c.id)} class="tarjeta" data-categoria={c.id} data-conteos={JSON.stringify(c.conteos)}>
+                  {imagen && (
+                    <Picture
+                      src={imagen}
+                      alt=""
+                      formats={['avif', 'webp']}
+                      widths={[320, 480, 640]}
+                      sizes="(max-width: 767px) 66vw, 300px"
+                      loading="lazy"
+                      class="foto"
+                      pictureAttributes={{ class: 'marco-foto' }}
+                    />
+                  )}
+                  <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
+                  <span class="textos">
+                    <span class="nombre">{c.nombre}</span>
+                    <span class="conteo" data-conteo>{conteoTexto(c.conteos.all)}</span>
+                  </span>
+                </a>
+              </li>
+            );
+          })
         }
         <li>
-          <a href="/mapa" class="tarjeta neutra" data-tarjeta-mapa>
-            <span class="icono"><Icono nombre="mapa" tamano={28} /></span>
-            <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
+          <button type="button" class="tarjeta todas" data-abrir-modal="todas-categorias">
+            <span class="icono"><Icono nombre="lista" tamano={28} /></span>
             <span class="textos">
-              <span class="nombre">En el mapa</span>
-              <span class="conteo">Planes por ciudad</span>
+              <span class="nombre">Ver todas</span>
+              <span class="conteo">Las 14 categorías</span>
             </span>
-          </a>
-        </li>
-        <li>
-          <a href="/agenda" class="tarjeta oscura" data-tarjeta-agenda>
-            <span class="icono"><Icono nombre="agenda" tamano={28} /></span>
-            <Icono nombre="flechaDiagonal" tamano={22} class="ir" />
-            <span class="textos">
-              <span class="nombre">Toda la agenda</span>
-              <span class="conteo">Todos los planes</span>
-            </span>
-          </a>
+          </button>
         </li>
       </ul>
     </nav>
     {pruebaSocial && <PruebaSocial {...pruebaSocial} />}
+
+    <!-- Las 14 categorías oficiales, con su ícono y sus planes del finde (etapa B2) -->
+    <Modal id="todas-categorias" titulo="Todas las categorías" forma="hoja" ancho={480}>
+      <ul class="lista-categorias" role="list">
+        {
+          todas.map((c) => (
+            <li>
+              <a href={rutaCategoriaOficial(c.id)} class:list={['fila-categoria', { vacia: !c.conteos.all }]} data-categoria={c.id} data-conteos={JSON.stringify(c.conteos)}>
+                <span class="fila-icono"><Icono nombre={c.icono} tamano={20} /></span>
+                <span class="fila-nombre">{c.nombre}</span>
+                <span class="fila-conteo" data-conteo-corto>{c.conteos.all}</span>
+                <span class="solo-lectores" data-conteo>{conteoTexto(c.conteos.all)}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </Modal>
   </div>
 </section>
 
 <script>
-  import { rutaCategoria } from '../../data/categorias';
+  import { rutaCategoriaOficial } from '../../data/categorias-oficiales';
   import { planes } from '../../lib/formato';
   import { bajarSiVacio } from '../../lib/buscador';
   import { activarFila } from '../../lib/fila';
@@ -133,9 +159,8 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
     const fila = hero.querySelector<HTMLElement>('[data-categorias]')!;
     activarFila(fila);
 
-    const tarjetas = [...hero.querySelectorAll<HTMLAnchorElement>('[data-categoria]')];
-    const mapa = hero.querySelector<HTMLAnchorElement>('[data-tarjeta-mapa]')!;
-    const agenda = hero.querySelector<HTMLAnchorElement>('[data-tarjeta-agenda]')!;
+    // Tarjetas de la portada y filas de "Ver todas": siguen a la ciudad elegida (conteo y enlace)
+    const enlaces = [...hero.querySelectorAll<HTMLAnchorElement>('[data-categoria]')];
     let actual = 'all';
 
     document.addEventListener('finde:ciudad', (ev) => {
@@ -143,16 +168,14 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
       if (ciudad === actual) return;
       actual = ciudad;
 
-      tarjetas.forEach((t) => {
-        const n = (JSON.parse(t.dataset.conteos!) as Record<string, number>)[ciudad] ?? 0;
-        // Una categoría sin planes en la ciudad elegida no se muestra (como en la carga)
-        t.parentElement!.hidden = n === 0;
-        t.href = rutaCategoria(t.dataset.categoria!, ciudad);
-        t.querySelector('[data-conteo]')!.textContent = `${planes(n)} este finde`;
+      enlaces.forEach((a) => {
+        const n = (JSON.parse(a.dataset.conteos!) as Record<string, number>)[ciudad] ?? 0;
+        a.href = rutaCategoriaOficial(a.dataset.categoria!, ciudad);
+        a.querySelector('[data-conteo]')!.textContent = n ? `${planes(n)} este finde` : 'Sin planes este finde';
+        const corto = a.querySelector('[data-conteo-corto]');
+        if (corto) corto.textContent = String(n);
+        a.classList.toggle('vacia', n === 0);
       });
-      const conCiudad = ciudad === 'all' ? '' : `?ciudad=${ciudad}`;
-      mapa.href = `/mapa${conCiudad}`;
-      agenda.href = `/agenda${conCiudad}`;
       fila.dispatchEvent(new Event('fila-eventos:reiniciar'));
     });
   }
@@ -380,6 +403,7 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
     scroll-snap-align: start;
   }
 
+  /* Tarjeta de categoría: la foto de fondo con una capa oscura abajo para que el texto blanco se lea */
   .tarjeta,
   .tarjeta:hover {
     position: relative;
@@ -387,13 +411,34 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
     min-height: 290px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 20px;
+    overflow: hidden;
+    border: 0;
     border-radius: var(--radius-field);
-    background: var(--fondo);
-    color: var(--ink);
-    box-shadow: inset 0 0 0 1px rgba(23, 18, 15, .05);
+    background: var(--photo-dark);
+    color: var(--on-dark);
+    text-align: left;
+    font: inherit;
     transition: transform 150ms ease-out;
+  }
+
+  .tarjeta :global(.marco-foto) {
+    position: absolute;
+    inset: 0;
+  }
+
+  .tarjeta :global(.foto) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .tarjeta:not(.todas)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(20, 14, 16, .05) 30%, rgba(20, 14, 16, .55) 62%, rgba(20, 14, 16, .9) 100%);
   }
 
   .tarjeta:hover {
@@ -408,23 +453,21 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
     outline-offset: 3px;
   }
 
-  .icono {
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: var(--radius-field);
-    background: rgba(255, 255, 255, .55);
-  }
-
   .tarjeta :global(.ir) {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    opacity: .75;
+    z-index: 1;
+    top: 16px;
+    right: 16px;
+    padding: 8px;
+    box-sizing: content-box;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .92);
+    color: var(--ink);
   }
 
   .textos {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -433,31 +476,95 @@ const conteoTexto = (n: number) => `${planes(n)} este finde`;
   .nombre {
     font-family: var(--display);
     font-weight: 800;
-    font-size: 1.5rem;
-    line-height: 1.05;
+    font-size: 1.4rem;
+    line-height: 1.08;
     letter-spacing: -0.01em;
+    text-wrap: balance;
   }
 
   .conteo {
     font-size: .95rem;
+    color: var(--on-dark-muted);
   }
 
-  .tarjeta.neutra {
-    --fondo: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line-input);
+  /* "Ver todas": botón oscuro con ícono, al final de la fila */
+  .tarjeta.todas {
+    justify-content: space-between;
+    background: var(--ink);
+    cursor: pointer;
   }
 
-  .tarjeta.neutra .icono {
+  .icono {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-field);
+    background: rgba(255, 255, 255, .14);
+  }
+
+  /* Hoja "Todas las categorías": filas con ícono, nombre y planes del finde */
+  .lista-categorias {
+    text-align: left;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: min(64vh, 560px);
+    overflow-y: auto;
+    margin-inline: -8px;
+    padding: 2px 8px;
+  }
+
+  .fila-categoria,
+  .fila-categoria:hover {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 0 12px;
+    border-radius: var(--radius-field);
+    color: var(--ink);
+  }
+
+  .fila-categoria:hover {
+    background: var(--light-hover);
+  }
+
+  .fila-icono {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--radius-xs);
     background: var(--surface-sunken);
   }
 
-  .tarjeta.oscura {
-    --fondo: var(--ink);
-    color: var(--on-dark);
+  .fila-nombre {
+    flex: 1;
+    font-weight: 600;
   }
 
-  .tarjeta.oscura .icono {
-    background: rgba(255, 255, 255, .14);
+  .fila-conteo {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--yellow);
+    font-size: .78rem;
+    font-weight: 700;
+  }
+
+  .fila-categoria.vacia .fila-nombre {
+    color: var(--muted);
+  }
+
+  .fila-categoria.vacia .fila-conteo {
+    background: var(--surface-sunken);
+    color: var(--muted);
   }
 
   /* Computadores con poca altura: las tarjetas se encogen para que quepan completas al entrar */

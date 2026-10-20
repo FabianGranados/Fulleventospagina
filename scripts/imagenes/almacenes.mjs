@@ -36,7 +36,7 @@ export const reintentar = async (fn, { intentos = 3, baseMs = 500, alReintentar 
 
 // ---------- SQLite (memoria o archivo local) ----------
 
-const abrirSqlite = async (ruta) => {
+export const abrirSqlite = async (ruta) => {
   // node:sqlite es estable en la práctica pero Node 22 avisa que es experimental; se silencia ese aviso
   const emitir = process.emitWarning;
   process.emitWarning = (w, ...resto) => (String(w).includes('SQLite') ? undefined : emitir.call(process, w, ...resto));
@@ -72,7 +72,8 @@ export const crearAlmacenLocal = async (raiz = process.cwd(), base = join(raiz, 
   const carpeta = join(base, 'r2-local');
   return {
     modo: 'local',
-    db: await abrirSqlite(join(base, 'imagenes-local.sqlite')),
+    // EVENTOS_SQLITE_LOCAL (npm run d1:local, etapa B2): la base D1 local que lee el sitio, en vez de registros/
+    db: await abrirSqlite(process.env.EVENTOS_SQLITE_LOCAL || join(base, 'imagenes-local.sqlite')),
     r2: {
       carpeta,
       subir: async (clave, buffer) => {

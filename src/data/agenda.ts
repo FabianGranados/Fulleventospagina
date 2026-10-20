@@ -1,6 +1,7 @@
 import { HOY_DEMO } from './demo';
 import { parchePorId, totalMiembros } from './parches';
-import { categoria } from './categorias';
+import { categoriasOficiales } from './categorias-oficiales';
+import type { NombreIcono } from '../components/ui/Icono.astro';
 // Datos de ejemplo de la Agenda (handoff 4.6, "Datos de ejemplo"). En producción vienen del backend (H53).
 // Línea social de cada evento: quién aparece, reposts totales (incluye a "quien"), colores de los
 // 2 avatares y si lo repostearon tus amigos cercanos (filtro "Lo que repostea tu gente").
@@ -41,11 +42,18 @@ export const reposteadosIniciales = ['e2'];
 
 // Categorías de la Agenda (textos exactos del prototipo). Los nombres salen de data/categorias.ts (decisión 2.32);
 // el orden es el del prototipo (Comida antes de Deporte).
-export const categoriasAgenda = [
+// Filtro de categoría de la Agenda (etapa B2): "Para ti" (todo), "Lo que repostea tu gente" (solo con sesión) y las 14
+// categorías oficiales. "Gratis" deja de ser categoría: es un filtro aparte (?gratis=1).
+export const categoriasAgenda: { id: string; texto: string; icono?: NombreIcono }[] = [
   { id: 'all', texto: 'Para ti' },
   { id: 'amigos', texto: 'Lo que repostea tu gente' },
-  ...['rumba', 'conciertos', 'gratis', 'comida', 'deporte', 'teatro'].map((id) => ({ id, texto: categoria(id)!.texto })),
+  ...categoriasOficiales.map((c) => ({ id: c.id, texto: c.nombre, icono: c.icono })),
 ];
+
+// Enlaces viejos con las 6 categorías del sitio (?categoria=rumba…) → categoría oficial; "gratis" pasa al filtro aparte
+export const categoriaAgendaDesdeSitio: Record<string, string> = Object.fromEntries(
+  categoriasOficiales.filter((c) => c.sitio).map((c) => [c.sitio!, c.id]),
+);
 
 // Fechas (H39: filtran de verdad). "Hoy" es el del demo (src/data/demo.ts), común a todas las pantallas;
 // el fin de semana de ejemplo va del viernes 9 al lunes festivo 12.
@@ -68,6 +76,8 @@ export const destinosRepost = [
 
 // Línea social (4.6 §7). Si la usuaria reposteó: "Tú, {quien} y {n} más"; si no: "{quien} y {n} más".
 export const lineaRepost = (s: SocialAgenda, reposteado: boolean) => {
+  // Evento sin reposts todavía (los nuevos de D1, etapa B2)
+  if (!s.reposts) return reposteado ? 'Lo reposteaste' : '';
   const resto = s.reposts - 1;
   const base = reposteado ? `Tú, ${s.quien}` : s.quien;
   return resto > 0 ? `${base} y ${resto} más lo repostearon` : `${base} lo repostearon`;

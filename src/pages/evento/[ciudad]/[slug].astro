@@ -31,12 +31,16 @@ import BoletaDigital from '../../../components/evento/BoletaDigital.astro';
 import TarjetaPublicacion from '../../../components/publicaciones/TarjetaPublicacion.astro';
 import PublicacionesEvento from '../../../components/publicaciones/PublicacionesEvento.astro';
 import { modeloEvento } from '../../../components/evento/modelo';
+import { obtenerEventos } from '../../../lib/datos-eventos';
 import { eventos, type Evento } from '../../../data/eventos';
 import { persona } from '../../../data/personas';
 import { CARGO_DEMO } from '../../../data/evento';
 import { sinBoleta } from '../../../data/asistencia';
 import { slug } from '../../../lib/formato';
 import { VENTA_PROPIA } from '../../../config';
+
+// Etapa B2: con EVENTOS_D1=local la página se arma bajo demanda con el evento publicado en D1 (astro.config.mjs); si
+// no, se genera una por evento de src/data/eventos.ts al compilar, como siempre
 
 export function getStaticPaths() {
   return eventos.map((evento) => ({
@@ -46,10 +50,18 @@ export function getStaticPaths() {
 }
 
 interface Props {
-  evento: Evento;
+  evento?: Evento;
 }
 
-const m = modeloEvento(Astro.props.evento);
+let evento = Astro.props.evento;
+if (!evento) {
+  const { ciudad, slug: slugPedido } = Astro.params;
+  evento = (await obtenerEventos()).find((e) => e.ciudad === ciudad && slug(e.titulo) === slugPedido);
+  // Pendiente, retirado o inexistente: no se muestra. Con un 404 sin cuerpo Astro pinta la página 404 del sitio
+  if (!evento) return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const m = modeloEvento(evento);
 const { evento: e, detalle: d } = m;
 const vende = !m.gratis;
 

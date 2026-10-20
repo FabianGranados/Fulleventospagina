@@ -1,7 +1,6 @@
 // Arma los datos que necesita la página de un evento a partir de src/data/eventos.ts
 // y, si existe, del detalle de src/data/evento.ts (hoy solo e1).
-import { eventos, type Evento } from '../../data/eventos';
-import { nombreCiudad } from '../../data/ciudades';
+import { eventos, ciudadDe, esGratis, textoPrecio, type Evento } from '../../data/eventos';
 import { detalles, type DetalleEvento, type Localidad } from '../../data/evento';
 import { cifra, isoConHora, pesos, rutaEvento } from '../../lib/formato';
 import { parchesDelEvento, type Parche } from '../../data/parches';
@@ -65,7 +64,7 @@ export interface ModeloEvento {
 
 export const modeloEvento = (evento: Evento): ModeloEvento => {
   const detalle = detalles[evento.id];
-  const ciudad = nombreCiudad(evento.ciudad);
+  const ciudad = ciudadDe(evento);
   const [nombreLugar, zonaLugar] = evento.lugar.split(' · ');
   const lugarDetalle = zonaLugar ? `${zonaLugar}, ${ciudad}` : ciudad;
 
@@ -101,7 +100,7 @@ export const modeloEvento = (evento: Evento): ModeloEvento => {
     detalle,
     ciudad,
     url: rutaEvento(evento.ciudad, evento.titulo),
-    gratis: evento.precio === 0,
+    gratis: esGratis(evento),
     dia: parte(evento.fecha, { day: 'numeric' }),
     mes: parte(evento.fecha, { month: 'short' }),
     fechaLarga: mayuscula(parte(evento.fecha, { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '')),
@@ -112,7 +111,7 @@ export const modeloEvento = (evento: Evento): ModeloEvento => {
     lugarNombre: detalle?.lugarNombre ?? nombreLugar,
     lugarDetalle,
     lugarCompleto: `${evento.lugar}, ${ciudad}`,
-    precioDesde: evento.precio ? `Desde ${pesos(evento.precio)}` : 'Gratis',
+    precioDesde: textoPrecio(evento),
     localidades,
     organizador: detalle?.organizador.nombre ?? '[ORGANIZADOR]',
     similares,

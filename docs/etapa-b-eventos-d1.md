@@ -115,11 +115,39 @@ actualizada el 24 de enero de 2025): 1.122 entradas, que son 1.103 municipios (c
 tenía Nuevo Belén de Bajirá y escribía mal Jamundí. Para actualizarla: ver `docs/licencias-datos.md`. La migración 0003
 actualiza nombres sin borrar filas.
 
-### Pendiente para B2 y B3
+## Estado de B2 (20 de octubre de 2026, rama `etapa-b2`, solo en local)
 
-Ver el diagnóstico de cierre de B1 en el informe de la sesión. En resumen: binding D1 en `wrangler.jsonc`,
-`src/lib/datos-eventos.ts`, páginas bajo demanda con paginación y caché, rutas por municipio, las 14 categorías en la
-interfaz, migrar los 19 eventos de ejemplo como `demo = 1` y, en B3, la foto desde `imagenes_evento` en el HTML.
+Nada de B2 toca Cloudflare: no hay binding en `wrangler.jsonc`, no se desplegó y no se corrió ninguna migración remota.
+
+- **De dónde salen los eventos:** `src/lib/datos-eventos.ts` (`obtenerEventos()`) es el único lugar. Con el binding
+  `DB` lee solo los eventos con `estado = 'publicado'`; sin binding (la compilación normal y la publicación actual)
+  devuelve los de `src/data/eventos.ts`, como siempre. Lo usan la Bienvenida (`/`), la Agenda y la página del evento.
+- **Base D1 local:** `wrangler.local.jsonc` declara el binding `DB` solo para local (nunca para desplegar ni para
+  `--remote`). `npm run d1:local -- preparar` crea la base en `.wrangler/state`, aplica las migraciones y carga los
+  19 eventos de ejemplo como `demo = 1`, pasando por las compuertas (entran pendientes, se aprueban con la etiqueta
+  "Carga de ejemplo local" y se publican). `npm run d1:local -- <comando>` corre cualquier comando de
+  `npm run eventos` (importar, pendientes, aprobar, publicar, retirar…) sobre esa misma base.
+- **Ver el sitio leyendo D1:** `npm run dev:d1`, o `npm run build:d1` y `npm run preview:d1`. Con `EVENTOS_D1=local`
+  la integración de `astro.config.mjs` vuelve bajo demanda `/`, `/agenda` y `/evento/[ciudad]/[slug]` (Astro solo lee
+  `prerender` literal, por eso se hace con `astro:route:setup`). El aviso "getStaticPaths() ignored" es esperado en
+  ese modo. Un evento retirado o sin publicar da la página 404 del sitio.
+- **Los eventos de ejemplo** guardan en D1 sus datos de evento; la gente que va, los parches, los colores, quién vende
+  y la hora de puertas/show se completan desde `eventos.ts` (solo para `demo = 1`). Los eventos nuevos se muestran sin
+  gente, reposts ni precios inventados (`textoPrecio`: "Gratis", "Desde $…", "Consultar precio" o "Precio por
+  confirmar").
+- **Las 14 categorías en la interfaz (opción C):** en la portada, las 6 a 8 con más planes del finde, con su foto de
+  `src/assets/categorias/` y una tarjeta "Ver todas" que abre la hoja con las 14 (ícono y conteo, siguen la ciudad).
+  En la Agenda, la hoja "Categoría" tiene las 14 con ícono y conteo, y "Gratis" es un botón aparte (`aria-pressed`,
+  `?gratis=1`). Los enlaces viejos `?categoria=rumba` o `?categoria=gratis` siguen funcionando.
+
+### Pendiente para B3 y antes de producción
+
+- El Mapa, Inicio, el perfil y las noticias siguen con `eventos.ts` y las 6 categorías del sitio.
+- Paginación en el servidor y caché en el borde para la Agenda (hoy se pintan todos los publicados y se pagina en el
+  navegador).
+- Rutas por municipio (hoy un municipio que no es ciudad del sitio usa `slug(municipio)` en la URL del evento).
+- La foto del evento desde `imagenes_evento` (B3).
+- Binding D1 real en `wrangler.jsonc` y migraciones remotas: solo con autorización.
 
 ## Mientras tanto
 

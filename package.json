@@ -6,6 +6,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "dev:d1": "EVENTOS_D1=local astro dev",
+    "build:d1": "EVENTOS_D1=local astro build",
+    "preview:d1": "EVENTOS_D1=local astro preview",
     "astro": "astro",
     "test": "npm run test:importador && npm run revisar:secretos && astro build && playwright test",
     "test:solo": "playwright test",
@@ -14,6 +17,7 @@
     "revisar:secretos": "node scripts/revisar-secretos.mjs",
     "demo:imagenes": "node scripts/demo/demo-imagenes.mjs",
     "eventos": "node scripts/eventos/cli.mjs",
+    "d1:local": "node scripts/eventos/d1-local.mjs",
     "divipola": "node scripts/eventos/divipola-generar.mjs",
     "divipola:sql": "node scripts/eventos/divipola-sql.mjs"
   },

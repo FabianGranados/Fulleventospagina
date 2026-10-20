@@ -4,13 +4,19 @@ import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import FilaEventos from '../eventos/FilaEventos.astro';
 import FranjaGente from './FranjaGente.astro';
 import { ciudades } from '../../data/ciudades';
-import { eventos } from '../../data/eventos';
+import { eventos as eventosDemo, esGratis, type Evento } from '../../data/eventos';
 import { rutaCategoria } from '../../data/categorias';
 import { fechasAgenda } from '../../data/agenda';
 
 // "Este finde" de la Bienvenida (decisión 2.34): tres filas de afiches distintas entre sí, no una por categoría
 // (las categorías ya están arriba, en las tarjetas del héroe). La ciudad se elige en un solo lugar: el selector de
 // aquí y el del buscador del héroe son el mismo estado. Entre la primera y la segunda fila va la franja de la cuenta.
+interface Props {
+  // Eventos publicados (etapa B2: lib/datos-eventos.ts, de D1 o de eventos.ts)
+  eventos?: Evento[];
+}
+
+const { eventos = eventosDemo } = Astro.props;
 const finde = fechasAgenda.find((f) => f.id === 'finde')!;
 const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
 
@@ -26,7 +32,7 @@ const filas = [
     titulo: 'Gratis este finde',
     subtitulo: 'Planes sin costo',
     categoria: 'gratis',
-    eventos: enFinde.filter((e) => !e.precio).sort((a, b) => b.van - a.van),
+    eventos: enFinde.filter(esGratis).sort((a, b) => b.van - a.van),
   },
   {
     id: 'finde-parche',

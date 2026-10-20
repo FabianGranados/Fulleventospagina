@@ -6,8 +6,7 @@
 import Icono from '../ui/Icono.astro';
 import PilaAvatares from '../ui/PilaAvatares.astro';
 import TarjetaAfiche from '../eventos/TarjetaAfiche.astro';
-import type { Evento } from '../../data/eventos';
-import { nombreCiudad } from '../../data/ciudades';
+import { categoriaOficialDe, ciudadDe, esGratis, type Evento } from '../../data/eventos';
 import { lineaRepost, type SocialAgenda } from '../../data/agenda';
 import { cifra, placaFecha, slug } from '../../lib/formato';
 
@@ -20,7 +19,7 @@ interface Props {
 
 const { evento: e, social, reposteado = false, oculta = false } = Astro.props;
 const { dia, mes } = placaFecha(e.fecha);
-const ciudad = nombreCiudad(e.ciudad);
+const ciudad = ciudadDe(e);
 const tituloId = `tarjeta-${e.id}-titulo`;
 // Texto sin tildes para la búsqueda del encabezado
 const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-/g, ' ');
@@ -34,6 +33,9 @@ const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-
   oculta={oculta}
   datos={{
     'data-etiquetas': e.etiquetas.join(' '),
+    // Filtros de la etapa B2: categoría oficial (una de las 14) y "Gratis" aparte
+    'data-oficial': categoriaOficialDe(e) ?? '',
+    'data-gratis': String(esGratis(e)),
     'data-fecha': e.fecha,
     'data-amigos': String(social.amigos),
     'data-texto': texto,
@@ -83,10 +85,14 @@ const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-
       <PilaAvatares colores={social.colores} tamano={22} solape={7} borde="hero" />
       <span data-linea>{lineaRepost(social, reposteado)}</span>
     </span>
-    <span class="social solo-visitante">
-      <Icono nombre="repost" tamano={15} grosor={2.2} />
-      {cifra(social.reposts)} {social.reposts === 1 ? 'repost' : 'reposts'}
-    </span>
+    {
+      social.reposts > 0 && (
+        <span class="social solo-visitante">
+          <Icono nombre="repost" tamano={15} grosor={2.2} />
+          {cifra(social.reposts)} {social.reposts === 1 ? 'repost' : 'reposts'}
+        </span>
+      )
+    }
   </Fragment>
 </TarjetaAfiche>
 

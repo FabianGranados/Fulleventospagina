@@ -10,13 +10,18 @@ import Pie from '../components/layout/Pie.astro';
 import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import AgendaApp from '../components/agenda/AgendaApp.astro';
 import VentanaRepost from '../components/eventos/VentanaRepost.astro';
+import { obtenerEventos } from '../lib/datos-eventos';
+
+// Etapa B2: con EVENTOS_D1=local se renderiza bajo demanda con los eventos publicados en D1 (astro.config.mjs);
+// si no, es estática
+const eventos = await obtenerEventos();
 ---
 
 <Base titulo="Agenda · Fulleventos" tamanoBase={15}>
   <EncabezadoVisitante class="solo-visitante" />
   <EncabezadoApp variante="completo" activa="agenda" class="solo-sesion" />
   <main id="contenido" class="contenedor principal">
-    <AgendaApp />
+    <AgendaApp eventos={eventos} />
   </main>
   <Pie />
   <BarraNavegacion activa="explorar" class="solo-sesion" />

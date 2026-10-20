@@ -2,6 +2,11 @@
 // Horas: la canónica de e1 son las puertas a las 8:00 p. m. y el show a las 9:30 p. m. (8.1 #9); las demás
 // son las que traían Inicio y el chat. Los eventos sin hora en ninguna fuente quedan sin hora.
 // "vende": las boleteras reales se muestran como [BOLETERA] hasta tener acuerdos (H1).
+// Con extensión: los scripts de Node (scripts/eventos/d1-local.mjs) también leen este archivo
+import { categoriaDesdeV1 } from './categorias-oficiales.ts';
+import { nombreCiudad } from './ciudades.ts';
+import { pesos } from '../lib/formato.ts';
+
 export interface Evento {
   id: string;
   titulo: string;
@@ -27,6 +32,16 @@ export interface Evento {
   // Solo si el evento distingue apertura de puertas y show (la hora es la de puertas)
   puertas?: string;
   show?: string;
+  // Etapa B2 (docs/etapa-b-eventos-d1.md): categoría oficial (una de las 14 de categorias-oficiales.ts). En los 19
+  // eventos de ejemplo se deduce de `categoria` (categoriaOficialDe); los de D1 la traen.
+  categoriaOficial?: string;
+  // Tipo de precio de D1: con "pago" o "mixto" sin cifra se muestra "Consultar precio"; "desconocido", "Precio por
+  // confirmar". Sin el campo (eventos de ejemplo), el precio es la cifra o "Gratis".
+  tipoPrecio?: 'gratis' | 'pago' | 'mixto' | 'desconocido';
+  // Nombre del municipio cuando no es una de las ciudades de src/data/ciudades.ts (eventos de D1)
+  ciudadNombre?: string;
+  // Viene de D1 (no de este archivo)
+  deD1?: boolean;
 }
 
 const BOLETERA = '[BOLETERA]';
@@ -54,3 +69,17 @@ export const eventos: Evento[] = [
 ];
 
 export const conteoCiudad = (ciudad: string) => eventos.filter((e) => e.ciudad === ciudad).length;
+
+// Categoría oficial de un evento (etapa B2): la suya o, en los de ejemplo, la equivalente a su categoría del sitio
+export const categoriaOficialDe = (e: Evento) => e.categoriaOficial ?? categoriaDesdeV1[e.categoria] ?? null;
+
+// Nombre de la ciudad o municipio del evento
+export const ciudadDe = (e: Evento) => e.ciudadNombre ?? nombreCiudad(e.ciudad);
+
+// Texto del precio en las tarjetas: "Desde $45.000", "Gratis", "Consultar precio" o "Precio por confirmar"
+export const textoPrecio = (e: Evento) => {
+  if (e.precio > 0) return `Desde ${pesos(e.precio)}`;
+  if (!e.tipoPrecio || e.tipoPrecio === 'gratis') return 'Gratis';
+  return e.tipoPrecio === 'desconocido' ? 'Precio por confirmar' : 'Consultar precio';
+};
+export const esGratis = (e: Evento) => e.tipoPrecio ? e.tipoPrecio === 'gratis' : !e.precio;

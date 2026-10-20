@@ -7,11 +7,17 @@ import TarjetaMarketplace from './TarjetaMarketplace.astro';
 import BotonFiltro from '../filtros/BotonFiltro.astro';
 import HojaFiltro from '../filtros/HojaFiltro.astro';
 import OpcionFiltro from '../filtros/OpcionFiltro.astro';
-import { categoria, colorCategoria } from '../../data/categorias';
 import { ciudades } from '../../data/ciudades';
-import { eventos } from '../../data/eventos';
+import { eventos as eventosDemo, categoriaOficialDe, type Evento } from '../../data/eventos';
 import { socialAgenda, reposteadosIniciales, categoriasAgenda, fechasAgenda } from '../../data/agenda';
 import { planes, ciudadesTexto } from '../../lib/formato';
+
+interface Props {
+  // Eventos publicados (etapa B2: lib/datos-eventos.ts, de D1 o de eventos.ts)
+  eventos?: Evento[];
+}
+
+const { eventos = eventosDemo } = Astro.props;
 
 // H47: 8 tarjetas y "Ver N planes más", como en la Bienvenida
 const PAGINA = 8;
@@ -26,6 +32,11 @@ const intercalados = [];
 for (let i = 0; porCiudad.some((g) => g[i]); i++) {
   for (const grupo of porCiudad) if (grupo[i]) intercalados.push(grupo[i]);
 }
+// Los eventos de D1 en municipios que aún no son ciudades del sitio van al final (solo en "Toda Colombia")
+intercalados.push(...eventos.filter((e) => !ciudades.some((c) => c.id === e.ciudad)));
+
+// Planes del finde por categoría oficial (los conteos de la hoja de categorías; el script los recalcula)
+const conteoCategoria = (id: string) => enFinde.filter((e) => categoriaOficialDe(e) === id).length;
 
 const conteo = (ciudad: string) => enFinde.filter((e) => e.ciudad === ciudad).length;
 const ciudadesConPlanes = new Set(enFinde.map((e) => e.ciudad)).size;
@@ -76,6 +87,10 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     <BotonFiltro hoja="filtro-categoria" filtro="categoria" rotulo="Categoría" icono="filtro">
       <span class="solo-sesion">Para ti</span><span class="solo-visitante">Todas las categorías</span>
     </BotonFiltro>
+    <!-- "Gratis" no es una categoría (etapa B2): se suma a cualquiera de las 14 -->
+    <button type="button" class="filtro-gratis" aria-pressed="false" data-filtro-gratis>
+      <Icono nombre="etiqueta" tamano={18} />Gratis
+    </button>
   </div>
 
   <HojaFiltro id="filtro-ciudad" titulo="Ciudad" leyenda="Filtrar por ciudad">
@@ -92,15 +107,14 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
   <HojaFiltro id="filtro-categoria" titulo="Categoría" leyenda="Filtrar por categoría">
     {
       categoriasAgenda.map((c) => {
-        const cat = categoria(c.id);
         return (
           <OpcionFiltro
             nombre="agenda-categoria"
             valor={c.id}
             atributo="categoria"
             checked={c.id === 'all'}
-            color={cat ? colorCategoria(cat) : undefined}
-            icono={cat ? undefined : c.id === 'amigos' ? 'repost' : 'filtro'}
+            icono={c.icono ?? (c.id === 'amigos' ? 'repost' : 'filtro')}
+            conteo={c.icono ? conteoCategoria(c.id) : undefined}
             class={c.id === 'amigos' ? 'solo-sesion' : undefined}
           >
             {c.id === 'all' ? (
@@ -155,7 +169,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
         return (
           <TarjetaMarketplace
             evento={e}
-            social={socialAgenda[e.id]}
+            social={socialAgenda[e.id] ?? { quien: '', reposts: 0, colores: [], amigos: false }}
             reposteado={reposteadosIniciales.includes(e.id)}
             oculta={posicion < 0 || posicion >= PAGINA}
           />
@@ -173,7 +187,8 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
 <script>
   import { ciudades } from '../../data/ciudades';
-  import { fechasAgenda, destinosRepost, lineaRepost, categoriasAgenda } from '../../data/agenda';
+  import { fechasAgenda, destinosRepost, lineaRepost, categoriasAgenda, categoriaAgendaDesdeSitio } from '../../data/agenda';
+  import { categoriaOficial } from '../../data/categorias-oficiales';
   import { planes, ciudadesTexto, slug } from '../../lib/formato';
   import { haySesion } from '../../lib/sesion';
 
@@ -212,6 +227,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     const botonCiudad = $('[data-filtro="ciudad"]');
     const botonCategoria = $('[data-filtro="categoria"]');
     const botonesVer = $$('[data-ver-resultados]');
+    const botonGratis = $<HTMLButtonElement>('[data-filtro-gratis]');
 
     // Encabezados (N1 con sesión y N2 de visitante, decisión 2.24): selector de ciudad y buscador de los dos;
     // solo uno está visible
@@ -220,14 +236,17 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     const camposBusqueda = buscadores.flatMap((b) => [...b.querySelectorAll<HTMLInputElement>('input[name="q"]')]);
 
     // Estado: filtros (en la URL) + guardados y reposts (en memoria: demo sin backend)
-    const estado = { ciudad: 'all', categoria: 'all', fecha: 'finde', q: '', mostrados: PAGINA };
+    const estado = { ciudad: 'all', categoria: 'all', gratis: false, fecha: 'finde', q: '', mostrados: PAGINA };
 
     const normalizar = (t: string) => slug(t).replace(/-/g, ' ');
 
     const leerUrl = () => {
       const p = new URLSearchParams(location.search);
       const ciudad = p.get('ciudad') ?? 'all';
-      const categoria = p.get('categoria') ?? 'all';
+      // Enlaces viejos con las 6 categorías del sitio: ?categoria=rumba → la oficial; ?categoria=gratis → filtro Gratis
+      const pedida = p.get('categoria') ?? 'all';
+      const categoria = categoriaAgendaDesdeSitio[pedida] ?? pedida;
+      estado.gratis = p.get('gratis') === '1' || pedida === 'gratis';
       const fecha = p.get('fecha') ?? 'finde';
       estado.ciudad = idsCiudad.has(ciudad) ? ciudad : 'all';
       // "Lo que repostea tu gente" es solo con sesión (decisión 2.24)
@@ -242,6 +261,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       if (estado.q) p.set('q', estado.q);
       if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
       if (estado.categoria !== 'all') p.set('categoria', estado.categoria);
+      if (estado.gratis) p.set('gratis', '1');
       if (estado.fecha !== 'finde') p.set('fecha', estado.fecha);
       const s = p.toString();
       return s ? `?${s}` : '';
@@ -250,19 +270,23 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     const enlaceMapa = () => {
       const p = new URLSearchParams();
       if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
-      if (estado.categoria !== 'all') p.set('categoria', estado.categoria);
+      // El mapa todavía filtra con las 6 categorías del sitio: se le pasa la equivalente si la hay
+      const sitio = categoriaOficial(estado.categoria)?.sitio;
+      if (sitio) p.set('categoria', sitio);
+      else if (estado.gratis) p.set('categoria', 'gratis');
       const s = p.toString();
       return s ? `/mapa?${s}` : '/mapa';
     };
 
     // Filtros sin la ciudad (para los conteos de las ciudades) y con la ciudad (para la rejilla)
-    const pasaSinCiudad = (t: HTMLElement) => {
+    // `cat` permite contar con otra categoría (los conteos de la hoja de categorías)
+    const pasaSinCiudad = (t: HTMLElement, cat = estado.categoria) => {
       const d = t.dataset;
       const f = fechas[estado.fecha];
       if (d.fecha! < f.desde || d.fecha! > f.hasta) return false;
-      const cat = estado.categoria;
       if (cat === 'amigos' && d.amigos !== 'true') return false;
-      if (cat !== 'all' && cat !== 'amigos' && !d.etiquetas!.split(' ').includes(cat)) return false;
+      if (cat !== 'all' && cat !== 'amigos' && d.oficial !== cat) return false;
+      if (estado.gratis && d.gratis !== 'true') return false;
       if (estado.q && !normalizar(estado.q).split(' ').every((p) => d.texto!.includes(p))) return false;
       return true;
     };
@@ -272,7 +296,8 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       const grupos = ciudades.map((c) => lista.filter((t) => t.dataset.ciudad === c.id));
       const salida: HTMLElement[] = [];
       for (let i = 0; grupos.some((g) => g[i]); i++) for (const g of grupos) if (g[i]) salida.push(g[i]);
-      return salida;
+      // Municipios que aún no son ciudades del sitio (eventos de D1), al final
+      return [...salida, ...lista.filter((t) => !nombres[t.dataset.ciudad!])];
     };
 
     const lugar = () => (estado.ciudad === 'all' ? 'Colombia' : nombres[estado.ciudad]);
@@ -282,7 +307,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
     const pintar = ({ anunciar = true, url = true } = {}) => {
       const f = fechas[estado.fecha];
-      const base = tarjetas.filter(pasaSinCiudad);
+      const base = tarjetas.filter((t) => pasaSinCiudad(t));
       const coinciden = base.filter((t) => estado.ciudad === 'all' || t.dataset.ciudad === estado.ciudad);
       visibles = ordenar(coinciden);
 
@@ -306,17 +331,27 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       botonCategoria.querySelector('[data-filtro-texto]')!.innerHTML = elegido(radiosCategoria, estado.categoria);
       botonCiudad.classList.toggle('activo', estado.ciudad !== 'all');
       botonCategoria.classList.toggle('activo', estado.categoria !== 'all');
+      botonGratis.setAttribute('aria-pressed', String(estado.gratis));
       botonesVer.forEach((b) => (b.textContent = visibles.length ? `Ver ${planes(visibles.length)}` : 'Ver resultados'));
 
       // Conteos de las ciudades: siguen la categoría, la fecha y la búsqueda
-      radiosCiudad.forEach((r) => {
-        const n = r.value === 'all' ? base.length : base.filter((t) => t.dataset.ciudad === r.value).length;
-        const caja = raiz.querySelector(`[data-conteo="${r.value}"]`)!;
-        caja.firstChild!.textContent = String(n);
-        caja.querySelector('.solo-lectores')!.textContent = n === 1 ? ' plan' : ' planes';
-        // Las ciudades sin planes se atenúan (siguen elegibles: el estado vacío lo explica)
+      const pintarConteo = (r: HTMLInputElement, n: number) => {
+        const caja = r.closest('label')!.querySelector('[data-conteo]');
+        if (caja) {
+          caja.firstChild!.textContent = String(n);
+          caja.querySelector('.solo-lectores')!.textContent = n === 1 ? ' plan' : ' planes';
+        }
+        // Las opciones sin planes se atenúan (siguen elegibles: el estado vacío lo explica)
         r.closest('label')!.classList.toggle('vacia', n === 0);
-      });
+      };
+      radiosCiudad.forEach((r) =>
+        pintarConteo(r, r.value === 'all' ? base.length : base.filter((t) => t.dataset.ciudad === r.value).length),
+      );
+      // Conteos de las 14 categorías: siguen la ciudad, la fecha, Gratis y la búsqueda (etapa B2)
+      const enCiudad = (t: HTMLElement) => estado.ciudad === 'all' || t.dataset.ciudad === estado.ciudad;
+      radiosCategoria
+        .filter((r) => r.value !== 'all' && r.value !== 'amigos')
+        .forEach((r) => pintarConteo(r, tarjetas.filter((t) => enCiudad(t) && pasaSinCiudad(t, r.value)).length));
 
       // Título y línea de resultados (H39: dicen la fecha elegida)
       titulo.textContent = `${f.titulo} en ${lugar()}`;
@@ -331,7 +366,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
       // Estado vacío (N67); con otra fecha, uno honesto que invita al finde (H39)
       vacio.hidden = visibles.length > 0;
-      const conFiltro = estado.ciudad !== 'all' || estado.categoria !== 'all' || estado.q !== '';
+      const conFiltro = estado.ciudad !== 'all' || estado.categoria !== 'all' || estado.gratis || estado.q !== '';
       if (estado.fecha === 'finde') {
         mensajeVacio.textContent = `Por ahora no hay planes con este filtro en ${lugar()} este finde. Prueba otra ciudad o mira todo el país.`;
         botonFinde.hidden = true;
@@ -371,6 +406,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
     radiosCiudad.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ ciudad: r.value })));
     radiosCategoria.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ categoria: r.value })));
+    botonGratis.addEventListener('click', () => cambiar({ gratis: !estado.gratis }));
     radiosFecha.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ fecha: r.value })));
     selectores.forEach((s) => s.addEventListener('change', () => cambiar({ ciudad: s.value || 'all' })));
 
@@ -382,7 +418,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     }));
 
     botonLimpiar.addEventListener('click', () => {
-      cambiar({ ciudad: 'all', categoria: 'all', q: '' });
+      cambiar({ ciudad: 'all', categoria: 'all', gratis: false, q: '' });
       titulo.focus();
     });
     botonFinde.addEventListener('click', () => {
@@ -593,6 +629,30 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+  }
+
+  /* "Gratis": botón que alterna, del mismo alto que los botones de filtro (etapa B2) */
+  .filtro-gratis {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 18px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 600;
+  }
+
+  .filtro-gratis:hover {
+    background: var(--light-hover);
+  }
+
+  .filtro-gratis[aria-pressed='true'] {
+    border-color: var(--ink);
+    background: var(--cat-gratis);
   }
 
   /* N17 · Aviso */

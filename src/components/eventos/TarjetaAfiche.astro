@@ -10,9 +10,8 @@
 // Marcado común para los scripts: [data-tarjeta][data-id], .guardar y el enlace del título.
 import Icono from '../ui/Icono.astro';
 import FotoEvento from './FotoEvento.astro';
-import type { Evento } from '../../data/eventos';
-import { nombreCiudad } from '../../data/ciudades';
-import { cifra, fechaCorta, pesos, placaFecha, rutaEvento } from '../../lib/formato';
+import { ciudadDe, esGratis, textoPrecio, type Evento } from '../../data/eventos';
+import { cifra, fechaCorta, placaFecha, rutaEvento } from '../../lib/formato';
 
 interface Props {
   evento: Evento;
@@ -71,15 +70,15 @@ const pila = [0, 1, 2].map((k) => `var(--${tonos[(base + k) % tonos.length]})`);
     }
     <slot name="marca" />
     <Titulo class="titulo" id={tituloId}><a href={href}>{e.titulo}</a></Titulo>
-    <p class="meta">{fechaCorta(e.fecha)} · {nombreCiudad(e.ciudad)}</p>
+    <p class="meta">{fechaCorta(e.fecha)} · {ciudadDe(e)}</p>
     <div class="pie">
       <slot name="social">
-        <span class="gente">
+        {e.van > 0 && <span class="gente">
           <span class="pila" aria-hidden="true">{pila.map((c) => <i style={`background: ${c}`}></i>)}</span>
           {cifra(e.van)} van
-        </span>
+        </span>}
       </slot>
-      <span class:list={['precio', { gratis: !e.precio }]}>{e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}</span>
+      <span class:list={['precio', { gratis: esGratis(e) }]}>{textoPrecio(e)}</span>
     </div>
   </div>
 </article>

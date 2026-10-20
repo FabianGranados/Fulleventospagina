@@ -45,7 +45,8 @@ const main = async () => {
   if (op.hoy && !/^\d{4}-\d{2}-\d{2}$/.test(op.hoy)) throw new ErrorEvento('configuracion', '--hoy va como AAAA-MM-DD');
   const almacen = op.simular ? await crearAlmacenMemoria() : await crearAlmacenLocal(process.cwd());
   const hoy = op.hoy ? { hoy: op.hoy } : {};
-  console.log(`Modo: ${op.simular ? 'simulación (base en memoria, no guarda nada)' : 'local (registros/imagenes-local.sqlite)'}`);
+  const baseLocal = process.env.EVENTOS_SQLITE_LOCAL ? 'base D1 local del sitio (npm run d1:local)' : 'registros/imagenes-local.sqlite';
+  console.log(`Modo: ${op.simular ? 'simulación (base en memoria, no guarda nada)' : `local (${baseLocal})`}`);
 
   if (comando === 'importar') {
     const ruta = args[0];
