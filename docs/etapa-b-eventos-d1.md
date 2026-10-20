@@ -53,7 +53,7 @@ CREATE TABLE fuentes_evento (id INTEGER PRIMARY KEY, evento_id TEXT NOT NULL REF
 | Pieza | Archivo |
 |---|---|
 | Migración de eventos, fuentes, alertas, imágenes candidatas, historial y las 14 categorías | `migraciones/0002_eventos.sql` |
-| Municipios DIVIPOLA (1.121 municipios, 33 departamentos), generada | `migraciones/0003_divipola.sql` (`npm run divipola:sql`) |
+| Municipios DIVIPOLA oficiales del DANE (1.122 entradas, 33 departamentos), generada | `migraciones/0003_divipola.sql` (`npm run divipola:sql`) |
 | Lista DIVIPOLA y búsqueda por código o por nombre (sin adivinar entre homónimos) | `src/data/divipola.json`, `scripts/eventos/divipola.mjs` |
 | Las 14 categorías oficiales y su equivalencia con los 6 chips actuales | `src/data/categorias-oficiales.ts` |
 | Evento normalizado y reglas de validación | `scripts/eventos/evento.mjs` |
@@ -109,10 +109,11 @@ una alerta.
 
 ### DIVIPOLA
 
-`src/data/divipola.json` sale del paquete npm `divipola` 1.0.3 (MIT), copia de la lista del DANE con 1.121 entradas
-(municipios, Bogotá y áreas no municipalizadas). **Hay que reemplazarla por el CSV oficial vigente del DANE antes de
-producción** (`npm run divipola -- archivo.csv --fuente "DANE, DIVIPOLA, fecha"` y luego `npm run divipola:sql`): los
-municipios creados después de esa copia no estarán. La migración 0003 actualiza nombres sin borrar filas.
+`src/data/divipola.json` es la lista oficial del DANE ("DIVIPOLA - Códigos municipios", datos.gov.co, CC BY-SA 4.0,
+actualizada el 24 de enero de 2025): 1.122 entradas, que son 1.103 municipios (con Bogotá y Nuevo Belén de Bajirá),
+18 áreas no municipalizadas y 1 isla, cada una con su tipo y sus coordenadas. Reemplazó a una copia anterior que no
+tenía Nuevo Belén de Bajirá y escribía mal Jamundí. Para actualizarla: ver `docs/licencias-datos.md`. La migración 0003
+actualiza nombres sin borrar filas.
 
 ### Pendiente para B2 y B3
 

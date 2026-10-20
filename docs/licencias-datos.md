@@ -1,31 +1,15 @@
 # Licencias de datos de terceros
 
-## src/data/divipola.json
+## src/data/divipola.json y migraciones/0003_divipola.sql
 
-Generado a partir del paquete npm `divipola` 1.0.3 (https://github.com/christophermontero/divipola), que reúne los códigos DIVIPOLA publicados por el DANE. Se distribuye con esta licencia:
+Fuente: Departamento Administrativo Nacional de Estadística (DANE), "DIVIPOLA - Códigos municipios", publicado en
+datos.gov.co (conjunto `gdxc-w37w`). Datos actualizados por el DANE el 24 de enero de 2025; descargados el 19 de
+octubre de 2026. Licencia: Creative Commons Atribución-CompartirIgual 4.0 Internacional (CC BY-SA 4.0),
+https://creativecommons.org/licenses/by-sa/4.0/deed.es
 
-```
-MIT License
+Cambios hechos a los datos: los nombres pasan de mayúsculas a nombre propio ("SANTIAGO DE CALI" → "Santiago de
+Cali"), los nombres de departamento salen de src/data/departamentos.ts (MGN del DANE) y las coordenadas se redondean
+a 6 decimales. Por la licencia, `src/data/divipola.json` se comparte con la misma licencia CC BY-SA 4.0.
 
-Copyright (c) 2021 Christopher Montero
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-Debe reemplazarse por el archivo oficial vigente del DANE antes de producción (docs/etapa-b-eventos-d1.md).
+Para actualizar: `npm run divipola -- archivo.json --fuente "…"` con el JSON de
+https://www.datos.gov.co/resource/gdxc-w37w.json?$limit=5000 y luego `npm run divipola:sql`.

@@ -16,7 +16,7 @@ export const generarSql = (datos) => {
   const lineas = [
     '-- Migración 0003 · Municipios de Colombia (DIVIPOLA, DANE). GENERADO con `npm run divipola:sql`: no editar a mano.',
     `-- Fuente: ${datos.fuente.replace(/\n/g, ' ')}`,
-    `-- ${deptos.size} departamentos y ${datos.municipios.length} municipios. Segura de repetir; actualiza nombres sin borrar.`,
+    `-- ${deptos.size} departamentos y ${datos.municipios.length} entradas (municipios, áreas no municipalizadas e islas). Segura de repetir; actualiza nombres sin borrar.`,
     '',
     'INSERT INTO departamentos (codigo, nombre) VALUES',
     [...deptos].sort(([a], [b]) => a.localeCompare(b)).map(([c, n]) => `  (${sql(c)}, ${sql(n)})`).join(',\n'),
@@ -26,9 +26,10 @@ export const generarSql = (datos) => {
   // Bloques de 200 filas: cada sentencia queda muy por debajo del límite de tamaño de D1
   for (let i = 0; i < datos.municipios.length; i += 200) {
     const bloque = datos.municipios.slice(i, i + 200);
-    lineas.push('INSERT INTO municipios (codigo, nombre, departamento_codigo) VALUES');
-    lineas.push(bloque.map((m) => `  (${sql(m.codigo)}, ${sql(m.nombre)}, ${sql(m.departamento_codigo)})`).join(',\n'));
-    lineas.push('ON CONFLICT (codigo) DO UPDATE SET nombre = excluded.nombre, departamento_codigo = excluded.departamento_codigo;', '');
+    const num = (v) => (v === undefined ? 'NULL' : String(v));
+    lineas.push('INSERT INTO municipios (codigo, nombre, departamento_codigo, tipo, latitud, longitud) VALUES');
+    lineas.push(bloque.map((m) => `  (${sql(m.codigo)}, ${sql(m.nombre)}, ${sql(m.departamento_codigo)}, ${sql(m.tipo ?? 'municipio')}, ${num(m.latitud)}, ${num(m.longitud)})`).join(',\n'));
+    lineas.push('ON CONFLICT (codigo) DO UPDATE SET nombre = excluded.nombre, departamento_codigo = excluded.departamento_codigo, tipo = excluded.tipo, latitud = excluded.latitud, longitud = excluded.longitud;', '');
   }
   return lineas.join('\n');
 };

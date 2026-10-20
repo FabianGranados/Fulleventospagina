@@ -44,7 +44,7 @@ const agregar = (k, m) => {
 for (const m of municipios) {
   agregar(clave(m.nombre), m);
   // Nombres oficiales largos que la gente escribe cortos
-  const corto = clave(m.nombre).replace(/ de indias$/, '').replace(/^guadalajara de /, '').replace(/^san jose de cucuta$/, 'cucuta');
+  const corto = clave(m.nombre).replace(/ de indias$/, '').replace(/^guadalajara de /, '').replace(/^santiago de /, '').replace(/^san jose de cucuta$/, 'cucuta');
   agregar(corto, m);
 }
 const deptoClave = (t) => clave(t).replace(/^(departamento del?|archipielago de) /, '');

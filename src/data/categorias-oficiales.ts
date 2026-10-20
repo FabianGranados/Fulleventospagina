@@ -10,23 +10,28 @@ export interface CategoriaOficial {
   nombre: string;
   alcance: string;
   sitio: 'rumba' | 'conciertos' | 'deporte' | 'teatro' | 'comida' | null;
+  // Foto de la tarjeta de la categoría (opción C, aprobada el 19 oct 2026): archivo en src/assets/categorias/<id>.jpg.
+  // Pexels: uso libre, también comercial, sin atribución obligatoria (https://www.pexels.com/license/).
+  foto: { autor: string; pexels: number };
 }
 
+export const urlFotoPexels = (c: CategoriaOficial) => `https://www.pexels.com/photo/${c.foto.pexels}/`;
+
 export const categoriasOficiales: CategoriaOficial[] = [
-  { id: 'rumba-y-vida-nocturna', nombre: 'Rumba y vida nocturna', alcance: 'Discotecas, fiestas temáticas y entretenimiento nocturno para adultos.', sitio: 'rumba' },
-  { id: 'conciertos-y-festivales', nombre: 'Conciertos y festivales', alcance: 'Música en vivo, festivales de varios días y recitales masivos.', sitio: 'conciertos' },
-  { id: 'arte-y-cultura', nombre: 'Arte y cultura', alcance: 'Teatro, exposiciones, danza, museos, literatura y cine.', sitio: 'teatro' },
-  { id: 'deportes', nombre: 'Deportes', alcance: 'Torneos profesionales, carreras, exhibiciones y competencias recreativas.', sitio: 'deporte' },
-  { id: 'gastronomia', nombre: 'Gastronomía', alcance: 'Catas, festivales culinarios, aperturas y mercados de comida.', sitio: 'comida' },
-  { id: 'naturaleza-y-aventura', nombre: 'Naturaleza y aventura', alcance: 'Senderismo, ecoturismo, avistamiento de aves y recorridos al aire libre.', sitio: null },
-  { id: 'familia-y-ninos', nombre: 'Familia y niños', alcance: 'Programación infantil, títeres, parques y actividades para menores.', sitio: null },
-  { id: 'negocios-y-emprendimiento', nombre: 'Negocios y emprendimiento', alcance: 'Congresos, ruedas de negocios, seminarios y ferias sectoriales.', sitio: null },
-  { id: 'educacion-y-tecnologia', nombre: 'Educación y tecnología', alcance: 'Talleres, conferencias académicas, hackathons y lanzamientos tecnológicos.', sitio: null },
-  { id: 'bienestar-y-estilo-de-vida', nombre: 'Bienestar y estilo de vida', alcance: 'Yoga, ferias de salud, meditación y desarrollo personal.', sitio: null },
-  { id: 'ferias-y-mercados', nombre: 'Ferias y mercados', alcance: 'Mercados de pulgas, ferias artesanales, exposiciones comerciales y bazares.', sitio: null },
-  { id: 'comunidad-y-tradiciones', nombre: 'Comunidad y tradiciones', alcance: 'Fiestas patronales, carnavales, desfiles cívicos y celebraciones folclóricas.', sitio: null },
-  { id: 'gaming-y-entretenimiento', nombre: 'Gaming y entretenimiento', alcance: 'eSports, convenciones de cómics, cosplay y cultura pop.', sitio: null },
-  { id: 'mascotas', nombre: 'Mascotas', alcance: 'Exposiciones caninas, jornadas de adopción y ferias para animales de compañía.', sitio: null },
+  { id: 'rumba-y-vida-nocturna', nombre: 'Rumba y vida nocturna', alcance: 'Discotecas, fiestas temáticas y entretenimiento nocturno para adultos.', sitio: 'rumba', foto: { autor: 'Isabella Mendes', pexels: 30196899 } },
+  { id: 'conciertos-y-festivales', nombre: 'Conciertos y festivales', alcance: 'Música en vivo, festivales de varios días y recitales masivos.', sitio: 'conciertos', foto: { autor: 'Bence Szemerey', pexels: 7192878 } },
+  { id: 'arte-y-cultura', nombre: 'Arte y cultura', alcance: 'Teatro, exposiciones, danza, museos, literatura y cine.', sitio: 'teatro', foto: { autor: 'Heber Vazquez', pexels: 20059728 } },
+  { id: 'deportes', nombre: 'Deportes', alcance: 'Torneos profesionales, carreras, exhibiciones y competencias recreativas.', sitio: 'deporte', foto: { autor: 'Beachbumology', pexels: 20433896 } },
+  { id: 'gastronomia', nombre: 'Gastronomía', alcance: 'Catas, festivales culinarios, aperturas y mercados de comida.', sitio: 'comida', foto: { autor: 'Tuan Vy', pexels: 36243530 } },
+  { id: 'naturaleza-y-aventura', nombre: 'Naturaleza y aventura', alcance: 'Senderismo, ecoturismo, avistamiento de aves y recorridos al aire libre.', sitio: null, foto: { autor: 'Juan Felipe Ramírez', pexels: 28154581 } },
+  { id: 'familia-y-ninos', nombre: 'Familia y niños', alcance: 'Programación infantil, títeres, parques y actividades para menores.', sitio: null, foto: { autor: 'Kampus Production', pexels: 8954791 } },
+  { id: 'negocios-y-emprendimiento', nombre: 'Negocios y emprendimiento', alcance: 'Congresos, ruedas de negocios, seminarios y ferias sectoriales.', sitio: null, foto: { autor: 'Pavel Danilyuk', pexels: 8761540 } },
+  { id: 'educacion-y-tecnologia', nombre: 'Educación y tecnología', alcance: 'Talleres, conferencias académicas, hackathons y lanzamientos tecnológicos.', sitio: null, foto: { autor: 'Tima Miroshnichenko', pexels: 5380607 } },
+  { id: 'bienestar-y-estilo-de-vida', nombre: 'Bienestar y estilo de vida', alcance: 'Yoga, ferias de salud, meditación y desarrollo personal.', sitio: null, foto: { autor: 'Vitaly Gariev', pexels: 36715606 } },
+  { id: 'ferias-y-mercados', nombre: 'Ferias y mercados', alcance: 'Mercados de pulgas, ferias artesanales, exposiciones comerciales y bazares.', sitio: null, foto: { autor: 'Elias Jara', pexels: 16063764 } },
+  { id: 'comunidad-y-tradiciones', nombre: 'Comunidad y tradiciones', alcance: 'Fiestas patronales, carnavales, desfiles cívicos y celebraciones folclóricas.', sitio: null, foto: { autor: 'Jimmy Casas Ospina', pexels: 13653677 } },
+  { id: 'gaming-y-entretenimiento', nombre: 'Gaming y entretenimiento', alcance: 'eSports, convenciones de cómics, cosplay y cultura pop.', sitio: null, foto: { autor: 'Alef Morais', pexels: 34179707 } },
+  { id: 'mascotas', nombre: 'Mascotas', alcance: 'Exposiciones caninas, jornadas de adopción y ferias para animales de compañía.', sitio: null, foto: { autor: 'Matheus Bertelli', pexels: 16652369 } },
 ];
 
 // Categorías del formato anterior de Gemini (fulleventos-eventos-imagenes/1) → oficial. "Otro" no tiene

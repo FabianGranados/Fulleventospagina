@@ -18,6 +18,26 @@ describe('DIVIPOLA', () => {
     }
   });
 
+  test('es la lista oficial del DANE: municipios nuevos, tipos y coordenadas', () => {
+    assert.equal(municipioPorCodigo('27493').nombre, 'Nuevo Belén de Bajirá');
+    assert.equal(municipioPorCodigo('76364').nombre, 'Jamundí');
+    const tipos = municipios.reduce((a, m) => ({ ...a, [m.tipo]: (a[m.tipo] ?? 0) + 1 }), {});
+    assert.ok(tipos.municipio >= 1103, JSON.stringify(tipos));
+    assert.equal(tipos.area_no_municipalizada, 18);
+    assert.ok(municipios.every((m) => typeof m.latitud === 'number' && typeof m.longitud === 'number'));
+    assert.equal(resolverMunicipio({ nombre: 'Cali' }).municipio.codigo, '76001');
+    assert.equal(resolverMunicipio({ nombre: 'Cúcuta' }).municipio.codigo, '54001');
+  });
+
+  test('el generador lee el JSON de datos.gov.co', () => {
+    const json = JSON.stringify([
+      { cod_dpto: '27', dpto: 'CHOCÓ', cod_mpio: '27493', nom_mpio: 'NUEVO BELÉN DE BAJIRÁ', tipo_municipio: 'Municipio', longitud: '-76,71727', latitud: '7,3719' },
+      { cod_dpto: '91', dpto: 'AMAZONAS', cod_mpio: '91460', nom_mpio: 'MIRITÍ - PARANÁ', tipo_municipio: 'Área no municipalizada', longitud: '-70,98893', latitud: '-0,888833' },
+    ]);
+    const m = generar(json, 'gdxc-w37w.json');
+    assert.deepEqual(m.map((x) => [x.codigo, x.nombre, x.tipo, x.latitud]), [['27493', 'Nuevo Belén de Bajirá', 'municipio', 7.3719], ['91460', 'Mirití - Paraná', 'area_no_municipalizada', -0.888833]]);
+  });
+
   test('las ciudades de la interfaz tienen su código y existen', () => {
     for (const c of ciudades) assert.ok(CIUDADES_SITIO[c.id], `falta el código de ${c.id}`);
     for (const [id, codigo] of Object.entries(CIUDADES_SITIO)) {
@@ -61,5 +81,18 @@ describe('DIVIPOLA', () => {
     for (const sentencia of sql.split(/;\s*\n/).filter((s) => s.trim() && !s.trim().startsWith('--'))) await a.db.ejecutar(sentencia.replace(/^(--.*\n)+/, ''));
     const [m] = await a.db.consultar('SELECT COUNT(*) AS m FROM municipios');
     assert.equal(m.m, municipios.length);
+  });
+});
+
+describe('Fotos de las categorías', () => {
+  test('cada una de las 14 categorías tiene su foto con autor y número de Pexels', async () => {
+    const { categoriasOficiales } = await import('../../src/data/categorias-oficiales.ts');
+    const { existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    assert.equal(categoriasOficiales.length, 14);
+    for (const c of categoriasOficiales) {
+      assert.ok(c.foto?.autor && Number.isInteger(c.foto.pexels), `${c.id} sin datos de foto`);
+      assert.ok(existsSync(join(import.meta.dirname, '..', '..', 'src', 'assets', 'categorias', `${c.id}.jpg`)), `falta la foto de ${c.id}`);
+    }
   });
 });

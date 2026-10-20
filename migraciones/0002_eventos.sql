@@ -42,7 +42,11 @@ CREATE TABLE IF NOT EXISTS departamentos (
 CREATE TABLE IF NOT EXISTS municipios (
   codigo              TEXT PRIMARY KEY CHECK (length(codigo) = 5),   -- DIVIPOLA, 5 dígitos
   nombre              TEXT NOT NULL,
-  departamento_codigo TEXT NOT NULL REFERENCES departamentos (codigo)
+  departamento_codigo TEXT NOT NULL REFERENCES departamentos (codigo),
+  -- El DANE distingue municipios, áreas no municipalizadas (Amazonía y Orinoquía) y una isla
+  tipo                TEXT NOT NULL DEFAULT 'municipio' CHECK (tipo IN ('municipio', 'area_no_municipalizada', 'isla')),
+  latitud             REAL,              -- centro del municipio según el DANE
+  longitud            REAL
 );
 CREATE INDEX IF NOT EXISTS ix_municipios_departamento ON municipios (departamento_codigo);
 
