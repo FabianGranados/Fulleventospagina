@@ -14,7 +14,7 @@ export default defineConfig({
   },
   webServer: {
     // EVENTOS_D1 y EVENTOS_D1_ESTADO llegan de scripts/eventos/pruebas-d1.mjs
-    command: `node node_modules/astro/bin/astro.mjs preview --port ${puerto} --host 127.0.0.1 --ignore-lock`,
+    command: `node node_modules/astro/bin/astro.mjs preview --outDir dist-pruebas-d1 --port ${puerto} --host 127.0.0.1 --ignore-lock`,
     url: `http://127.0.0.1:${puerto}/`,
     reuseExistingServer: false,
     timeout: 120_000,

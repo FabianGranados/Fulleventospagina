@@ -66,3 +66,7 @@ export const hora12 = (valor: string) => {
 // Nombre accesible de Mensajes con los chats sin leer: "Mensajes, 3 chats sin leer" (encabezado y barra inferior)
 export const sinLeerTexto = (n: number) => (n ? `${n} ${n === 1 ? 'chat sin leer' : 'chats sin leer'}` : '');
 export const nombreMensajes = (n: number) => (n ? `Mensajes, ${sinLeerTexto(n)}` : 'Mensajes');
+
+// JSON dentro de un <script> (JSON-LD, datos para el navegador): "<" escapado, así un texto que traiga "</script>"
+// (un título de D1, por ejemplo) no puede cerrar la etiqueta
+export const jsonEnScript = (valor: unknown) => JSON.stringify(valor).replace(/</g, '\\u003c');

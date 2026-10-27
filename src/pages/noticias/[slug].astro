@@ -2,6 +2,7 @@
 // Página de cada noticia (decisión 2.25): pública, prerenderizada e indexable (H34), como el Evento.
 // El contenido sale de src/content/noticias/<slug>.md; la dirección es el nombre del archivo.
 import { render } from 'astro:content';
+import { jsonEnScript } from '../../lib/formato';
 import Base from '../../layouts/Base.astro';
 import EncabezadoApp from '../../components/layout/EncabezadoApp.astro';
 import EncabezadoVisitante from '../../components/layout/EncabezadoVisitante.astro';
@@ -76,7 +77,7 @@ const esquema = {
     ? { url: imagenAbsoluta, alt: d.imagen?.alt }
     : planes[0]?.foto && { url: planes[0].foto.src, alt: planes[0].foto.alt, ancho: planes[0].foto.ancho, alto: planes[0].foto.alto }}
 >
-  <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
+  <script type="application/ld+json" is:inline set:html={jsonEnScript(esquema)} />
   <EncabezadoVisitante class="solo-visitante" />
   <EncabezadoApp variante="detalle" class="solo-sesion" />
   <main id="contenido" class="contenedor principal">

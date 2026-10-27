@@ -24,8 +24,10 @@ const idsCiudad = new Set(['all', ...ciudades.map((c) => c.id)]);
 const idsCategoria = new Set(categoriasAgenda.map((c) => c.id));
 export const fechaAgenda = (id: string) => fechasAgenda.find((f) => f.id === id) ?? fechasAgenda.find((f) => f.id === 'finde')!;
 
-// Lo que no se reconoce vuelve al valor inicial: una URL vieja o alterada nunca rompe la página
-export const leerFiltros = (p: URLSearchParams): FiltrosAgenda => {
+// Lo que no se reconoce vuelve al valor inicial: una URL vieja o alterada nunca rompe la página.
+// `amigos` ("Lo que repostea tu gente") solo vale en el navegador con sesión: el servidor no sabe de la sesión y sus
+// páginas se guardan en caché pública, así que ahí se lee como "todas" (servidor = true).
+export const leerFiltros = (p: URLSearchParams, { servidor = false } = {}): FiltrosAgenda => {
   const pedida = p.get('categoria') ?? 'all';
   // Enlaces viejos con las 6 categorías del sitio (?categoria=rumba → la oficial; ?categoria=gratis → Gratis)
   const categoria = categoriaAgendaDesdeSitio[pedida] ?? pedida;
@@ -34,7 +36,7 @@ export const leerFiltros = (p: URLSearchParams): FiltrosAgenda => {
   const pagina = Number.parseInt(p.get('pagina') ?? '1', 10);
   return {
     ciudad: idsCiudad.has(ciudad) ? ciudad : 'all',
-    categoria: idsCategoria.has(categoria) ? categoria : 'all',
+    categoria: idsCategoria.has(categoria) && !(servidor && categoria === 'amigos') ? categoria : 'all',
     gratis: p.get('gratis') === '1' || pedida === 'gratis',
     fecha: fechasAgenda.some((f) => f.id === fecha) ? fecha : 'finde',
     q: (p.get('q') ?? '').trim().slice(0, 80),

@@ -36,7 +36,7 @@ import { eventos, type Evento } from '../../../data/eventos';
 import { persona } from '../../../data/personas';
 import { CARGO_DEMO } from '../../../data/evento';
 import { sinBoleta } from '../../../data/asistencia';
-import { slug } from '../../../lib/formato';
+import { slug, jsonEnScript } from '../../../lib/formato';
 import { VENTA_PROPIA } from '../../../config';
 
 // Etapa B2: con EVENTOS_D1=local la página se arma bajo demanda con el evento publicado en D1 (astro.config.mjs); si
@@ -168,7 +168,7 @@ const datosCompra = VENTA_PROPIA && {
   imagen={e.foto && { url: e.foto.src, alt: e.foto.alt, ancho: e.foto.ancho, alto: e.foto.alto }}
 >
   {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>{VENTA_PROPIA ? 'Ir a comprar boletas' : 'Ir a las boletas'}</a>}
-  <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
+  <script type="application/ld+json" is:inline set:html={jsonEnScript(esquema)} />
   <div class:list={['pagina-evento', { 'con-barra': vende }]}>
     <EncabezadoVisitante class="solo-visitante" />
     <EncabezadoApp variante="detalle" class="solo-sesion" />
@@ -208,7 +208,7 @@ const datosCompra = VENTA_PROPIA && {
             <p class="visor-aviso">Esta compra es una demostración: no se cobra nada ni se emite una boleta real.</p>
             <div class="visor" data-visor-boletas />
           </Modal>
-          <script type="application/json" id="datos-compra" set:html={JSON.stringify(datosCompra)} />
+          <script type="application/json" id="datos-compra" set:html={jsonEnScript(datosCompra)} />
         </>
       )
     }

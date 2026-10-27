@@ -11,12 +11,17 @@ import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import AgendaApp from '../components/agenda/AgendaApp.astro';
 import VentanaRepost from '../components/eventos/VentanaRepost.astro';
 import { eventosPublicados } from '../lib/datos-eventos';
-import { leerFiltros } from '../lib/filtros-agenda';
+import { consultaAgenda, leerFiltros, resultadoAgenda } from '../lib/filtros-agenda';
 
 // Etapa B2/B3: con EVENTOS_D1=local o pruebas se renderiza bajo demanda (astro.config.mjs) con los eventos publicados
 // en D1, y el servidor aplica los filtros de la URL y pagina (24 por página). Si no, es estática y filtra el navegador.
 const eventos = await eventosPublicados(Astro.locals);
-const filtros = Astro.isPrerendered ? undefined : leerFiltros(Astro.url.searchParams);
+const filtros = Astro.isPrerendered ? undefined : leerFiltros(Astro.url.searchParams, { servidor: true });
+// Una página que no existe (?pagina=99) lleva a la última, para no tener la misma lista en varias direcciones
+if (filtros && filtros.pagina > 1) {
+  const { paginas } = resultadoAgenda(eventos, filtros);
+  if (filtros.pagina > paginas) return Astro.redirect(`/agenda${consultaAgenda({ ...filtros, pagina: paginas })}`, 301);
+}
 ---
 
 <Base titulo="Agenda · Fulleventos" tamanoBase={15}>

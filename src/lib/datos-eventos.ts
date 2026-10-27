@@ -91,6 +91,9 @@ const fotoDe = (f: FilaEvento): FotoEvento | undefined => {
   };
 };
 
+// Solo enlaces web: una fila editada a mano con "javascript:" u otro esquema no llega a un href
+const urlSegura = (url: string | null) => (url && /^https?:\/\//i.test(url) ? url : undefined);
+
 const aEvento = (f: FilaEvento): Evento => {
   const demo = f.demo ? eventosDemo.find((e) => e.id === f.id) : undefined;
   const oficial = categoriaOficial(f.categoria);
@@ -113,7 +116,7 @@ const aEvento = (f: FilaEvento): Evento => {
     precio: f.precio_desde ?? 0,
     tipoPrecio: f.tipo_precio,
     vende: demo?.vende ?? (gratis ? 'Entrada libre' : (f.organizador ?? 'el sitio oficial')),
-    urlVenta: f.url_venta ?? f.url_oficial ?? demo?.urlVenta,
+    urlVenta: urlSegura(f.url_venta) ?? urlSegura(f.url_oficial) ?? demo?.urlVenta,
     resumen: f.resumen ?? demo?.resumen,
     hora: demo?.hora ?? (f.hora ? hora12(f.hora) : undefined),
     ...(f.bg1 && f.bg2 ? { bg1: f.bg1, bg2: f.bg2 } : {}),

@@ -170,9 +170,12 @@ Nada de B3 toca Cloudflare: no se desplegó, no se corrió nada con `--remote` y
   sin "Ver en el mapa").
 - **Agenda paginada en el servidor** (`src/lib/filtros-agenda.ts`, la misma regla para el servidor y el navegador):
   bajo demanda, el servidor lee `ciudad`, `categoria`, `gratis`, `fecha`, `q` y `pagina` de la URL, filtra, ordena y
-  manda 24 planes por página con enlaces "Anterior" y "Siguiente" que funcionan sin JavaScript. Cambiar un filtro
-  pide la URL nueva (página 1). Valores desconocidos vuelven a los iniciales; una página fuera de rango muestra la
-  última. La página estática sigue igual (8 y "Ver N planes más" en el navegador).
+  manda 24 planes por página con enlaces "Anterior" y "Siguiente" que funcionan sin JavaScript. La fecha son
+  enlaces; en las hojas de ciudad y categoría, elegir con las flechas no recarga (WCAG 3.2.2): la página filtrada se
+  pide al cerrar la hoja, y "Gratis" al pulsarlo. Después de cambiar, el foco va a la línea de resultados
+  (`#agenda-resultados`). Valores desconocidos vuelven a los iniciales; una página fuera de rango redirige (301) a la
+  última. "Lo que repostea tu gente" no existe bajo demanda (son datos de la usuaria y la página va a caché pública).
+  La página estática sigue igual (8 y "Ver N planes más" en el navegador).
 - **Caché** (`src/middleware.ts`, solo páginas bajo demanda): públicas con `public, max-age=60,
   stale-while-revalidate=300`; las de la cuenta (`/inicio`, `/yo`, `/perfil/*`, `/mensajes`, `/crear-evento`), las que
   traen cookies o las que no son 200, `private, no-store`.
@@ -183,9 +186,12 @@ Nada de B3 toca Cloudflare: no se desplegó, no se corrió nada con `--remote` y
   para e1, e3 y e12, aprobadas por "Demostración local"), `npm run d1:local -- servir-fotos` y
   `PUBLIC_IMAGENES_URL=http://localhost:4580 npm run dev:d1`. Para fotos reales: `npm run d1:local -- imagenes <…>`.
 - **Noticias:** `eventos:` acepta también ids de D1 (`ev_…`); solo se muestran los publicados.
+- **Datos de D1 en el HTML:** el JSON-LD y los datos de compra salen con `jsonEnScript` (`lib/formato.ts`, escapa
+  `<`), y `urlVenta`/`url_oficial` solo se usan si son `http(s)`.
 - **Pruebas:** `npm run test:d1` (dentro de `npm test`) crea una base local aparte en `.wrangler/pruebas-d1` con los 19
   de ejemplo, 30 de prueba (Bogotá y Manizales), uno pendiente y fotos de prueba, compila en modo D1 y corre
-  `tests/d1.spec.ts`: paginación sin JavaScript, filtros en el servidor, que el pendiente nunca aparezca, Mapa con
+  `tests/d1.spec.ts` (compila en `dist-pruebas-d1/`, así `dist/` y lo que se desplegaría no se tocan): paginación
+  sin JavaScript, teclado en las hojas, filtros en el servidor, que el pendiente nunca aparezca, Mapa con
   las 14 categorías, caché, fotos y axe/scroll de las páginas nuevas. `tests/eventos/config-cloudflare.prueba.mjs`
   revisa que `wrangler.pruebas.jsonc` apunte solo a `fulleventos-pruebas` y que `wrangler.jsonc` siga sin D1.
 
@@ -196,7 +202,12 @@ Nada de B3 toca Cloudflare: no se desplegó, no se corrió nada con `--remote` y
 - La paginación y los filtros se hacen sobre la lista completa de publicados que trae una consulta. Con miles de
   eventos, conviene pasar el filtro y el `LIMIT/OFFSET` a SQL (los índices `ix_eventos_listado` y
   `ix_eventos_categoria` ya existen) y guardar en la caché del borde (Cache API) en vez de solo en el navegador.
-- El Mapa no pagina: muestra todos los publicados de la fecha elegida.
+- El Mapa no pagina: manda en el HTML todos los publicados (de todas las fechas) para filtrar en el navegador. Con
+  miles de eventos hay que acotarlo en el servidor a la fecha elegida o mandar solo los datos que filtra el script.
+- `Cache-Control` lo respeta el navegador; el CDN de Cloudflare no guarda respuestas de un Worker sin la Cache API o
+  reglas de caché, así que hoy no le quita lecturas a D1.
+- Dos eventos con el mismo título en la misma ciudad (un evento recurrente) comparten URL
+  (`/evento/<ciudad>/<slug>`): solo se ve el primero. Hay que poner la fecha o el id en la ruta.
 - Rutas por municipio (hoy un municipio que no es ciudad del sitio usa `slug(municipio)` en la URL del evento) y pin
   propio en el mapa para esos municipios.
 - Activar R2 en Cloudflare y poner `PUBLIC_IMAGENES_URL` del bucket público: sin eso no hay fotos en pruebas ni en

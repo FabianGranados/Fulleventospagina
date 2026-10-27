@@ -16,3 +16,4 @@ playwright-report/
 registros/
 # Compilación de la demostración local (npm run demo:imagenes); nunca se despliega
 dist-demo/
+dist-pruebas-d1/

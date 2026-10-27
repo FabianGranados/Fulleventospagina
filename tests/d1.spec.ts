@@ -47,7 +47,7 @@ test.describe('Agenda: filtros y páginas en el servidor', () => {
     await expect(nav.getByRole('link', { name: /Anterior/ })).toHaveCount(0);
 
     await nav.getByRole('link', { name: /Siguiente/ }).click();
-    await expect(page).toHaveURL(/\/agenda\?pagina=2$/);
+    await expect(page).toHaveURL(/\/agenda\?pagina=2#agenda-resultados$/);
     await expect(tarjetasAgenda(page)).toHaveCount(24);
     await expect(nav).toContainText('Página 2 de 3');
 
@@ -100,9 +100,20 @@ test.describe('Agenda: filtros y páginas en el servidor', () => {
     await expect(page.locator('[data-vacio]')).toBeVisible();
     await expect(page.locator('[data-vacio-mensaje]')).toContainText('La próxima semana no hay planes');
 
-    // Página fuera de rango: la última; valores raros: los iniciales
+    // Página fuera de rango: redirige a la última; valores raros: los iniciales
     await page.goto('/agenda?pagina=99');
+    await expect(page).toHaveURL(/\/agenda\?pagina=3$/);
     await expect(page.getByRole('navigation', { name: 'Páginas de la agenda' })).toContainText('Página 3 de 3');
+
+    // "Lo que repostea tu gente" son datos de la usuaria: el servidor no los filtra (la página es de caché pública)
+    await page.goto('/agenda?categoria=amigos');
+    await expect(page.locator('[data-resultados]')).toContainText('49 planes');
+
+    // La fecha son enlaces: funciona sin JavaScript
+    await page.goto('/agenda?ciudad=bogota');
+    await page.getByRole('navigation', { name: 'Fecha' }).getByRole('link', { name: 'Próxima semana' }).click();
+    await expect(page).toHaveURL(/ciudad=bogota&fecha=semana/);
+    await expect(page.getByRole('navigation', { name: 'Fecha' }).getByRole('link', { name: 'Próxima semana' })).toHaveAttribute('aria-current', 'page');
     await page.goto('/agenda?ciudad=<script>&categoria=nada&pagina=-4');
     await expect(page.locator('[data-resultados]')).toContainText('49 planes');
 
@@ -115,14 +126,42 @@ test.describe('Agenda: filtros y páginas en el servidor', () => {
   test('con JavaScript, cambiar un filtro pide la página filtrada y vuelve a la página 1', async ({ page }) => {
     await page.goto('/agenda?pagina=2');
     await page.locator('[data-filtro-gratis]').click();
-    await expect(page).toHaveURL(/\/agenda\?gratis=1$/);
+    await expect(page).toHaveURL(/\/agenda\?gratis=1#agenda-resultados$/);
     await expect(page.locator('[data-filtro-gratis]')).toHaveAttribute('aria-pressed', 'true');
 
     await page.locator('[data-filtro="categoria"]').click();
     await page.locator('#filtro-categoria label').filter({ hasText: 'Mascotas' }).click();
+    // Elegir no recarga: la página filtrada llega al cerrar la hoja
+    await expect(page).toHaveURL(/\/agenda\?gratis=1/);
+    await page.locator('#filtro-categoria [data-ver-resultados]').click();
     await expect(page).toHaveURL(/categoria=mascotas/);
     await expect(page).toHaveURL(/gratis=1/);
     await expect(page.locator('[data-filtro="categoria"]')).toContainText('Mascotas');
+    // El foco queda en los resultados, no al principio de la página
+    await expect(page.locator('[data-resultados]')).toBeFocused();
+  });
+
+  test('con el teclado, las flechas en la hoja no recargan la página (WCAG 3.2.2)', async ({ page }) => {
+    await page.goto('/agenda');
+    await page.locator('[data-filtro="categoria"]').click();
+    await page.locator('#filtro-categoria input:checked').focus();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect(page).toHaveURL(/\/agenda$/);
+    await expect(page.locator('#filtro-categoria')).toHaveAttribute('open', '');
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/categoria=conciertos-y-festivales/);
+  });
+
+  test('el buscador del encabezado muestra la búsqueda y conserva la ciudad', async ({ page }) => {
+    await page.goto('/agenda?ciudad=medellin&q=noche');
+    const buscador = page.locator('form[data-buscador-app]:visible').first();
+    await expect(buscador.locator('input[name="q"]')).toHaveValue('noche');
+    await expect(buscador.locator('select[data-selector-ciudad]')).toHaveValue('medellin');
+    await buscador.locator('input[name="q"]').fill('reguetón');
+    await buscador.locator('input[name="q"]').press('Enter');
+    await expect(page).toHaveURL(/ciudad=medellin/);
+    await expect(page).toHaveURL(/q=regu/);
   });
 
   test('nunca muestra un evento pendiente', async ({ page, request }) => {

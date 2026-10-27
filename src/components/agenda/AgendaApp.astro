@@ -57,7 +57,8 @@ const mensajeVacio =
     ? `Por ahora no hay planes con este filtro en ${lugar} este finde. Prueba otra ciudad o mira todo el país.`
     : `${fecha.titulo} no hay planes con este filtro en ${lugar}: mira el finde.`;
 const conFiltro = f.ciudad !== 'all' || f.categoria !== 'all' || f.gratis || f.q !== '';
-const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina })}`;
+// Al cambiar de página se vuelve a los resultados (el script les pasa el foco)
+const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina })}#agenda-resultados`;
 ---
 
 <div class="agenda" data-agenda-app data-pagina={PAGINA} data-servidor={servidor ? '' : undefined}>
@@ -82,18 +83,34 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
         </a>
         <a href="/mapa" class="opcion-vista" data-vista-mapa><Icono nombre="mapa" tamano={16} />Mapa</a>
       </nav>
-      <!-- H59: grupo excluyente con radios nativos; H39: filtra de verdad -->
-      <fieldset class="segmentado fechas">
-        <legend class="solo-lectores">Fecha</legend>
-        {
-          fechasAgenda.map((x) => (
-            <label class="opcion-fecha">
-              <input type="radio" name="agenda-fecha" value={x.id} checked={x.id === f.fecha} data-fecha />
-              {x.texto}
-            </label>
-          ))
-        }
-      </fieldset>
+      {
+        servidor ? (
+          // Bajo demanda (etapa B3): cada fecha es otra página, así que son enlaces (WCAG 3.2.2: elegir con las
+          // flechas no recarga nada) y funcionan sin JavaScript
+          <nav aria-label="Fecha" class="segmentado fechas">
+            {fechasAgenda.map((x) => (
+              <a
+                href={`/agenda${consultaAgenda({ ...f, fecha: x.id, pagina: 1 })}#agenda-resultados`}
+                class="opcion-fecha"
+                aria-current={x.id === f.fecha ? 'page' : undefined}
+              >
+                {x.texto}
+              </a>
+            ))}
+          </nav>
+        ) : (
+          // H59: grupo excluyente con radios nativos; H39: filtra de verdad
+          <fieldset class="segmentado fechas">
+            <legend class="solo-lectores">Fecha</legend>
+            {fechasAgenda.map((x) => (
+              <label class="opcion-fecha">
+                <input type="radio" name="agenda-fecha" value={x.id} checked={x.id === f.fecha} data-fecha />
+                {x.texto}
+              </label>
+            ))}
+          </fieldset>
+        )
+      }
     </div>
   </div>
 
@@ -132,7 +149,8 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
 
   <HojaFiltro id="filtro-categoria" titulo="Categoría" leyenda="Filtrar por categoría">
     {
-      categoriasAgenda.map((c) => {
+      // Bajo demanda no va "Lo que repostea tu gente": son datos de la usuaria y la página se guarda en caché pública
+      categoriasAgenda.filter((c) => !servidor || c.id !== 'amigos').map((c) => {
         return (
           <OpcionFiltro
             nombre="agenda-categoria"
@@ -168,7 +186,7 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
   </div>
 
   <div class="resultados">
-    <p class="conteo-resultados" tabindex="-1" data-resultados>
+    <p class="conteo-resultados" id="agenda-resultados" tabindex="-1" data-resultados>
       <b>{r.total ? planes(r.total) : 'Sin planes'}</b>{`${busqueda} ${donde} ${fecha.periodo}`}
     </p>
     <div class="resultados-derecha">
@@ -212,7 +230,7 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
         ) : (
           <span class="pagina-hueco" />
         )}
-        <span class="pagina-actual" aria-current="page">
+        <span class="pagina-actual">
           Página {r.pagina} de {r.paginas}
         </span>
         {r.pagina < r.paginas ? (
@@ -433,15 +451,30 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
 
     const cambiar = (cambios: Partial<typeof estado>) => {
       Object.assign(estado, { mostrados: PAGINA }, cambios);
-      if (servidor) location.assign(`${location.pathname}${consulta()}`);
+      if (servidor) location.assign(`${location.pathname}${consulta()}#agenda-resultados`);
       else pintar();
     };
 
-    radiosCiudad.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ ciudad: r.value })));
-    radiosCategoria.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ categoria: r.value })));
+    // Bajo demanda, elegir en la hoja no recarga (WCAG 3.2.2: con las flechas se pasa por varias opciones): la
+    // página filtrada se pide al cerrar la hoja ("Ver resultados", Escape o la X)
+    const pendiente: Partial<typeof estado> = {};
+    const elegir = (cambios: Partial<typeof estado>) => {
+      if (servidor) Object.assign(pendiente, cambios);
+      else cambiar(cambios);
+    };
+    if (servidor)
+      document.querySelectorAll<HTMLDialogElement>('#filtro-ciudad, #filtro-categoria').forEach((hoja) =>
+        hoja.addEventListener('close', () => {
+          const cambia = Object.entries(pendiente).some(([k, v]) => estado[k as keyof typeof estado] !== v);
+          if (cambia) cambiar({ ...pendiente });
+        }),
+      );
+    radiosCiudad.forEach((r) => r.addEventListener('change', () => r.checked && elegir({ ciudad: r.value })));
+    radiosCategoria.forEach((r) => r.addEventListener('change', () => r.checked && elegir({ categoria: r.value })));
     botonGratis.addEventListener('click', () => cambiar({ gratis: !estado.gratis }));
     radiosFecha.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ fecha: r.value })));
-    selectores.forEach((s) => s.addEventListener('change', () => cambiar({ ciudad: s.value || 'all' })));
+    // Bajo demanda, la ciudad del encabezado se aplica al buscar (el botón del buscador), no al moverse por la lista
+    if (!servidor) selectores.forEach((s) => s.addEventListener('change', () => cambiar({ ciudad: s.value || 'all' })));
 
     // El encabezado no recarga en esta página (data-agenda-app): aplicamos la búsqueda aquí
     buscadores.forEach((buscador) => buscador.addEventListener('submit', () => {
@@ -532,11 +565,17 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
     leerUrl();
     if (!servidor) pintar({ anunciar: false, url: false });
     // Bajo demanda: "Lo que repostea tu gente" sin sesión vuelve a todas las categorías
-    else if (new URLSearchParams(location.search).get('categoria') === 'amigos' && !conSesion) cambiar({ categoria: 'all' });
     else {
       // Los enlaces al mapa llevan los filtros de la página
       vistaMapa.href = enlaceMapa();
       verMapa.href = enlaceMapa();
+      // El buscador y el selector de ciudad del encabezado muestran lo que se está viendo (si no, buscar borraría la
+      // ciudad elegida)
+      selectores.forEach((s) => (s.value = estado.ciudad));
+      camposBusqueda.forEach((c) => (c.value = estado.q));
+      // Después de cambiar un filtro o de página, el foco queda en los resultados (H49): no hay que recorrer otra vez
+      // el encabezado y los filtros
+      if (location.hash === '#agenda-resultados') resultados.focus();
     }
   }
 </script>
@@ -639,7 +678,8 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
     cursor: pointer;
   }
 
-  .opcion-fecha:has(input:checked) {
+  .opcion-fecha:has(input:checked),
+  .opcion-fecha[aria-current='page'] {
     background: var(--ink);
     color: var(--on-dark);
   }
@@ -651,6 +691,10 @@ const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina
     width: 1px;
     height: 1px;
     pointer-events: none;
+  }
+
+  a.opcion-fecha {
+    text-decoration: none;
   }
 
   .opcion-fecha:has(input:focus-visible) {
