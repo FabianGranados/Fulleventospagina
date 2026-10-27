@@ -15,8 +15,15 @@ import TarjetaPublicacion from '../components/publicaciones/TarjetaPublicacion.a
 import { pestanas, publicaciones } from '../data/inicio';
 import { ciudades } from '../data/ciudades';
 import { chatsSinLeer } from '../data/mensajes';
+import { eventosPublicados } from '../lib/datos-eventos';
 
 const noLeidos = chatsSinLeer;
+// Etapa B3: con EVENTOS_D1 la página va bajo demanda y el feed solo muestra publicaciones de eventos publicados
+const publicados = await eventosPublicados(Astro.locals);
+const delFeed = publicaciones.flatMap((p) => {
+  const evento = publicados.find((e) => e.id === p.evento);
+  return evento ? [{ p, evento }] : [];
+});
 const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
 ---
 
@@ -75,7 +82,7 @@ const nombres = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
       <p class="solo-lectores" role="status" data-anuncio></p>
 
       <div class="publicaciones">
-        {publicaciones.map((p) => <Publicacion publicacion={p} />)}
+        {delFeed.map(({ p, evento }) => <Publicacion publicacion={p} evento={evento} />)}
       </div>
     </section>
 

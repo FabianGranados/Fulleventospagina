@@ -15,21 +15,25 @@ import OpcionFiltro from '../../components/filtros/OpcionFiltro.astro';
 import { ciudades } from '../../data/ciudades';
 import { TEMAS, temas } from '../../data/noticias';
 import { ciudadesDe, noticiasOrdenadas, separarDestacada } from '../../lib/noticias';
+import { eventosPublicados } from '../../lib/datos-eventos';
 
+// Etapa B3: con EVENTOS_D1 la página va bajo demanda y las noticias solo enlazan eventos publicados en D1
+const publicados = await eventosPublicados(Astro.locals);
+const ciudadesNoticia = (n: Awaited<ReturnType<typeof noticiasOrdenadas>>[number]) => ciudadesDe(n, publicados);
 const todas = await noticiasOrdenadas();
 const { destacada, resto } = separarDestacada(todas);
 
 // Solo las ciudades y los temas que tienen noticias, en el orden de siempre
-const conNoticias = new Set(todas.flatMap(ciudadesDe));
+const conNoticias = new Set(todas.flatMap(ciudadesNoticia));
 const ciudadesFiltro = ciudades.filter((c) => conNoticias.has(c.id));
 const temasFiltro = temas.filter((t) => todas.some((n) => n.data.tema === t));
-const porCiudad = (id: string) => todas.filter((n) => ciudadesDe(n).includes(id)).length;
+const porCiudad = (id: string) => todas.filter((n) => ciudadesNoticia(n).includes(id)).length;
 const porTema = (t: string) => todas.filter((n) => n.data.tema === t).length;
 const unidad: [string, string] = ['noticia', 'noticias'];
 
 const datosFiltro = (n: (typeof todas)[number]) => ({
   'data-noticia': true,
-  'data-ciudades': ciudadesDe(n).join(' '),
+  'data-ciudades': ciudadesNoticia(n).join(' '),
   'data-tema': n.data.tema,
 });
 

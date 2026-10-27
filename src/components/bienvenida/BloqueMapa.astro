@@ -2,11 +2,17 @@
 import Etiqueta from '../ui/Etiqueta.astro';
 import Icono from '../ui/Icono.astro';
 import MiniMapaColombia from './MiniMapaColombia.astro';
-import { ciudades } from '../../data/ciudades';
-import { eventos, conteoCiudad } from '../../data/eventos';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
+import { ciudadesActivas, delFinde } from '../../lib/planes';
 
-const activas = ciudades.filter((c) => conteoCiudad(c.id) > 0).length;
+interface Props {
+  // Eventos publicados (lib/datos-eventos.ts, de D1 o de eventos.ts)
+  eventos?: Evento[];
+}
+
+const finde = delFinde(Astro.props.eventos ?? eventosDemo);
+const activas = ciudadesActivas(finde);
 ---
 
 <section id="mapa" class="seccion" aria-labelledby="mapa-titulo">
@@ -25,10 +31,10 @@ const activas = ciudades.filter((c) => conteoCiudad(c.id) > 0).length;
       </ul>
       <div class="accion">
         <a href="/mapa" class="abrir"><Icono nombre="mapa" />Abrir el mapa de eventos</a>
-        <span class="resumen"><b>{planes(eventos.length)}</b> este finde en <b>{ciudadesTexto(activas)}</b></span>
+        <span class="resumen"><b>{planes(finde.length)}</b> este finde en <b>{ciudadesTexto(activas)}</b></span>
       </div>
     </div>
-    <MiniMapaColombia />
+    <MiniMapaColombia eventos={finde} />
   </div>
 </section>
 

@@ -6,15 +6,23 @@
 // tamaños y conteos. El estado inicial es "Toda Colombia", "Todo", "Este finde", 1×.
 import Icono from '../ui/Icono.astro';
 import { ciudadesMapa, rotulosGeo, miCiudad } from '../../data/mapa';
-import { departamentos, islas, nivelPlanes, planesPorDepartamento, escalaPlanes } from '../../data/departamentos';
-import { ciudades } from '../../data/ciudades';
+import { departamentos, islas, nivelPlanes, escalaPlanes } from '../../data/departamentos';
 import { nombreCiudad } from '../../data/ciudades';
-import { eventos, conteoCiudad } from '../../data/eventos';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
+import { delFinde, porCiudad, porDepartamento as planesPorDpto } from '../../lib/planes';
 
+interface Props {
+  // Eventos publicados (lib/datos-eventos.ts); el estado inicial es "Este finde"
+  eventos?: Evento[];
+}
+
+const eventos = delFinde(Astro.props.eventos ?? eventosDemo);
+const conteos = porCiudad(eventos);
+const conteoCiudad = (id: string) => conteos[id] ?? 0;
 const activas = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).length;
 const tamano = (n: number) => Math.min(70, 40 + 5 * (n - 1));
-const porDepartamento = planesPorDepartamento(Object.fromEntries(ciudades.map((c) => [c.id, conteoCiudad(c.id)])));
+const porDepartamento = planesPorDpto(eventos);
 // Recuadro de las islas: 1 grado = 40 unidades, alrededor del archipiélago
 const islaX = (lon: number) => (lon + 82.05) * 40;
 const islaY = (lat: number) => (13.6 - lat) * 40;

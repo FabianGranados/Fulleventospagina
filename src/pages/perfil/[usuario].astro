@@ -2,12 +2,16 @@
 // Perfil de otra persona (H46): cada persona tiene su ruta. Datos de src/data/personas.ts (H62).
 import type { GetStaticPaths } from 'astro';
 import VistaPerfil from '../../components/perfil/VistaPerfil.astro';
-import { personas } from '../../data/personas';
+import { personas, type Persona } from '../../data/personas';
+import { eventosPublicados } from '../../lib/datos-eventos';
 
 export const getStaticPaths = (() =>
   personas.map((persona) => ({ params: { usuario: persona.id }, props: { persona } }))) satisfies GetStaticPaths;
 
-const { persona } = Astro.props;
+// Etapa B3: con EVENTOS_D1 va bajo demanda (sin props) y los planes son solo de eventos publicados
+const persona: Persona | undefined = Astro.props.persona ?? personas.find((p) => p.id === Astro.params.usuario);
+if (!persona) return new Response(null, { status: 404, statusText: 'Not Found' });
+await eventosPublicados(Astro.locals);
 ---
 
 <VistaPerfil persona={persona} />

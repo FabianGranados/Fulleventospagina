@@ -2,6 +2,10 @@
 // Mi perfil (H46): el perfil propio de la usuaria del demo, Camila Vargas.
 import VistaPerfil from '../components/perfil/VistaPerfil.astro';
 import { usuaria } from '../data/personas';
+import { eventosPublicados } from '../lib/datos-eventos';
+
+// Etapa B3: con EVENTOS_D1 va bajo demanda y los planes son solo de eventos publicados (VistaPerfil los lee)
+await eventosPublicados(Astro.locals);
 ---
 
 <VistaPerfil persona={usuaria} />

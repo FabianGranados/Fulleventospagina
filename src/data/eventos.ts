@@ -40,8 +40,22 @@ export interface Evento {
   tipoPrecio?: 'gratis' | 'pago' | 'mixto' | 'desconocido';
   // Nombre del municipio cuando no es una de las ciudades de src/data/ciudades.ts (eventos de D1)
   ciudadNombre?: string;
+  // Código DANE del departamento (eventos de D1): colorea el mapa aunque el municipio no sea ciudad del sitio
+  departamento?: string;
+  // Etapa B3: foto principal publicada (imagenes_evento), lista para el HTML. Sin ella, el degradado bg1/bg2.
+  foto?: FotoEvento;
   // Viene de D1 (no de este archivo)
   deD1?: boolean;
+}
+
+// Foto de un evento ya resuelta en el servidor (lib/datos-eventos.ts): URL absolutas del bucket público
+export interface FotoEvento {
+  srcset: string;
+  src: string;
+  ancho?: number;
+  alto?: number;
+  alt: string;
+  credito?: string;
 }
 
 const BOLETERA = '[BOLETERA]';
@@ -68,7 +82,7 @@ export const eventos: Evento[] = [
   { id: 'e19', titulo: 'Música y comida en el malecón del Amazonas', categoria: 'Comida', etiquetas: ['comida', 'gratis'], ciudad: 'leticia', fecha: '2026-10-11', lugar: 'Malecón de Leticia', precio: 0, vende: 'Entrada libre', bg1: '#B9E07A', bg2: '#12343A', van: 70, parches: 0, resumen: 'Música y comida típica en el malecón de Leticia, a orillas del río Amazonas. Entrada libre.' },
 ];
 
-export const conteoCiudad = (ciudad: string) => eventos.filter((e) => e.ciudad === ciudad).length;
+export const conteoCiudad = (ciudad: string, lista: Evento[] = eventos) => lista.filter((e) => e.ciudad === ciudad).length;
 
 // Categoría oficial de un evento (etapa B2): la suya o, en los de ejemplo, la equivalente a su categoría del sitio
 export const categoriaOficialDe = (e: Evento) => e.categoriaOficial ?? categoriaDesdeV1[e.categoria] ?? null;

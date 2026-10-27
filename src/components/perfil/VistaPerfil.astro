@@ -22,6 +22,7 @@ import { usuaria, type Persona } from '../../data/personas';
 import { eventos, type Evento } from '../../data/eventos';
 import { cifrasPerfil, perfil as buscarPerfil } from '../../data/perfil';
 import { AMIGOS, misParches, planesDeUsuaria, type EstadoPlan } from '../../data/asistencia';
+import { publicadosDeLaSolicitud } from '../../lib/datos-eventos';
 
 interface Props {
   persona: Persona;
@@ -30,7 +31,9 @@ interface Props {
 const { persona } = Astro.props;
 const propio = persona.id === usuaria.id;
 const perfil = buscarPerfil(persona.id);
-const cifras = cifrasPerfil(persona.id);
+// Eventos publicados que pidió la página (lib/datos-eventos.ts); sin ellos, los de ejemplo
+const publicados = publicadosDeLaSolicitud(Astro.locals) ?? eventos;
+const cifras = cifrasPerfil(persona.id, publicados);
 const nombreCorto = persona.nombre.split(' ')[0];
 
 // Segunda persona en Mi perfil, tercera en el ajeno (H37, tabla "Estado de asistencia" de la sección 7)
@@ -49,11 +52,11 @@ const enComun = propio ? [] : misParches.filter((p) => p.miembros.includes(perso
 //   de nadie más hay asistencia, así que no se inventa (estado vacío del handoff).
 const planes: { evento: Evento; estado: string }[] = propio
   ? planesDeUsuaria().flatMap((p) => {
-      const evento = eventos.find((e) => e.id === p.evento);
+      const evento = publicados.find((e) => e.id === p.evento);
       return evento ? [{ evento, estado: textoEstado[p.estado][0] }] : [];
     })
   : AMIGOS.includes(persona.id)
-    ? eventos
+    ? publicados
         .filter((e) => enComun.some((p) => p.evento === e.id))
         .sort((a, b) => a.fecha.localeCompare(b.fecha))
         .map((evento) => ({ evento, estado: textoEstado.parche[1] }))

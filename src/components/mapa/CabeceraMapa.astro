@@ -5,10 +5,17 @@
 import Etiqueta from '../ui/Etiqueta.astro';
 import Icono from '../ui/Icono.astro';
 import { fechasMapa } from '../../data/mapa';
-import { eventos } from '../../data/eventos';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
+import { ciudadesActivas, delFinde } from '../../lib/planes';
 
-const activas = new Set(eventos.map((e) => e.ciudad)).size;
+interface Props {
+  // Eventos publicados (lib/datos-eventos.ts); el estado inicial es "Este finde"
+  eventos?: Evento[];
+}
+
+const eventos = delFinde(Astro.props.eventos ?? eventosDemo);
+const activas = ciudadesActivas(eventos);
 const finde = fechasMapa.find((f) => f.id === 'finde')!;
 const intro = `${planes(eventos.length)} en ${ciudadesTexto(activas)}, ${finde.rango}. Toca un punto del mapa para ver qué hay en cada ciudad.`;
 ---

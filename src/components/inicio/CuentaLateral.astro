@@ -9,6 +9,7 @@ import { misParches } from '../../data/asistencia';
 import { chatsSinLeer } from '../../data/mensajes';
 import { estadoParche, fondoParche as fondo } from './resumen';
 import { cifra } from '../../lib/formato';
+import { publicadosDeLaSolicitud } from '../../lib/datos-eventos';
 
 interface Props {
   noLeidos?: number;
@@ -16,7 +17,8 @@ interface Props {
 
 const { noLeidos = chatsSinLeer } = Astro.props;
 // Las mismas cifras de Mi perfil, calculadas de los datos (PF6, decisión 2.29)
-const contadores = cifrasPerfil(usuaria.id)!;
+// Con los eventos publicados que pidió la página (lib/datos-eventos.ts), igual que Mi perfil
+const contadores = cifrasPerfil(usuaria.id, publicadosDeLaSolicitud(Astro.locals))!;
 
 // soloComputador: en celular "Tus parches" va compacto arriba del feed (ResumenCelular, decisión 2.27)
 const menu: { texto: string; href: string; icono: NombreIcono; actual?: boolean; conteo?: number; soloComputador?: boolean }[] = [

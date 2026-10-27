@@ -4,7 +4,11 @@
 // en una fila con desplazamiento lateral. En computador no se muestra: siguen en las columnas (Descubre y
 // CuentaLateral), que en celular ocultan esas dos tarjetas para no repetirlas.
 import { misParches } from '../../data/asistencia';
-import { semana, confirmados, estadoParche, fondoParche } from './resumen';
+import { semanaDe, confirmadosDe, estadoParche, fondoParche } from './resumen';
+import { publicadosDeLaSolicitud } from '../../lib/datos-eventos';
+
+const semana = semanaDe(publicadosDeLaSolicitud(Astro.locals));
+const confirmados = confirmadosDe(semana);
 ---
 
 <section class="resumen-celular" aria-labelledby="resumen-semana-titulo">

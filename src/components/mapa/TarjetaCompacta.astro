@@ -2,9 +2,10 @@
 // N22 · Tarjeta compacta horizontal de evento (lista del mapa). Miniatura de 88 px.
 import Icono from '../ui/Icono.astro';
 import FotoEvento from '../eventos/FotoEvento.astro';
-import type { Evento } from '../../data/eventos';
-import { nombreCiudad } from '../../data/ciudades';
-import { pesos, placaFecha, rutaEvento } from '../../lib/formato';
+import { categoriaOficialDe, ciudadDe, esGratis, textoPrecio, type Evento } from '../../data/eventos';
+import { ciudades } from '../../data/ciudades';
+import { departamentoDe } from '../../lib/planes';
+import { placaFecha, rutaEvento } from '../../lib/formato';
 
 interface Props {
   evento: Evento;
@@ -13,7 +14,9 @@ interface Props {
 
 const { evento: e, reposteado = false } = Astro.props;
 const { dia, mes } = placaFecha(e.fecha);
-const ciudad = nombreCiudad(e.ciudad);
+const ciudad = ciudadDe(e);
+// Los municipios de D1 que no son ciudad del sitio no tienen pin: su tarjeta no lleva "Ver en el mapa"
+const conPin = ciudades.some((c) => c.id === e.ciudad);
 // Cada tarjeta abre su propio evento (H36)
 const href = rutaEvento(e.ciudad, e.titulo);
 ---
@@ -25,6 +28,9 @@ const href = rutaEvento(e.ciudad, e.titulo);
   data-ciudad={e.ciudad}
   data-fecha={e.fecha}
   data-etiquetas={e.etiquetas.join(' ')}
+  data-oficial={categoriaOficialDe(e) ?? ''}
+  data-gratis={String(esGratis(e))}
+  data-departamento={departamentoDe(e) ?? ''}
   data-titulo={e.titulo}
   data-categoria={e.categoria}
   data-lugar={e.lugar}
@@ -46,7 +52,7 @@ const href = rutaEvento(e.ciudad, e.titulo);
     <div class="compra">
       <!-- Precio con aviso del cargo (H21, decisión 2.14) y boletera como marcador (H1) -->
       <span class="precio">
-        {e.precio ? `Desde ${pesos(e.precio)}` : 'Gratis'}
+        {textoPrecio(e)}
         {e.precio > 0 && <small>+ cargo por servicio</small>}
         <small>{e.vende}</small>
       </span>
@@ -83,9 +89,13 @@ const href = rutaEvento(e.ciudad, e.titulo);
         <Icono nombre="marcador" tamano={16} />
       </button>
       <!-- Visible también con ciudad elegida (H7): lleva al mapa y enfoca el pin (H42) -->
-      <button type="button" class="ver-mapa" aria-label={`Ver en el mapa: ${ciudad}`} data-ver-mapa={e.ciudad}>
-        <Icono nombre="pin" tamano={14} grosor={2.2} />Ver en el mapa
-      </button>
+      {
+        conPin && (
+          <button type="button" class="ver-mapa" aria-label={`Ver en el mapa: ${ciudad}`} data-ver-mapa={e.ciudad}>
+            <Icono nombre="pin" tamano={14} grosor={2.2} />Ver en el mapa
+          </button>
+        )
+      }
     </div>
   </div>
 </article>

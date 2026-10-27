@@ -5,7 +5,7 @@ import Icono from '../ui/Icono.astro';
 import Avatar from '../ui/Avatar.astro';
 import FotoEvento from '../eventos/FotoEvento.astro';
 import type { Publicacion } from '../../data/inicio';
-import { eventos } from '../../data/eventos';
+import type { Evento } from '../../data/eventos';
 import { persona, usuaria } from '../../data/personas';
 import { parchePorId, totalMiembros } from '../../data/parches';
 import { amigosQueVan, va } from '../../data/asistencia';
@@ -14,10 +14,11 @@ import { cifra, placaFecha, rutaEvento, horaSinCorte } from '../../lib/formato';
 
 interface Props {
   publicacion: Publicacion;
+  // El evento publicado de la publicación (la página descarta las de eventos que no lo están)
+  evento: Evento;
 }
 
-const { publicacion: p } = Astro.props;
-const e = eventos.find((ev) => ev.id === p.evento)!;
+const { publicacion: p, evento: e } = Astro.props;
 const autor = persona(p.autor)!;
 const parche = p.parche ? parchePorId(p.parche) : undefined;
 const { dia, mes } = placaFecha(e.fecha);

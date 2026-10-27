@@ -31,7 +31,7 @@ import BoletaDigital from '../../../components/evento/BoletaDigital.astro';
 import TarjetaPublicacion from '../../../components/publicaciones/TarjetaPublicacion.astro';
 import PublicacionesEvento from '../../../components/publicaciones/PublicacionesEvento.astro';
 import { modeloEvento } from '../../../components/evento/modelo';
-import { obtenerEventos } from '../../../lib/datos-eventos';
+import { eventosPublicados } from '../../../lib/datos-eventos';
 import { eventos, type Evento } from '../../../data/eventos';
 import { persona } from '../../../data/personas';
 import { CARGO_DEMO } from '../../../data/evento';
@@ -53,15 +53,17 @@ interface Props {
   evento?: Evento;
 }
 
+// Publicados de esta solicitud (también los "Planes parecidos" y la foto del evento, etapa B3)
+const publicados = await eventosPublicados(Astro.locals);
 let evento = Astro.props.evento;
 if (!evento) {
   const { ciudad, slug: slugPedido } = Astro.params;
-  evento = (await obtenerEventos()).find((e) => e.ciudad === ciudad && slug(e.titulo) === slugPedido);
+  evento = publicados.find((e) => e.ciudad === ciudad && slug(e.titulo) === slugPedido);
   // Pendiente, retirado o inexistente: no se muestra. Con un 404 sin cuerpo Astro pinta la página 404 del sitio
   if (!evento) return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-const m = modeloEvento(evento);
+const m = modeloEvento(evento, publicados);
 const { evento: e, detalle: d } = m;
 const vende = !m.gratis;
 
@@ -159,7 +161,12 @@ const datosCompra = VENTA_PROPIA && {
 };
 ---
 
-<Base titulo={titulo} descripcion={descripcion} tamanoBase={15}>
+<Base
+  titulo={titulo}
+  descripcion={descripcion}
+  tamanoBase={15}
+  imagen={e.foto && { url: e.foto.src, alt: e.foto.alt, ancho: e.foto.ancho, alto: e.foto.alto }}
+>
   {vende && <a class="salto" href="#comprar-boletas" data-ir-comprar>{VENTA_PROPIA ? 'Ir a comprar boletas' : 'Ir a las boletas'}</a>}
   <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
   <div class:list={['pagina-evento', { 'con-barra': vende }]}>

@@ -151,13 +151,56 @@ Nada de B2 toca Cloudflare: no hay binding en `wrangler.jsonc`, no se desplegó 
   `dist/server/wrangler.json`). Desplegar y cualquier comando `--remote` necesitan autorización.
 - El adaptador agrega un binding `SESSION` (KV) sin id: al desplegar, wrangler crea ese KV solo.
 
-### Pendiente para B3 y antes de producción
+## Estado de B3 (27 de octubre de 2026, rama `etapa-b3`, solo en local)
 
-- El Mapa, Inicio, el perfil y las noticias siguen con `eventos.ts` y las 6 categorías del sitio.
-- Paginación en el servidor y caché en el borde para la Agenda (hoy se pintan todos los publicados y se pagina en el
-  navegador).
-- Rutas por municipio (hoy un municipio que no es ciudad del sitio usa `slug(municipio)` en la URL del evento).
-- La foto del evento desde `imagenes_evento` (B3).
+Nada de B3 toca Cloudflare: no se desplegó, no se corrió nada con `--remote` y R2 sigue sin activarse.
+
+- **Todo el sitio con los eventos publicados:** las páginas piden la lista con `eventosPublicados(Astro.locals)`
+  (`src/lib/datos-eventos.ts`): una sola consulta a D1 por solicitud, que comparten los componentes
+  (`publicadosDeLaSolicitud`). Bajo demanda con `EVENTOS_D1` (en `astro.config.mjs`, `BAJO_DEMANDA`): `/`, `/agenda`,
+  `/evento/[ciudad]/[slug]`, `/mapa`, `/inicio`, `/yo`, `/perfil/[usuario]`, `/noticias` y `/noticias/[slug]`. Un
+  evento pendiente, retirado o rechazado no aparece en ninguna (ni en "Planes parecidos", el feed, "Tu semana", los
+  planes del perfil, sus cifras ni los eventos de una noticia). Sin D1, todo sale igual que antes de `eventos.ts`.
+- **Conteos comunes** (`src/lib/planes.ts`): `delFinde`, `porCiudad`, `porDepartamento` (con el departamento de D1,
+  así los municipios que no son ciudad del sitio también colorean el mapa) y `ciudadesActivas`.
+- **Mapa:** la fila de 6 categorías pasó a la hoja de las 14 oficiales con ícono y conteo, más "Gratis" aparte
+  (`components/filtros/BotonGratis.astro`, el mismo de la Agenda). URL: `?categoria=<id oficial>&gratis=1`; los
+  enlaces viejos (`?categoria=rumba`, `?categoria=gratis`) siguen sirviendo. El script ya no carga `eventos.ts`: lee
+  los planes de las tarjetas del panel. Los municipios de D1 que no son ciudad del sitio salen en la lista (sin pin y
+  sin "Ver en el mapa").
+- **Agenda paginada en el servidor** (`src/lib/filtros-agenda.ts`, la misma regla para el servidor y el navegador):
+  bajo demanda, el servidor lee `ciudad`, `categoria`, `gratis`, `fecha`, `q` y `pagina` de la URL, filtra, ordena y
+  manda 24 planes por página con enlaces "Anterior" y "Siguiente" que funcionan sin JavaScript. Cambiar un filtro
+  pide la URL nueva (página 1). Valores desconocidos vuelven a los iniciales; una página fuera de rango muestra la
+  última. La página estática sigue igual (8 y "Ver N planes más" en el navegador).
+- **Caché** (`src/middleware.ts`, solo páginas bajo demanda): públicas con `public, max-age=60,
+  stale-while-revalidate=300`; las de la cuenta (`/inicio`, `/yo`, `/perfil/*`, `/mensajes`, `/crear-evento`), las que
+  traen cookies o las que no son 200, `private, no-store`.
+- **Fotos desde `imagenes_evento`:** la consulta trae la foto principal **publicada** de cada evento y el servidor la
+  pone en el HTML (`FotoEvento.astro`, con `srcset`) y en `og:image` (página del evento y noticias). Solo con
+  `PUBLIC_IMAGENES_URL` y rutas válidas del importador; si la foto no carga, el script la quita y queda el degradado.
+  Probado en local con el importador en modo local: `npm run d1:local -- fotos-de-prueba` (3 fotos de demostración
+  para e1, e3 y e12, aprobadas por "Demostración local"), `npm run d1:local -- servir-fotos` y
+  `PUBLIC_IMAGENES_URL=http://localhost:4580 npm run dev:d1`. Para fotos reales: `npm run d1:local -- imagenes <…>`.
+- **Noticias:** `eventos:` acepta también ids de D1 (`ev_…`); solo se muestran los publicados.
+- **Pruebas:** `npm run test:d1` (dentro de `npm test`) crea una base local aparte en `.wrangler/pruebas-d1` con los 19
+  de ejemplo, 30 de prueba (Bogotá y Manizales), uno pendiente y fotos de prueba, compila en modo D1 y corre
+  `tests/d1.spec.ts`: paginación sin JavaScript, filtros en el servidor, que el pendiente nunca aparezca, Mapa con
+  las 14 categorías, caché, fotos y axe/scroll de las páginas nuevas. `tests/eventos/config-cloudflare.prueba.mjs`
+  revisa que `wrangler.pruebas.jsonc` apunte solo a `fulleventos-pruebas` y que `wrangler.jsonc` siga sin D1.
+
+### Pendiente después de B3 y antes de producción
+
+- Mensajes, `/crear-evento` y las publicaciones guardadas en el navegador (`lib/publicaciones.ts`) siguen con
+  `eventos.ts` (son del demo, con datos en el navegador).
+- La paginación y los filtros se hacen sobre la lista completa de publicados que trae una consulta. Con miles de
+  eventos, conviene pasar el filtro y el `LIMIT/OFFSET` a SQL (los índices `ix_eventos_listado` y
+  `ix_eventos_categoria` ya existen) y guardar en la caché del borde (Cache API) en vez de solo en el navegador.
+- El Mapa no pagina: muestra todos los publicados de la fecha elegida.
+- Rutas por municipio (hoy un municipio que no es ciudad del sitio usa `slug(municipio)` en la URL del evento) y pin
+  propio en el mapa para esos municipios.
+- Activar R2 en Cloudflare y poner `PUBLIC_IMAGENES_URL` del bucket público: sin eso no hay fotos en pruebas ni en
+  producción.
 - Binding D1 real en `wrangler.jsonc` y migraciones remotas: solo con autorización.
 
 ## Mientras tanto

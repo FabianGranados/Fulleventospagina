@@ -5,15 +5,21 @@ import Etiqueta from '../ui/Etiqueta.astro';
 import Avatar from '../ui/Avatar.astro';
 import MiniMapaInicio from './MiniMapaInicio.astro';
 import { genteGustos, tendencias } from '../../data/inicio';
-import { semana, confirmados } from './resumen';
+import { semanaDe, confirmadosDe } from './resumen';
 import { eventos } from '../../data/eventos';
-import { ciudades, nombreCiudad } from '../../data/ciudades';
+import { nombreCiudad } from '../../data/ciudades';
 import { persona } from '../../data/personas';
 import { cifra, planes, ciudadesTexto } from '../../lib/formato';
-import { conteoCiudad } from '../../data/eventos';
 import { VENTA_PROPIA } from '../../config';
+import { publicadosDeLaSolicitud } from '../../lib/datos-eventos';
+import { ciudadesActivas, delFinde } from '../../lib/planes';
 
-const activas = ciudades.filter((c) => conteoCiudad(c.id) > 0).length;
+// Eventos publicados que pidió la página (lib/datos-eventos.ts); sin ellos, los de ejemplo
+const publicados = publicadosDeLaSolicitud(Astro.locals) ?? eventos;
+const semana = semanaDe(publicados);
+const confirmados = confirmadosDe(semana);
+const finde = delFinde(publicados);
+const activas = ciudadesActivas(finde);
 const gente = genteGustos.map((g) => ({ ...g, p: persona(g.persona)! }));
 ---
 
@@ -47,8 +53,8 @@ const gente = genteGustos.map((g) => ({ ...g, p: persona(g.persona)! }));
       <h2 id="mapa-titulo">Mapa de eventos</h2>
       <span class="nuevo">Nuevo</span>
     </div>
-    <p class="resumen"><b>{planes(eventos.length)}</b> este finde en {ciudadesTexto(activas)}, de la costa al Amazonas.</p>
-    <MiniMapaInicio />
+    <p class="resumen"><b>{planes(finde.length)}</b> este finde en {ciudadesTexto(activas)}, de la costa al Amazonas.</p>
+    <MiniMapaInicio eventos={finde} />
   </section>
 
   <section class="tarjeta blanca gente" aria-labelledby="gente-titulo">

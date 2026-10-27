@@ -8,7 +8,8 @@ import PilaAvatares from '../ui/PilaAvatares.astro';
 import TarjetaAfiche from '../eventos/TarjetaAfiche.astro';
 import { categoriaOficialDe, ciudadDe, esGratis, type Evento } from '../../data/eventos';
 import { lineaRepost, type SocialAgenda } from '../../data/agenda';
-import { cifra, placaFecha, slug } from '../../lib/formato';
+import { cifra, placaFecha } from '../../lib/formato';
+import { textoBuscable } from '../../lib/filtros-agenda';
 
 interface Props {
   evento: Evento;
@@ -21,8 +22,8 @@ const { evento: e, social, reposteado = false, oculta = false } = Astro.props;
 const { dia, mes } = placaFecha(e.fecha);
 const ciudad = ciudadDe(e);
 const tituloId = `tarjeta-${e.id}-titulo`;
-// Texto sin tildes para la búsqueda del encabezado
-const texto = slug(`${e.titulo} ${e.lugar} ${ciudad} ${e.categoria}`).replace(/-/g, ' ');
+// Texto sin tildes para la búsqueda del encabezado (el mismo con el que busca el servidor)
+const texto = textoBuscable(e);
 ---
 
 <!-- H59 pide un encabezado por tarjeta; aquí cuelgan directo del h1 de la página, por eso h2 -->

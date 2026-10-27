@@ -10,18 +10,20 @@ import Pie from '../components/layout/Pie.astro';
 import BarraNavegacion from '../components/layout/BarraNavegacion.astro';
 import AgendaApp from '../components/agenda/AgendaApp.astro';
 import VentanaRepost from '../components/eventos/VentanaRepost.astro';
-import { obtenerEventos } from '../lib/datos-eventos';
+import { eventosPublicados } from '../lib/datos-eventos';
+import { leerFiltros } from '../lib/filtros-agenda';
 
-// Etapa B2: con EVENTOS_D1=local se renderiza bajo demanda con los eventos publicados en D1 (astro.config.mjs);
-// si no, es estática
-const eventos = await obtenerEventos();
+// Etapa B2/B3: con EVENTOS_D1=local o pruebas se renderiza bajo demanda (astro.config.mjs) con los eventos publicados
+// en D1, y el servidor aplica los filtros de la URL y pagina (24 por página). Si no, es estática y filtra el navegador.
+const eventos = await eventosPublicados(Astro.locals);
+const filtros = Astro.isPrerendered ? undefined : leerFiltros(Astro.url.searchParams);
 ---
 
 <Base titulo="Agenda · Fulleventos" tamanoBase={15}>
   <EncabezadoVisitante class="solo-visitante" />
   <EncabezadoApp variante="completo" activa="agenda" class="solo-sesion" />
   <main id="contenido" class="contenedor principal">
-    <AgendaApp eventos={eventos} />
+    <AgendaApp eventos={eventos} filtros={filtros} />
   </main>
   <Pie />
   <BarraNavegacion activa="explorar" class="solo-sesion" />

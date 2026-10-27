@@ -27,7 +27,7 @@ const RUTA_VALIDA = /^eventos\/[a-z0-9_-]{1,64}\/[a-f0-9]{16}-\d{3,4}\.webp$/;
 const ESPERA_MS = 6000;
 
 // Tamaños con los que el navegador elige la variante (proporciones de cada tarjeta, ver FotoEvento.astro)
-const TAMANOS: Record<string, string> = {
+export const TAMANOS_FOTO: Record<string, string> = {
   tarjeta: '(max-width: 767px) 72vw, 360px',
   detalle: '(max-width: 1279px) 100vw, 1240px',
   mini: '120px',
@@ -82,7 +82,7 @@ const pintarUna = (marco: HTMLElement, foto: FotoIndice, raiz: string) => {
   img.decoding = 'async';
   img.loading = tamano === 'detalle' ? 'eager' : 'lazy';
   if (tamano === 'detalle') img.setAttribute('fetchpriority', 'high');
-  img.sizes = TAMANOS[tamano] ?? TAMANOS.tarjeta;
+  img.sizes = TAMANOS_FOTO[tamano] ?? TAMANOS_FOTO.tarjeta;
   img.srcset = srcset;
   img.src = srcset.split(', ').at(-1)!.split(' ')[0];
   if (foto.ancho && foto.alto) {
@@ -112,4 +112,16 @@ export const pintarFotos = async (raiz: ParentNode = document): Promise<number> 
     }
   }
   return pintadas;
+};
+
+// Fotos que ya puso el servidor (etapa B3): si una no carga (borrada o caída de R2), se quita y queda el degradado
+export const vigilarFotosServidor = (raiz: ParentNode = document) => {
+  for (const img of raiz.querySelectorAll<HTMLImageElement>('img[data-foto-servidor]')) {
+    const quitar = () => {
+      img.closest('.foto-evento')?.classList.remove('cargada');
+      img.remove();
+    };
+    if (img.complete && !img.naturalWidth) quitar();
+    else img.addEventListener('error', quitar, { once: true });
+  }
 };

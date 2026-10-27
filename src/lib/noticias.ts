@@ -24,13 +24,15 @@ export const nombreLugar = (ciudad: string) => (ciudad === NACIONAL ? NOMBRE_NAC
 
 export const antetitulo = (n: Noticia) => n.data.antetitulo ?? `${TEMAS[n.data.tema]} · ${nombreLugar(n.data.ciudad)}`;
 
-export const eventosDe = (n: Noticia): Evento[] =>
-  n.data.eventos.map((id) => eventos.find((e) => e.id === id)).filter((e): e is Evento => Boolean(e));
+// `publicados`: los eventos que se pueden mostrar (lib/datos-eventos.ts, eventosPublicados). Un evento de la
+// noticia que no esté publicado (pendiente, retirado) no aparece ni da su ciudad o sus colores.
+export const eventosDe = (n: Noticia, publicados: Evento[] = eventos): Evento[] =>
+  n.data.eventos.map((id) => publicados.find((e) => e.id === id)).filter((e): e is Evento => Boolean(e));
 
 // Ciudades donde "cae" la noticia para el filtro: la suya y las de sus eventos (una guía nacional con un plan en
 // Leticia aparece al filtrar por Leticia)
-export const ciudadesDe = (n: Noticia) =>
-  [...new Set([n.data.ciudad, ...eventosDe(n).map((e) => e.ciudad)])].filter((c) => c !== NACIONAL);
+export const ciudadesDe = (n: Noticia, publicados: Evento[] = eventos) =>
+  [...new Set([n.data.ciudad, ...eventosDe(n, publicados).map((e) => e.ciudad)])].filter((c) => c !== NACIONAL);
 
 // Fondo de la imagen cuando la noticia no trae foto: los colores de su primer evento o los del tema
 const FONDOS_TEMA: Record<string, [string, string]> = {
@@ -43,8 +45,8 @@ const FONDOS_TEMA: Record<string, [string, string]> = {
   guias: ['#8FD3D0', '#12343A'],
 };
 
-export const fondoNoticia = (n: Noticia) => {
-  const e = eventosDe(n)[0];
+export const fondoNoticia = (n: Noticia, publicados: Evento[] = eventos) => {
+  const e = eventosDe(n, publicados)[0];
   const [bg1, bg2] = e ? [e.bg1, e.bg2] : FONDOS_TEMA[n.data.tema];
   return `--bg1: ${bg1}; --bg2: ${bg2}`;
 };
@@ -68,7 +70,7 @@ export const fechaCorta = (iso: string) =>
 export const metaNoticia = (n: Noticia) => `${fechaCorta(n.data.fecha)} · ${minutosLectura(n)} min de lectura`;
 
 // Relacionadas: mismo tema y misma ciudad pesan más; luego las más recientes
-export const relacionadas = (n: Noticia, todas: Noticia[], cuantas = 3) =>
+export const relacionadas = (n: Noticia, todas: Noticia[], cuantas = 3, publicados: Evento[] = eventos) =>
   todas
     .filter((o) => o.id !== n.id)
     .map((o) => {
@@ -77,7 +79,7 @@ export const relacionadas = (n: Noticia, todas: Noticia[], cuantas = 3) =>
         (o.data.tema === n.data.tema ? 2 : 0) +
         (o.data.ciudad === n.data.ciudad && o.data.ciudad !== NACIONAL ? 2 : 0) +
         (comparten ? 1 : 0) +
-        (ciudadesDe(o).some((c) => ciudadesDe(n).includes(c)) ? 1 : 0);
+        (ciudadesDe(o, publicados).some((c) => ciudadesDe(n, publicados).includes(c)) ? 1 : 0);
       return { o, puntos };
     })
     .sort((a, b) => b.puntos - a.puntos || b.o.data.fecha.localeCompare(a.o.data.fecha))

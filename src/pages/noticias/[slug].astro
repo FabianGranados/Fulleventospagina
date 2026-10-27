@@ -25,6 +25,7 @@ import {
   rutaNoticia,
   type Noticia,
 } from '../../lib/noticias';
+import { eventosPublicados } from '../../lib/datos-eventos';
 
 export async function getStaticPaths() {
   const todas = await noticiasOrdenadas();
@@ -32,15 +33,19 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-  noticia: Noticia;
-  todas: Noticia[];
+  noticia?: Noticia;
+  todas?: Noticia[];
 }
 
-const { noticia: n, todas } = Astro.props;
+// Etapa B3: con EVENTOS_D1 la página va bajo demanda (astro.config.mjs) y sus eventos son solo los publicados en D1
+const publicados = await eventosPublicados(Astro.locals);
+const todas = Astro.props.todas ?? (await noticiasOrdenadas());
+const n = Astro.props.noticia ?? todas.find((o) => o.id === Astro.params.slug);
+if (!n) return new Response(null, { status: 404, statusText: 'Not Found' });
 const { Content } = await render(n);
 const d = n.data;
-const planes = eventosDe(n);
-const mas = relacionadas(n, todas);
+const planes = eventosDe(n, publicados);
+const mas = relacionadas(n, todas, 3, publicados);
 
 // schema.org/NewsArticle (H34). Las URL absolutas solo si hay dominio configurado (site en astro.config), igual
 // que el Evento; la imagen solo si es absoluta
@@ -64,7 +69,13 @@ const esquema = {
 };
 ---
 
-<Base titulo={`${d.titulo} · Fulleventos`} descripcion={d.bajada}>
+<Base
+  titulo={`${d.titulo} · Fulleventos`}
+  descripcion={d.bajada}
+  imagen={imagenAbsoluta
+    ? { url: imagenAbsoluta, alt: d.imagen?.alt }
+    : planes[0]?.foto && { url: planes[0].foto.src, alt: planes[0].foto.alt, ancho: planes[0].foto.ancho, alto: planes[0].foto.alto }}
+>
   <script type="application/ld+json" is:inline set:html={JSON.stringify(esquema)} />
   <EncabezadoVisitante class="solo-visitante" />
   <EncabezadoApp variante="detalle" class="solo-sesion" />
@@ -111,8 +122,8 @@ const esquema = {
         d.imagen ? (
           <img class="imagen" src={d.imagen.src} alt={d.imagen.alt} />
         ) : (
-          <div class="imagen" style={fondoNoticia(n)} aria-hidden="true">
-            {d.eventos[0] && <FotoEvento id={d.eventos[0]} tamano="detalle" capa="normal" />}
+          <div class="imagen" style={fondoNoticia(n, publicados)} aria-hidden="true">
+            {planes[0] && <FotoEvento id={planes[0].id} tamano="detalle" capa="normal" />}
           </div>
         )
       }

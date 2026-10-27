@@ -1,54 +1,71 @@
 ---
 // Agenda (4.6): cabecera con vista y fecha, filtros de ciudad y categoría (en la URL),
 // aviso de repost, línea de resultados, estado vacío, rejilla paginada y región viva (H49).
+// Dos modos (etapa B3):
+// - Estática (sin D1): salen todas las tarjetas y el script filtra en el navegador; 8 y "Ver N planes más" (H47).
+// - Bajo demanda (con D1, prop `filtros`): el servidor filtra y manda solo una página de 24, con enlaces
+//   "Anterior" y "Siguiente" que funcionan sin JavaScript. Al cambiar un filtro el script pide la nueva URL.
 import Icono from '../ui/Icono.astro';
 import EnlaceSubrayado from '../ui/EnlaceSubrayado.astro';
 import TarjetaMarketplace from './TarjetaMarketplace.astro';
 import BotonFiltro from '../filtros/BotonFiltro.astro';
+import BotonGratis from '../filtros/BotonGratis.astro';
 import HojaFiltro from '../filtros/HojaFiltro.astro';
 import OpcionFiltro from '../filtros/OpcionFiltro.astro';
-import { ciudades } from '../../data/ciudades';
-import { eventos as eventosDemo, categoriaOficialDe, type Evento } from '../../data/eventos';
+import { ciudades, nombreCiudad } from '../../data/ciudades';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
 import { socialAgenda, reposteadosIniciales, categoriasAgenda, fechasAgenda } from '../../data/agenda';
 import { planes, ciudadesTexto } from '../../lib/formato';
+import {
+  FILTROS_INICIALES,
+  consultaAgenda,
+  fechaAgenda,
+  intercalar,
+  resultadoAgenda,
+  type FiltrosAgenda,
+} from '../../lib/filtros-agenda';
 
 interface Props {
   // Eventos publicados (etapa B2: lib/datos-eventos.ts, de D1 o de eventos.ts)
   eventos?: Evento[];
+  // Solo bajo demanda (etapa B3): los filtros de la URL, que el servidor aplica
+  filtros?: FiltrosAgenda;
 }
 
-const { eventos = eventosDemo } = Astro.props;
+const { eventos = eventosDemo, filtros } = Astro.props;
+const servidor = Boolean(filtros);
+const f = filtros ?? FILTROS_INICIALES;
 
-// H47: 8 tarjetas y "Ver N planes más", como en la Bienvenida
+// H47: 8 tarjetas y "Ver N planes más", como en la Bienvenida (solo en la página estática)
 const PAGINA = 8;
 
-// Estado inicial (sin parámetros): "Este finde", todo el país, "Para ti"
-const finde = fechasAgenda.find((f) => f.id === 'finde')!;
-const enFinde = eventos.filter((e) => e.fecha >= finde.desde && e.fecha <= finde.hasta);
+// Estático: todas las tarjetas (el script filtra) y el estado inicial "Este finde", todo el país, "Para ti".
+// Bajo demanda: solo la página pedida, ya filtrada.
+const r = resultadoAgenda(eventos, f);
+const tarjetas = servidor ? r.planes : intercalar(eventos);
+const enPagina = new Set(servidor ? r.planes : resultadoAgenda(eventos, f, eventos.length || 1).planes.slice(0, PAGINA));
+const siguientes = servidor ? 0 : Math.min(PAGINA, r.total - PAGINA);
 
-// Orden intercalado por ciudad, Bogotá primero (4.6 §7)
-const porCiudad = ciudades.map((c) => eventos.filter((e) => e.ciudad === c.id));
-const intercalados = [];
-for (let i = 0; porCiudad.some((g) => g[i]); i++) {
-  for (const grupo of porCiudad) if (grupo[i]) intercalados.push(grupo[i]);
-}
-// Los eventos de D1 en municipios que aún no son ciudades del sitio van al final (solo en "Toda Colombia")
-intercalados.push(...eventos.filter((e) => !ciudades.some((c) => c.id === e.ciudad)));
-
-// Planes del finde por categoría oficial (los conteos de la hoja de categorías; el script los recalcula)
-const conteoCategoria = (id: string) => enFinde.filter((e) => categoriaOficialDe(e) === id).length;
-
-const conteo = (ciudad: string) => enFinde.filter((e) => e.ciudad === ciudad).length;
-const ciudadesConPlanes = new Set(enFinde.map((e) => e.ciudad)).size;
-const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
+// Textos de la cabecera y de la línea de resultados (los mismos que pinta el script)
+const fecha = fechaAgenda(f.fecha);
+const lugar = f.ciudad === 'all' ? 'Colombia' : nombreCiudad(f.ciudad);
+const busqueda = f.q ? ` para «${f.q}»` : '';
+const donde = f.ciudad !== 'all' ? `en ${lugar}` : r.total ? `en ${ciudadesTexto(r.ciudades)}` : `en ${lugar}`;
+const textoCategoria = categoriasAgenda.find((c) => c.id === f.categoria)?.texto ?? 'Para ti';
+const mensajeVacio =
+  f.fecha === 'finde'
+    ? `Por ahora no hay planes con este filtro en ${lugar} este finde. Prueba otra ciudad o mira todo el país.`
+    : `${fecha.titulo} no hay planes con este filtro en ${lugar}: mira el finde.`;
+const conFiltro = f.ciudad !== 'all' || f.categoria !== 'all' || f.gratis || f.q !== '';
+const enlacePagina = (pagina: number) => `/agenda${consultaAgenda({ ...f, pagina })}`;
 ---
 
-<div class="agenda" data-agenda-app data-pagina={PAGINA}>
+<div class="agenda" data-agenda-app data-pagina={PAGINA} data-servidor={servidor ? '' : undefined}>
   <div class="cabecera">
     <div class="titulos">
       <!-- "Para ti" solo con sesión: el visitante ve la agenda de todo el país, sin gustos (decisión 2.24) -->
       <p class="antetitulo"><span class="solo-sesion">Agenda para ti</span><span class="solo-visitante">Agenda</span></p>
-      <h1 id="agenda-titulo" tabindex="-1" data-titulo>Este finde en Colombia</h1>
+      <h1 id="agenda-titulo" tabindex="-1" data-titulo>{`${fecha.titulo} en ${lugar}`}</h1>
       <p class="bajada solo-sesion">
         Elegidos por tus gustos (salsa, rock, fútbol y planes gratis) en todo el país, de la costa al Amazonas,
         empezando por Bogotá. Repostea los que te gusten para que tu gente los vea.
@@ -69,10 +86,10 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       <fieldset class="segmentado fechas">
         <legend class="solo-lectores">Fecha</legend>
         {
-          fechasAgenda.map((f) => (
+          fechasAgenda.map((x) => (
             <label class="opcion-fecha">
-              <input type="radio" name="agenda-fecha" value={f.id} checked={f.id === 'finde'} data-fecha />
-              {f.texto}
+              <input type="radio" name="agenda-fecha" value={x.id} checked={x.id === f.fecha} data-fecha />
+              {x.texto}
             </label>
           ))
         }
@@ -83,21 +100,30 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
   <!-- Filtros de ciudad y categoría (decisión 2.35): dos botones que abren una hoja con las opciones, en vez de
        dos filas de chips. Los radios viven en las hojas; el resultado se aplica al elegir y la página se ve detrás -->
   <div class="filtros">
-    <BotonFiltro hoja="filtro-ciudad" filtro="ciudad" rotulo="Ciudad" icono="pin">Toda Colombia</BotonFiltro>
-    <BotonFiltro hoja="filtro-categoria" filtro="categoria" rotulo="Categoría" icono="filtro">
-      <span class="solo-sesion">Para ti</span><span class="solo-visitante">Todas las categorías</span>
-    </BotonFiltro>
+    <BotonFiltro hoja="filtro-ciudad" filtro="ciudad" rotulo="Ciudad" icono="pin" activo={f.ciudad !== 'all'}>{f.ciudad === 'all' ? 'Toda Colombia' : lugar}</BotonFiltro>
+    <BotonFiltro hoja="filtro-categoria" filtro="categoria" rotulo="Categoría" icono="filtro" activo={f.categoria !== 'all'}>{
+      f.categoria === 'all' ? (
+        <><span class="solo-sesion">Para ti</span><span class="solo-visitante">Todas las categorías</span></>
+      ) : (
+        textoCategoria
+      )
+    }</BotonFiltro>
     <!-- "Gratis" no es una categoría (etapa B2): se suma a cualquiera de las 14 -->
-    <button type="button" class="filtro-gratis" aria-pressed="false" data-filtro-gratis>
-      <Icono nombre="etiqueta" tamano={18} />Gratis
-    </button>
+    <BotonGratis activo={f.gratis} />
   </div>
 
   <HojaFiltro id="filtro-ciudad" titulo="Ciudad" leyenda="Filtrar por ciudad">
-    <OpcionFiltro nombre="agenda-ciudad" valor="all" atributo="ciudad" checked icono="pin" conteo={enFinde.length}>Toda Colombia</OpcionFiltro>
+    <OpcionFiltro nombre="agenda-ciudad" valor="all" atributo="ciudad" checked={f.ciudad === 'all'} icono="pin" conteo={r.conteoCiudad.all}>Toda Colombia</OpcionFiltro>
     {
       ciudades.map((c) => (
-        <OpcionFiltro nombre="agenda-ciudad" valor={c.id} atributo="ciudad" conteo={conteo(c.id)}>
+        <OpcionFiltro
+          nombre="agenda-ciudad"
+          valor={c.id}
+          atributo="ciudad"
+          checked={f.ciudad === c.id}
+          conteo={r.conteoCiudad[c.id] ?? 0}
+          class={(r.conteoCiudad[c.id] ?? 0) === 0 ? 'vacia' : undefined}
+        >
           {c.nombre}
         </OpcionFiltro>
       ))
@@ -112,10 +138,10 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
             nombre="agenda-categoria"
             valor={c.id}
             atributo="categoria"
-            checked={c.id === 'all'}
+            checked={c.id === f.categoria}
             icono={c.icono ?? (c.id === 'amigos' ? 'repost' : 'filtro')}
-            conteo={c.icono ? conteoCategoria(c.id) : undefined}
-            class={c.id === 'amigos' ? 'solo-sesion' : undefined}
+            conteo={c.icono ? r.conteoCategoria[c.id] : undefined}
+            class={c.id === 'amigos' ? 'solo-sesion' : c.icono && !r.conteoCategoria[c.id] ? 'vacia' : undefined}
           >
             {c.id === 'all' ? (
               <>
@@ -143,7 +169,7 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
   <div class="resultados">
     <p class="conteo-resultados" tabindex="-1" data-resultados>
-      <b>{planes(enFinde.length)}</b> en {ciudadesTexto(ciudadesConPlanes)} este finde
+      <b>{r.total ? planes(r.total) : 'Sin planes'}</b>{`${busqueda} ${donde} ${fecha.periodo}`}
     </p>
     <div class="resultados-derecha">
       <span class="ejemplo">Contenido de ejemplo</span>
@@ -154,29 +180,52 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
   <!-- Región viva permanente y vacía (H49) -->
   <p class="solo-lectores" role="status" data-anuncio></p>
 
-  <div class="vacio" hidden data-vacio>
-    <p data-vacio-mensaje></p>
+  <div class="vacio" hidden={r.total > 0} data-vacio>
+    <p data-vacio-mensaje>{mensajeVacio}</p>
     <div class="vacio-botones">
-      <button type="button" class="boton-contorno" hidden data-ver-finde>Ver los planes de este finde</button>
-      <button type="button" class="boton-contorno" data-limpiar>Ver todos los planes del país</button>
+      <button type="button" class="boton-contorno" hidden={f.fecha === 'finde'} data-ver-finde>Ver los planes de este finde</button>
+      <button type="button" class="boton-contorno" hidden={f.fecha !== 'finde' && !conFiltro} data-limpiar>Ver todos los planes del país</button>
     </div>
   </div>
 
   <div class="rejilla" id="agenda-rejilla" data-rejilla>
     {
-      intercalados.map((e) => {
-        const posicion = enFinde.includes(e) ? intercalados.filter((x) => enFinde.includes(x)).indexOf(e) : -1;
-        return (
-          <TarjetaMarketplace
-            evento={e}
-            social={socialAgenda[e.id] ?? { quien: '', reposts: 0, colores: [], amigos: false }}
-            reposteado={reposteadosIniciales.includes(e.id)}
-            oculta={posicion < 0 || posicion >= PAGINA}
-          />
-        );
-      })
+      tarjetas.map((e) => (
+        <TarjetaMarketplace
+          evento={e}
+          social={socialAgenda[e.id] ?? { quien: '', reposts: 0, colores: [], amigos: false }}
+          reposteado={reposteadosIniciales.includes(e.id)}
+          oculta={!enPagina.has(e)}
+        />
+      ))
     }
   </div>
+
+  {
+    servidor && r.paginas > 1 && (
+      <nav class="paginacion" aria-label="Páginas de la agenda">
+        {r.pagina > 1 ? (
+          <a href={enlacePagina(r.pagina - 1)} rel="prev" class="boton-contorno pagina-enlace">
+            <Icono nombre="volver" tamano={16} grosor={2.2} />
+            Anterior
+          </a>
+        ) : (
+          <span class="pagina-hueco" />
+        )}
+        <span class="pagina-actual" aria-current="page">
+          Página {r.pagina} de {r.paginas}
+        </span>
+        {r.pagina < r.paginas ? (
+          <a href={enlacePagina(r.pagina + 1)} rel="next" class="boton-contorno pagina-enlace">
+            Siguiente
+            <Icono nombre="siguiente" tamano={16} grosor={2.2} />
+          </a>
+        ) : (
+          <span class="pagina-hueco" />
+        )}
+      </nav>
+    )
+  }
 
   <div class="mas" hidden={siguientes <= 0} data-mas-contenedor>
     <button type="button" class="boton-contorno grande" aria-controls="agenda-rejilla" data-mas>
@@ -187,19 +236,19 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
 <script>
   import { ciudades } from '../../data/ciudades';
-  import { fechasAgenda, destinosRepost, lineaRepost, categoriasAgenda, categoriaAgendaDesdeSitio } from '../../data/agenda';
-  import { categoriaOficial } from '../../data/categorias-oficiales';
+  import { fechasAgenda, destinosRepost, lineaRepost } from '../../data/agenda';
   import { planes, ciudadesTexto, slug } from '../../lib/formato';
   import { haySesion } from '../../lib/sesion';
+  import { consultaAgenda, leerFiltros } from '../../lib/filtros-agenda';
 
   const raiz = document.querySelector<HTMLElement>('[data-agenda-app]');
 
   if (raiz) {
     const PAGINA = Number(raiz.dataset.pagina);
+    // Bajo demanda (etapa B3): el servidor ya filtró y paginó; cambiar un filtro pide la nueva URL
+    const servidor = raiz.dataset.servidor !== undefined;
     const conSesion = haySesion();
     const nombres: Record<string, string> = Object.fromEntries(ciudades.map((c) => [c.id, c.nombre]));
-    const idsCiudad = new Set(['all', ...ciudades.map((c) => c.id)]);
-    const idsCategoria = new Set(categoriasAgenda.map((c) => c.id));
     const fechas = Object.fromEntries(fechasAgenda.map((f) => [f.id, f]));
 
     const $ = <T extends HTMLElement = HTMLElement>(sel: string) => raiz.querySelector<T>(sel)!;
@@ -240,40 +289,23 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
     const normalizar = (t: string) => slug(t).replace(/-/g, ' ');
 
+    // La misma lectura del servidor (lib/filtros-agenda.ts); "Lo que repostea tu gente" es solo con sesión (2.24)
     const leerUrl = () => {
-      const p = new URLSearchParams(location.search);
-      const ciudad = p.get('ciudad') ?? 'all';
-      // Enlaces viejos con las 6 categorías del sitio: ?categoria=rumba → la oficial; ?categoria=gratis → filtro Gratis
-      const pedida = p.get('categoria') ?? 'all';
-      const categoria = categoriaAgendaDesdeSitio[pedida] ?? pedida;
-      estado.gratis = p.get('gratis') === '1' || pedida === 'gratis';
-      const fecha = p.get('fecha') ?? 'finde';
-      estado.ciudad = idsCiudad.has(ciudad) ? ciudad : 'all';
-      // "Lo que repostea tu gente" es solo con sesión (decisión 2.24)
-      estado.categoria = idsCategoria.has(categoria) && (categoria !== 'amigos' || conSesion) ? categoria : 'all';
-      estado.fecha = fecha in fechas ? fecha : 'finde';
-      estado.q = (p.get('q') ?? '').trim();
-      estado.mostrados = PAGINA;
+      const { pagina: _pagina, ...filtros } = leerFiltros(new URLSearchParams(location.search));
+      Object.assign(estado, filtros, { mostrados: PAGINA });
+      if (estado.categoria === 'amigos' && !conSesion) estado.categoria = 'all';
     };
 
-    const consulta = () => {
-      const p = new URLSearchParams();
-      if (estado.q) p.set('q', estado.q);
-      if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
-      if (estado.categoria !== 'all') p.set('categoria', estado.categoria);
-      if (estado.gratis) p.set('gratis', '1');
-      if (estado.fecha !== 'finde') p.set('fecha', estado.fecha);
-      const s = p.toString();
-      return s ? `?${s}` : '';
-    };
+    // Cambiar un filtro vuelve a la página 1
+    const consulta = () => consultaAgenda({ ...estado, pagina: 1 });
 
     const enlaceMapa = () => {
       const p = new URLSearchParams();
       if (estado.ciudad !== 'all') p.set('ciudad', estado.ciudad);
-      // El mapa todavía filtra con las 6 categorías del sitio: se le pasa la equivalente si la hay
-      const sitio = categoriaOficial(estado.categoria)?.sitio;
-      if (sitio) p.set('categoria', sitio);
-      else if (estado.gratis) p.set('categoria', 'gratis');
+      // El mapa filtra con las mismas 14 categorías y "Gratis" aparte (etapa B3)
+      if (estado.categoria !== 'all' && estado.categoria !== 'amigos') p.set('categoria', estado.categoria);
+      if (estado.gratis) p.set('gratis', '1');
+      if (estado.fecha !== 'finde') p.set('fecha', estado.fecha);
       const s = p.toString();
       return s ? `/mapa?${s}` : '/mapa';
     };
@@ -401,7 +433,8 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
 
     const cambiar = (cambios: Partial<typeof estado>) => {
       Object.assign(estado, { mostrados: PAGINA }, cambios);
-      pintar();
+      if (servidor) location.assign(`${location.pathname}${consulta()}`);
+      else pintar();
     };
 
     radiosCiudad.forEach((r) => r.addEventListener('change', () => r.checked && cambiar({ ciudad: r.value })));
@@ -486,17 +519,25 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
       resultados.focus();
     });
 
-    // Atrás y adelante del navegador
-    addEventListener('popstate', () => {
-      leerUrl();
-      pintar({ url: false });
-    });
+    // Atrás y adelante del navegador (bajo demanda cada URL es una página propia)
+    if (!servidor)
+      addEventListener('popstate', () => {
+        leerUrl();
+        pintar({ url: false });
+      });
 
     // Con sesión, los reposts de la usuaria del demo (el servidor pinta la tarjeta como la ve el visitante)
     if (conSesion) tarjetas.filter((t) => t.querySelector('[data-reposteado-sesion]')).forEach((t) => marcarRepost(t, true));
 
     leerUrl();
-    pintar({ anunciar: false, url: false });
+    if (!servidor) pintar({ anunciar: false, url: false });
+    // Bajo demanda: "Lo que repostea tu gente" sin sesión vuelve a todas las categorías
+    else if (new URLSearchParams(location.search).get('categoria') === 'amigos' && !conSesion) cambiar({ categoria: 'all' });
+    else {
+      // Los enlaces al mapa llevan los filtros de la página
+      vistaMapa.href = enlaceMapa();
+      verMapa.href = enlaceMapa();
+    }
   }
 </script>
 
@@ -629,30 +670,6 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-  }
-
-  /* "Gratis": botón que alterna, del mismo alto que los botones de filtro (etapa B2) */
-  .filtro-gratis {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 48px;
-    padding: 0 18px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
-    color: var(--ink);
-    font-size: .95rem;
-    font-weight: 600;
-  }
-
-  .filtro-gratis:hover {
-    background: var(--light-hover);
-  }
-
-  .filtro-gratis[aria-pressed='true'] {
-    border-color: var(--ink);
-    background: var(--cat-gratis);
   }
 
   /* N17 · Aviso */
@@ -804,5 +821,47 @@ const siguientes = Math.min(PAGINA, enFinde.length - PAGINA);
     display: flex;
     justify-content: center;
     margin-top: 6px;
+  }
+
+  /* Páginas del servidor (etapa B3): enlaces reales, funcionan sin JavaScript */
+  .paginacion {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .pagina-enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    text-decoration: none;
+  }
+
+  .pagina-enlace[rel='prev'] {
+    justify-self: start;
+  }
+
+  .pagina-enlace[rel='next'] {
+    justify-self: end;
+  }
+
+  .pagina-enlace:hover {
+    background: var(--light-hover);
+  }
+
+  .pagina-actual {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 420px) {
+    .pagina-enlace {
+      padding: 0 14px;
+    }
   }
 </style>

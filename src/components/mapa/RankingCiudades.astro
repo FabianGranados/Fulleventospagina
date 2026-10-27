@@ -2,10 +2,19 @@
 // N23 · Ranking "Ciudades con más planes" (variante ranking de N18: 44 px, texto 700, contador siempre amarillo).
 // El script de la página reordena y oculta los chips según los filtros.
 import { ciudadesMapa } from '../../data/mapa';
-import { conteoCiudad } from '../../data/eventos';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
+import { delFinde, porCiudad } from '../../lib/planes';
 
-// Mayor a menor; los empates conservan el orden de las ciudades (orden estable)
-const ranking = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).sort((a, b) => conteoCiudad(b.id) - conteoCiudad(a.id));
+interface Props {
+  // Eventos publicados (lib/datos-eventos.ts); el estado inicial es "Este finde"
+  eventos?: Evento[];
+}
+
+const conteos = porCiudad(delFinde(Astro.props.eventos ?? eventosDemo));
+const conteoCiudad = (id: string) => conteos[id] ?? 0;
+// Mayor a menor; los empates conservan el orden de las ciudades (orden estable). Están todas las ciudades: las que
+// no tienen planes con los filtros iniciales salen ocultas y el script las muestra si cambian los filtros.
+const ranking = [...ciudadesMapa].sort((a, b) => conteoCiudad(b.id) - conteoCiudad(a.id));
 ---
 
 <section class="ranking" aria-labelledby="mapa-ciudades" data-ranking>
@@ -16,7 +25,7 @@ const ranking = ciudadesMapa.filter((c) => conteoCiudad(c.id) > 0).sort((a, b) =
   <div class="fila" role="group" aria-label="Ciudades" data-ranking-fila>
     {
       ranking.map((c) => (
-        <button type="button" class="chip" aria-pressed="false" data-ranking-ciudad={c.id}>
+        <button type="button" class="chip" aria-pressed="false" hidden={conteoCiudad(c.id) === 0} data-ranking-ciudad={c.id}>
           {c.nombre}{' '}
           <span class="conteo">
             <span data-ranking-conteo>{conteoCiudad(c.id)}</span>

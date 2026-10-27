@@ -12,12 +12,14 @@ interface Props {
   // Nombre del filtro para los lectores de pantalla: "Ciudad: Bogotá"
   rotulo: string;
   icono: NombreIcono;
+  // Con un filtro puesto desde el servidor (Agenda bajo demanda, etapa B3)
+  activo?: boolean;
 }
 
-const { hoja, filtro, rotulo, icono } = Astro.props;
+const { hoja, filtro, rotulo, icono, activo = false } = Astro.props;
 ---
 
-<button type="button" class="filtro" data-abrir-modal={hoja} data-filtro={filtro}>
+<button type="button" class:list={['filtro', { activo }]} data-abrir-modal={hoja} data-filtro={filtro}>
   <Icono nombre={icono} tamano={18} />
   <span class="solo-lectores">{rotulo}: </span><span class="texto" data-filtro-texto><slot /></span>
   <Icono nombre="siguiente" tamano={16} grosor={2.4} class="abajo" />

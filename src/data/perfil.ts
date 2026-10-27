@@ -5,7 +5,7 @@
 // el mismo dato de Inicio y Evento (H37).
 
 import { misParches, planesDeUsuaria } from './asistencia';
-import { eventos } from './eventos';
+import { eventos, type Evento } from './eventos';
 import { usuaria } from './personas';
 
 export interface Recuerdo {
@@ -94,12 +94,13 @@ export interface CifrasPerfil {
   siguiendo: number;
 }
 
-export const cifrasPerfil = (id: string): CifrasPerfil | undefined => {
+// `publicados`: los eventos que se pueden mostrar (lib/datos-eventos.ts); un plan de un evento retirado no cuenta
+export const cifrasPerfil = (id: string, publicados: Evento[] = eventos): CifrasPerfil | undefined => {
   const p = perfil(id);
   if (!p) return undefined;
   // Asistencia y parches solo están cargados para la usuaria del demo (asistencia.ts)
-  const proximos = id === usuaria.id ? planesDeUsuaria() : [];
-  const ciudadesProximos = proximos.map((x) => eventos.find((e) => e.id === x.evento)?.ciudad).filter(Boolean);
+  const proximos = id === usuaria.id ? planesDeUsuaria().filter((x) => publicados.some((e) => e.id === x.evento)) : [];
+  const ciudadesProximos = proximos.map((x) => publicados.find((e) => e.id === x.evento)?.ciudad).filter(Boolean);
   return {
     planes: proximos.length + p.recuerdos.length,
     ciudades: new Set([...ciudadesProximos, ...p.recuerdos.map((r) => r.ciudad)]).size,

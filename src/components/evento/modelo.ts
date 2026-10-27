@@ -62,7 +62,8 @@ export interface ModeloEvento {
   amigosVan: Persona[];
 }
 
-export const modeloEvento = (evento: Evento): ModeloEvento => {
+// `publicados`: los eventos que se pueden mostrar (lib/datos-eventos.ts); los parecidos salen solo de ahí
+export const modeloEvento = (evento: Evento, publicados: Evento[] = eventos): ModeloEvento => {
   const detalle = detalles[evento.id];
   const ciudad = ciudadDe(evento);
   const [nombreLugar, zonaLugar] = evento.lugar.split(' · ');
@@ -92,8 +93,8 @@ export const modeloEvento = (evento: Evento): ModeloEvento => {
       : []);
 
   const similares = detalle
-    ? detalle.similares.map((id) => eventos.find((e) => e.id === id)!).filter(Boolean)
-    : eventos.filter((e) => e.categoria === evento.categoria && e.ciudad !== evento.ciudad).slice(0, 3);
+    ? detalle.similares.map((id) => publicados.find((e) => e.id === id)!).filter(Boolean)
+    : publicados.filter((e) => e.categoria === evento.categoria && e.ciudad !== evento.ciudad && e.id !== evento.id).slice(0, 3);
 
   return {
     evento,

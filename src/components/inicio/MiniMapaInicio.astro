@@ -3,7 +3,15 @@
 // Mismo contorno y posiciones que el mini-mapa de Bienvenida (proyección del Mapa, sección 2.8).
 import Icono from '../ui/Icono.astro';
 import { ciudades } from '../../data/ciudades';
-import { conteoCiudad } from '../../data/eventos';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
+import { porCiudad } from '../../lib/planes';
+
+interface Props {
+  // Planes del finde (Descubre ya los filtró de los publicados)
+  eventos?: Evento[];
+}
+
+const conteos = porCiudad(Astro.props.eventos ?? eventosDemo);
 
 const contorno =
   'M21.4 43.2 L26.5 46.0 L27.5 49.5 L27.2 45.5 L30.7 41.5 L38.2 36.0 L39.2 34.5 L38.5 30.0 L39.5 26.0 L42.5 22.0 L46.5 20.0 L51.0 19.0 L52.9 17.6 L58.0 17.0 L65.9 14.6 L70.0 12.0 L73.3 8.0 L78.3 5.4 L81.0 8.0 L81.7 11.5 L75.5 14.5 L72.5 19.0 L66.5 25.5 L64.5 33.0 L61.5 39.0 L67.5 43.5 L71.0 47.0 L70.3 51.0 L73.0 56.0 L83.0 59.5 L94.0 59.2 L101.0 60.5 L120.2 68.0 L117.0 78.0 L116.5 86.0 L119.0 91.3 L123.0 102.0 L124.0 111.0 L126.3 118.3 L116.0 119.0 L113.0 113.0 L101.0 112.0 L96.0 117.5 L94.5 123.5 L94.5 131.0 L99.0 137.5 L100.5 144.0 L97.0 152.0 L95.5 163.0 L95.6 172.2 L91.0 168.0 L92.0 158.0 L84.0 154.0 L75.0 153.0 L66.0 154.5 L60.0 151.0 L53.0 142.0 L47.2 132.0 L41.0 129.0 L32.0 127.0 L26.0 126.0 L18.5 121.5 L14.0 118.0 L6.5 115.5 L7.0 112.0 L9.0 108.0 L16.0 104.3 L20.0 98.0 L23.0 91.2 L21.0 85.0 L20.5 75.0 L20.5 68.0 L17.0 60.0 L17.5 55.0 L20.5 50.5 L22.0 47.0 Z';
@@ -11,7 +19,7 @@ const contorno =
 // Tamaño del punto según planes (N21): ≥5 → 20 px, ≥3 → 16, 2 → 13, 1 → 9 sin número
 const pines = ciudades
   .map((c) => {
-    const n = conteoCiudad(c.id);
+    const n = conteos[c.id] ?? 0;
     return {
       ...c,
       n,

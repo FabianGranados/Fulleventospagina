@@ -5,19 +5,32 @@
 import Icono from '../ui/Icono.astro';
 import TarjetaCompacta from './TarjetaCompacta.astro';
 import { ciudadesMapa, LIMITE_LISTA } from '../../data/mapa';
-import { eventos } from '../../data/eventos';
+import { eventos as eventosDemo, ciudadDe, type Evento } from '../../data/eventos';
 import { planes } from '../../lib/formato';
+import { delFinde } from '../../lib/planes';
 
-// Orden fijo de ciudades y, dentro de cada una, por fecha (los empates conservan el orden de los datos)
-const grupos = ciudadesMapa
-  .map((c) => ({
-    ciudad: c,
-    eventos: eventos.filter((e) => e.ciudad === c.id).sort((a, b) => a.fecha.localeCompare(b.fecha)),
-  }))
-  .filter((g) => g.eventos.length);
+interface Props {
+  // Eventos publicados (lib/datos-eventos.ts): todas las fechas; el script filtra
+  eventos?: Evento[];
+}
+
+const eventos = Astro.props.eventos ?? eventosDemo;
+const finde = new Set(delFinde(eventos));
+const porFecha = (lista: Evento[]) => lista.sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+// Orden fijo de ciudades y, dentro de cada una, por fecha (los empates conservan el orden de los datos). Al final,
+// los municipios de D1 que aún no son ciudad del sitio (sin pin en el mapa)
+const otros = [...new Set(eventos.filter((e) => !ciudadesMapa.some((c) => c.id === e.ciudad)).map((e) => e.ciudad))];
+const grupos = [
+  ...ciudadesMapa.map((c) => ({ id: c.id, nombre: c.nombre, eventos: porFecha(eventos.filter((e) => e.ciudad === c.id)) })),
+  ...otros.map((id) => {
+    const lista = porFecha(eventos.filter((e) => e.ciudad === id));
+    return { id, nombre: ciudadDe(lista[0]), eventos: lista };
+  }),
+].filter((g) => g.eventos.length);
 
 // Días del grupo de una ciudad, para agrupar por día cuando hay una ciudad elegida (H47)
-const dias = (lista: typeof eventos) => [...new Set(lista.map((e) => e.fecha))];
+const dias = (lista: Evento[]) => [...new Set(lista.map((e) => e.fecha))];
 const nombreDia = (iso: string) => {
   const texto = new Date(`${iso}T12:00:00-05:00`).toLocaleDateString('es-CO', {
     weekday: 'long',
@@ -28,7 +41,7 @@ const nombreDia = (iso: string) => {
 };
 
 let indice = 0;
-const total = eventos.length;
+const total = finde.size;
 ---
 
 <aside class="panel" aria-label="Planes en el mapa" data-panel>
@@ -60,18 +73,18 @@ const total = eventos.length;
     {
       grupos.map((g) => (
         <>
-          <h3 class="grupo" data-grupo-ciudad={g.ciudad.id}>
-            <span>{g.ciudad.nombre}</span>
+          <h3 class="grupo" data-grupo-ciudad={g.id} hidden={!g.eventos.some((e) => finde.has(e))}>
+            <span>{g.nombre}</span>
             <span class="grupo-conteo">
               <span class="solo-lectores">, </span>
-              <span data-grupo-conteo>{planes(g.eventos.length)}</span>
+              <span data-grupo-conteo>{planes(g.eventos.filter((e) => finde.has(e)).length)}</span>
             </span>
           </h3>
           {dias(g.eventos).map((dia) => {
             const delDia = g.eventos.filter((e) => e.fecha === dia);
             return (
               <>
-                <h3 class="grupo" data-grupo-dia={dia} data-ciudad={g.ciudad.id} hidden>
+                <h3 class="grupo" data-grupo-dia={dia} data-ciudad={g.id} hidden>
                   <span>{nombreDia(dia)}</span>
                   <span class="grupo-conteo">
                     <span class="solo-lectores">, </span>
@@ -79,7 +92,7 @@ const total = eventos.length;
                   </span>
                 </h3>
                 {delDia.map((e) => (
-                  <div class="celda" data-celda hidden={indice++ >= LIMITE_LISTA}>
+                  <div class="celda" data-celda hidden={!finde.has(e) || indice++ >= LIMITE_LISTA}>
                     <TarjetaCompacta evento={e} reposteado={e.id === 'e2'} />
                   </div>
                 ))}
@@ -90,7 +103,7 @@ const total = eventos.length;
       ))
     }
 
-    <div class="mas" data-mas-contenedor>
+    <div class="mas" hidden={total <= LIMITE_LISTA} data-mas-contenedor>
       <button type="button" class="boton-contorno grande" aria-expanded="false" aria-controls="mapa-lista" data-mas>
         {`Ver ${total - LIMITE_LISTA} planes más`}
       </button>

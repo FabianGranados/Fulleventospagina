@@ -13,36 +13,60 @@ import MapaColombia from '../components/mapa/MapaColombia.astro';
 import PanelResultados from '../components/mapa/PanelResultados.astro';
 import RankingCiudades from '../components/mapa/RankingCiudades.astro';
 import VentanaRepost from '../components/eventos/VentanaRepost.astro';
-import { categoriasMapa } from '../data/mapa';
+import BotonFiltro from '../components/filtros/BotonFiltro.astro';
+import BotonGratis from '../components/filtros/BotonGratis.astro';
+import HojaFiltro from '../components/filtros/HojaFiltro.astro';
+import OpcionFiltro from '../components/filtros/OpcionFiltro.astro';
+import { categoriasOficiales } from '../data/categorias-oficiales';
+import { categoriaOficialDe } from '../data/eventos';
+import { eventosPublicados } from '../lib/datos-eventos';
+import { delFinde } from '../lib/planes';
+
+// Etapa B3: con EVENTOS_D1 la página va bajo demanda (astro.config.mjs) con los eventos publicados en D1; si no, es
+// estática con src/data/eventos.ts. Las tarjetas del panel llevan los datos que filtra el script.
+const eventos = await eventosPublicados(Astro.locals);
+// Conteo inicial de cada categoría ("Este finde", toda Colombia); el script lo recalcula con los filtros
+const finde = delFinde(eventos);
+const conteoCategoria = (id: string) => finde.filter((e) => categoriaOficialDe(e) === id).length;
 ---
 
 <Base titulo="Mapa de eventos · Fulleventos" tamanoBase={15}>
   <EncabezadoVisitante class="solo-visitante" />
   <EncabezadoApp variante="completo" activa="mapa" class="solo-sesion" />
   <main id="contenido" class="contenedor principal">
-    <CabeceraMapa />
+    <CabeceraMapa eventos={eventos} />
 
-    <div class="chips" role="group" aria-label="Filtrar por categoría" data-chips>
-      {
-        categoriasMapa.map((c) => (
-          <button type="button" class="chip" data-categoria={c.id} aria-pressed={c.id === 'all' ? 'true' : 'false'}>
-            {c.texto}
-          </button>
-        ))
-      }
+    <!-- Las 14 categorías oficiales con ícono y "Gratis" aparte (etapa B3), como en la Agenda -->
+    <div class="filtros">
+      <BotonFiltro hoja="filtro-categoria" filtro="categoria" rotulo="Categoría" icono="filtro">Todas las categorías</BotonFiltro>
+      <BotonGratis />
     </div>
+
+    <HojaFiltro id="filtro-categoria" titulo="Categoría" leyenda="Filtrar por categoría">
+      <OpcionFiltro nombre="mapa-categoria" valor="all" atributo="categoria" checked icono="filtro">Todas las categorías</OpcionFiltro>
+      {
+        categoriasOficiales.map((c) => {
+          const n = conteoCategoria(c.id);
+          return (
+            <OpcionFiltro nombre="mapa-categoria" valor={c.id} atributo="categoria" icono={c.icono} conteo={n} class={n ? undefined : 'vacia'}>
+              {c.nombre}
+            </OpcionFiltro>
+          );
+        })
+      }
+    </HojaFiltro>
 
     <!-- Región viva permanente (H49) -->
     <p class="solo-lectores" role="status" data-anuncio></p>
 
     <div class="contenedor-fila">
       <div class="fila-mapa">
-        <MapaColombia />
-        <PanelResultados />
+        <MapaColombia eventos={eventos} />
+        <PanelResultados eventos={eventos} />
       </div>
     </div>
 
-    <RankingCiudades />
+    <RankingCiudades eventos={eventos} />
   </main>
   <Pie />
   <BarraNavegacion activa="explorar" class="solo-sesion" />
@@ -51,22 +75,32 @@ import { categoriasMapa } from '../data/mapa';
 </Base>
 
 <script>
-  import { planesPorDepartamento, nivelPlanes } from '../data/departamentos';
-  import { eventos } from '../data/eventos';
-  import { ciudadesMapa, categoriasMapa, fechasMapa, miCiudad, LIMITE_LISTA } from '../data/mapa';
+  import { nivelPlanes } from '../data/departamentos';
+  import { ciudadesMapa, fechasMapa, miCiudad, LIMITE_LISTA } from '../data/mapa';
+  import { categoriasOficiales } from '../data/categorias-oficiales';
+  import { categoriaAgendaDesdeSitio } from '../data/agenda';
   import { planes, ciudadesTexto } from '../lib/formato';
   import { destinosRepost } from '../data/agenda';
   import { haySesion } from '../lib/sesion';
 
   // dx/dy: desplazamiento del mapa al arrastrarlo con zoom (decisión 2.37), en % del lienzo
-  type Estado = { ciudad: string | null; zoom: number; categoria: string; fecha: string; todo: boolean; dx: number; dy: number };
+  type Estado = {
+    ciudad: string | null;
+    zoom: number;
+    categoria: string;
+    gratis: boolean;
+    fecha: string;
+    todo: boolean;
+    dx: number;
+    dy: number;
+  };
 
   const $ = <T extends Element = HTMLElement>(sel: string, raiz: ParentNode = document) => raiz.querySelector<T>(sel)!;
   const $$ = <T extends Element = HTMLElement>(sel: string, raiz: ParentNode = document) => [...raiz.querySelectorAll<T>(sel)];
 
   const porId = Object.fromEntries(ciudadesMapa.map((c) => [c.id, c]));
   const fechaPorId = Object.fromEntries(fechasMapa.map((f) => [f.id, f]));
-  const categoriaPorId = Object.fromEntries(categoriasMapa.map((c) => [c.id, c]));
+  const categoriaPorId = Object.fromEntries(categoriasOficiales.map((c) => [c.id, c]));
   const movimientoReducido = matchMedia('(prefers-reduced-motion: reduce)');
 
   const mapa = $('[data-mapa]');
@@ -92,17 +126,34 @@ import { categoriasMapa } from '../data/mapa';
   const celdas = $$('[data-celda]', lista);
   const chipsRanking = $$<HTMLButtonElement>('[data-ranking-ciudad]', ranking);
 
-  const estado: Estado = { ciudad: null, zoom: 1, categoria: 'all', fecha: 'finde', todo: false, dx: 0, dy: 0 };
+  // Etapa B3: los planes salen de las tarjetas del panel, que el servidor arma con los eventos publicados (D1 o
+  // src/data/eventos.ts). Así el navegador no carga la lista de eventos aparte.
+  const planesMapa = celdas.map((celda) => {
+    const d = $('[data-tarjeta]', celda).dataset;
+    return { id: d.id!, ciudad: d.ciudad!, fecha: d.fecha!, oficial: d.oficial ?? '', gratis: d.gratis === 'true', dpto: d.departamento ?? '' };
+  });
+
+  // Filtro de categoría (hoja con las 14) y "Gratis" aparte
+  const radiosCategoria = $$<HTMLInputElement>('input[name="mapa-categoria"]');
+  const botonCategoria = $('[data-filtro="categoria"]');
+  const botonGratis = $<HTMLButtonElement>('[data-filtro-gratis]');
+  const botonesVer = $$('[data-ver-resultados]');
+
+  const estado: Estado = { ciudad: null, zoom: 1, categoria: 'all', gratis: false, fecha: 'finde', todo: false, dx: 0, dy: 0 };
 
   // --- Reglas de estado (6.2.5) ---
   const reiniciar = () => Object.assign(estado, { ciudad: null, zoom: 1, todo: false, dx: 0, dy: 0 });
   const elegir = (id: string) => Object.assign(estado, { ciudad: id, zoom: Math.max(estado.zoom, 2), todo: false, dx: 0, dy: 0 });
 
-  const filtrados = () => {
+  // `categoria` permite contar con otra (los conteos de la hoja)
+  const filtrados = (categoria = estado.categoria) => {
     const f = fechaPorId[estado.fecha];
-    return eventos.filter(
+    return planesMapa.filter(
       (e) =>
-        (estado.categoria === 'all' || e.etiquetas.includes(estado.categoria)) && e.fecha >= f.desde && e.fecha <= f.hasta,
+        (categoria === 'all' || e.oficial === categoria) &&
+        (!estado.gratis || e.gratis) &&
+        e.fecha >= f.desde &&
+        e.fecha <= f.hasta,
     );
   };
 
@@ -143,7 +194,8 @@ import { categoriasMapa } from '../data/mapa';
 
   const mensajeVacio = () => {
     const c = estado.categoria;
-    const que = c === 'all' ? 'planes' : c === 'gratis' ? 'planes gratis' : `planes de ${categoriaPorId[c].texto}`;
+    const gratis = estado.gratis ? ' gratis' : '';
+    const que = c === 'all' ? `planes${gratis}` : `planes${gratis} de ${categoriaPorId[c].nombre}`;
     return `No hay ${que}${estado.ciudad ? ` en ${lugar()}` : ''} ${fechaPorId[estado.fecha].frase}.`;
   };
 
@@ -177,7 +229,23 @@ import { categoriasMapa } from '../data/mapa';
       ? `${resumen}, ${fecha.rango}. Toca un punto del mapa para ver qué hay en cada ciudad.`
       : `${resumen} ${fecha.rango}. Mira lo que hay este finde.`;
     $$<HTMLInputElement>('input[name="fecha"]').forEach((r) => (r.checked = r.value === estado.fecha));
-    $$('[data-chips] [data-categoria]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.categoria === estado.categoria)));
+    radiosCategoria.forEach((r) => (r.checked = r.value === estado.categoria));
+    const elegida = radiosCategoria.find((r) => r.checked)?.closest('label')?.querySelector('[data-nombre]');
+    $('[data-filtro-texto]', botonCategoria).textContent = elegida?.textContent ?? 'Todas las categorías';
+    botonCategoria.classList.toggle('activo', estado.categoria !== 'all');
+    botonGratis.setAttribute('aria-pressed', String(estado.gratis));
+    // Conteos de la hoja: siguen la fecha, "Gratis" y la ciudad elegida
+    radiosCategoria
+      .filter((r) => r.value !== 'all')
+      .forEach((r) => {
+        const n = filtrados(r.value).filter((e) => !estado.ciudad || e.ciudad === estado.ciudad).length;
+        const caja = r.closest('label')!.querySelector('[data-conteo]');
+        if (caja) {
+          caja.firstChild!.textContent = String(n);
+          caja.querySelector('.solo-lectores')!.textContent = n === 1 ? ' plan' : ' planes';
+        }
+        r.closest('label')!.classList.toggle('vacia', n === 0);
+      });
 
     // --- Mapa ---
     const Z = estado.zoom;
@@ -205,7 +273,9 @@ import { categoriasMapa } from '../data/mapa';
       }
       pin.setAttribute('aria-pressed', String(elegido));
     }
-    const porDpto = planesPorDepartamento(conteo);
+    // Todos los municipios cuentan para su departamento, también los que aún no son ciudad del sitio
+    const porDpto: Record<string, number> = {};
+    for (const e of lista0) if (e.dpto) porDpto[e.dpto] = (porDpto[e.dpto] ?? 0) + 1;
     for (const d of dptos) d.dataset.nivel = String(nivelPlanes(porDpto[d.dataset.dpto!] ?? 0));
 
     $$('[data-accion="todo"]', mapa).forEach((b) => b.setAttribute('aria-pressed', String(!estado.ciudad)));
@@ -218,6 +288,7 @@ import { categoriasMapa } from '../data/mapa';
     // --- Panel ---
     const visibles = lista0.filter((e) => !estado.ciudad || e.ciudad === estado.ciudad);
     const ids = new Set(visibles.map((e) => e.id));
+    botonesVer.forEach((b) => (b.textContent = visibles.length ? `Ver ${planes(visibles.length)}` : 'Ver resultados'));
     $('[data-panel-antetitulo]', panel).textContent = estado.ciudad ? 'Ciudad elegida' : 'Todo el país';
     $('[data-panel-nombre]', panel).textContent = lugar() ?? 'Toda Colombia';
     $('[data-panel-conteo]', panel).textContent = planes(visibles.length);
@@ -262,7 +333,7 @@ import { categoriasMapa } from '../data/mapa';
             ? 'Prueba otra categoría o mira toda Colombia.'
             : 'Prueba otra categoría.';
       $('[data-accion="fecha-finde"]', vacio).hidden = estado.fecha === 'finde';
-      $('[data-accion="categorias"]', vacio).hidden = estado.categoria === 'all';
+      $('[data-accion="categorias"]', vacio).hidden = estado.categoria === 'all' && !estado.gratis;
     }
 
     const ocultas = visibles.length - LIMITE_LISTA;
@@ -293,6 +364,7 @@ import { categoriasMapa } from '../data/mapa';
       valor && valor !== defecto ? params.set(clave, valor) : params.delete(clave);
     fijar('ciudad', estado.ciudad, 'all');
     fijar('categoria', estado.categoria, 'all');
+    fijar('gratis', estado.gratis ? '1' : null, '');
     fijar('fecha', estado.fecha, 'finde');
     const qs = params.toString();
     history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
@@ -301,6 +373,7 @@ import { categoriasMapa } from '../data/mapa';
     const agenda = new URLSearchParams();
     if (estado.ciudad) agenda.set('ciudad', estado.ciudad);
     if (estado.categoria !== 'all') agenda.set('categoria', estado.categoria);
+    if (estado.gratis) agenda.set('gratis', '1');
     if (estado.fecha !== 'finde') agenda.set('fecha', estado.fecha);
     const consultaAgenda = agenda.toString();
     vistaLista.href = `/agenda${consultaAgenda ? `?${consultaAgenda}` : ''}`;
@@ -362,13 +435,20 @@ import { categoriasMapa } from '../data/mapa';
     }),
   );
 
-  $$('[data-chips] [data-categoria]').forEach((b) =>
-    b.addEventListener('click', () => {
-      estado.categoria = b.dataset.categoria!;
+  radiosCategoria.forEach((r) =>
+    r.addEventListener('change', () => {
+      if (!r.checked) return;
+      estado.categoria = r.value;
       estado.todo = false;
       actualizar();
     }),
   );
+
+  botonGratis.addEventListener('click', () => {
+    estado.gratis = !estado.gratis;
+    estado.todo = false;
+    actualizar();
+  });
 
   $$<HTMLInputElement>('input[name="fecha"]').forEach((r) =>
     r.addEventListener('change', () => {
@@ -380,6 +460,7 @@ import { categoriasMapa } from '../data/mapa';
 
   $('[data-accion="categorias"]', panel).addEventListener('click', () => {
     estado.categoria = 'all';
+    estado.gratis = false;
     actualizar();
   });
 
@@ -509,7 +590,10 @@ import { categoriasMapa } from '../data/mapa';
   const ciudadUrl = params.get('ciudad');
   const categoriaUrl = params.get('categoria');
   const fechaUrl = params.get('fecha');
-  if (categoriaUrl && categoriaPorId[categoriaUrl]) estado.categoria = categoriaUrl;
+  // Enlaces viejos con las 6 categorías del sitio (?categoria=rumba → la oficial; ?categoria=gratis → "Gratis")
+  const categoriaPedida = categoriaUrl ? (categoriaAgendaDesdeSitio[categoriaUrl] ?? categoriaUrl) : null;
+  if (categoriaPedida && categoriaPorId[categoriaPedida]) estado.categoria = categoriaPedida;
+  estado.gratis = params.get('gratis') === '1' || categoriaUrl === 'gratis';
   if (fechaUrl && fechaPorId[fechaUrl]) estado.fecha = fechaUrl;
   if (ciudadUrl && porId[ciudadUrl]) elegir(ciudadUrl);
 
@@ -538,50 +622,11 @@ import { categoriasMapa } from '../data/mapa';
     margin-top: 0;
   }
 
-  /* Fila de categorías (mismo patrón que la Bienvenida; H61) */
-  .chips {
-    position: relative;
+  /* Filtro de categoría y "Gratis" (etapa B3, como en la Agenda) */
+  .filtros {
     display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-block: 6px;
-    margin-block: -6px -2px;
-    scroll-padding-inline: 8px 40px;
-  }
-
-  .chip {
-    flex-shrink: 0;
-    height: 42px;
-    border-radius: var(--radius-pill);
-    padding: 0 16px;
-    font-size: .9rem;
-    font-weight: 500;
-    white-space: nowrap;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--ink);
-  }
-
-  .chip[aria-pressed='true'] {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--on-dark);
-  }
-
-  @media (min-width: 768px) {
-    .chips {
-      flex-wrap: wrap;
-      overflow: visible;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .chips {
-      /* Sin desvanecido (decisión 2.28): la fila llega al borde de la pantalla y lo que sigue se asoma */
-      margin-right: calc(-1 * var(--margen-lateral));
-      padding-right: var(--margen-lateral);
-      padding-right: 24px;
-    }
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   /* Mapa y panel lado a lado cuando caben (560 + 24 + 382); en ese mismo punto la lista pasa a

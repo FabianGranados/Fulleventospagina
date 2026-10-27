@@ -5,6 +5,8 @@ const puerto = Number(process.env.PUERTO_PRUEBAS ?? 4322);
 
 export default defineConfig({
   testDir: 'tests',
+  // Las del modo D1 van aparte (npm run test:d1, playwright.d1.config.ts)
+  testIgnore: 'd1.spec.ts',
   timeout: 60_000,
   reporter: 'list',
   use: {

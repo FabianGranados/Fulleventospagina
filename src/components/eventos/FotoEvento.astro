@@ -9,6 +9,11 @@
 //   héroe del evento). Solo aparece cuando la foto cargó, así no oscurece el degradado.
 // - `conAlt`: usa el texto alternativo del índice (detalle del evento). En las tarjetas la foto es decorativa
 //   porque el título del evento está al lado.
+// Etapa B3: si el evento tiene foto publicada en D1 (imagenes_evento), la pone el servidor en el HTML
+// (lib/datos-eventos.ts la deja en Astro.locals). Si no carga, el script la quita y queda el degradado.
+import { fotoDeLaSolicitud } from '../../lib/datos-eventos';
+import { TAMANOS_FOTO } from '../../lib/fotos-eventos';
+
 interface Props {
   id: string;
   tamano?: 'tarjeta' | 'detalle' | 'mini' | 'media';
@@ -18,19 +23,38 @@ interface Props {
 }
 
 const { id, tamano = 'tarjeta', capa = 'fondo', velo = 'ninguno', conAlt = false } = Astro.props;
+const foto = fotoDeLaSolicitud(Astro.locals, id);
 ---
 
 <span
-  class:list={['foto-evento', `capa-${capa}`, `velo-${velo}`]}
+  class:list={['foto-evento', `capa-${capa}`, `velo-${velo}`, { cargada: foto }]}
   data-foto-evento={id}
   data-tamano={tamano}
   data-con-alt={conAlt ? '' : undefined}
   aria-hidden={conAlt ? undefined : 'true'}
-></span>
+>
+  {
+    foto && (
+      <img
+        src={foto.src}
+        srcset={foto.srcset}
+        sizes={TAMANOS_FOTO[tamano]}
+        alt={conAlt ? foto.alt : ''}
+        width={foto.ancho}
+        height={foto.alto}
+        decoding="async"
+        loading={tamano === 'detalle' ? 'eager' : 'lazy'}
+        fetchpriority={tamano === 'detalle' ? 'high' : undefined}
+        data-foto-servidor
+      />
+    )
+  }
+</span>
 
 <script>
-  import { pintarFotos } from '../../lib/fotos-eventos';
+  import { pintarFotos, vigilarFotosServidor } from '../../lib/fotos-eventos';
 
+  vigilarFotosServidor();
   pintarFotos();
 </script>
 

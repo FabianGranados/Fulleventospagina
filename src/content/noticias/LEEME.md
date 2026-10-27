@@ -43,7 +43,7 @@ fuente:
 | `fecha` | Sí | Fecha de publicación, `AAAA-MM-DD` (zona de Colombia). Ordena las noticias: la más nueva va primero. |
 | `ciudad` | Sí | Un id de `src/data/ciudades.ts` (`bogota`, `medellin`, `cali`, `barranquilla`, `cartagena`, `santamarta`, `bucaramanga`, `pereira`, `villavicencio`, `pasto`, `leticia`) o `nacional` si no es de una sola ciudad. |
 | `tema` | Sí | Uno de la lista cerrada: `conciertos`, `rumba`, `deporte`, `teatro`, `comida`, `festivales`, `guias`. La lista está en `src/data/noticias.ts`; agregar un tema es un cambio de código. |
-| `eventos` | No (por defecto `[]`) | Ids de eventos de `src/data/eventos.ts` (`e1`, `e2`…) relacionados. Se muestran en "Eventos de esta noticia" con su tarjeta y su botón a la boletera. Un id que no exista hace fallar la compilación. |
+| `eventos` | No (por defecto `[]`) | Ids de eventos relacionados: los de `src/data/eventos.ts` (`e1`, `e2`…) o los de la base D1 (`ev_…`). Se muestran en "Eventos de esta noticia" con su tarjeta y su botón a la boletera, solo si el evento está publicado. Un id con otro formato hace fallar la compilación. |
 | `destacada` | No (por defecto `false`) | `true` para la noticia grande de la Bienvenida y de `/noticias`. Si hay varias, sale la más reciente; si no hay ninguna, sale la más reciente de todas. |
 | `antetitulo` | No | Reemplaza el antetítulo automático "{Tema} · {Ciudad}" (por ejemplo "Cartel confirmado · Bogotá"). Máximo 60 caracteres. |
 | `imagen` | No | `src`: URL `https://…` o ruta de un archivo en `public/` (`/noticias/foto.jpg`). `alt`: descripción de la imagen para lectores de pantalla (obligatoria si hay imagen). Sin imagen se usa el degradado del sitio con los colores del primer evento o del tema. |

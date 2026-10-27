@@ -1,13 +1,17 @@
 // Cálculos compartidos de "Tu semana" y "Tus parches" de Inicio: los usan las columnas de computador
 // (Descubre, CuentaLateral) y el resumen compacto de celular (ResumenCelular, decisión 2.27). Una sola fuente (H37).
 import { tuSemana } from '../../data/inicio';
-import { eventos } from '../../data/eventos';
+import { eventos, type Evento } from '../../data/eventos';
 import { conversaciones } from '../../data/mensajes';
 import { totalMiembros, type Parche } from '../../data/parches';
 import { horaSinCorte, placaFecha, rutaEvento } from '../../lib/formato';
 
-export const semana = tuSemana.map((s) => {
-  const e = eventos.find((ev) => ev.id === s.evento)!;
+// `publicados`: los eventos que se pueden mostrar (lib/datos-eventos.ts); un plan de un evento retirado no sale
+export const semanaDe = (publicados: Evento[] = eventos) =>
+  tuSemana.flatMap((s) => {
+    const e = publicados.find((ev) => ev.id === s.evento);
+    return e ? [{ s, e }] : [];
+  }).map(({ s, e }) => {
   const dia = new Date(`${e.fecha}T12:00:00-05:00`)
     .toLocaleDateString('es-CO', { weekday: 'short', timeZone: 'America/Bogota' })
     .replace('.', '');
@@ -21,7 +25,8 @@ export const semana = tuSemana.map((s) => {
   };
 });
 
-export const confirmados = semana.length === 1 ? '1 plan confirmado' : `${semana.length} planes confirmados`;
+export const confirmadosDe = (semana: unknown[]) =>
+  semana.length === 1 ? '1 plan confirmado' : `${semana.length} planes confirmados`;
 
 // Una regla para todos (detalle fino 48): con cupo máximo, "N de M cupos"; sin cupo, "N miembros" y los
 // mensajes nuevos de su chat, el mismo dato que el separador "N mensajes nuevos" de Mensajes (H37)

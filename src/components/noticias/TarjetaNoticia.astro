@@ -3,7 +3,8 @@
 // el título y su área se estira sobre la tarjeta, así hay un solo enlace por noticia para el teclado.
 // Solo la imagen y el titular (decisión 2.38): el antetítulo, la bajada y la fecha van dentro de la noticia.
 import FotoEvento from '../eventos/FotoEvento.astro';
-import { fondoNoticia, rutaNoticia, type Noticia } from '../../lib/noticias';
+import { eventosDe, fondoNoticia, rutaNoticia, type Noticia } from '../../lib/noticias';
+import { publicadosDeLaSolicitud } from '../../lib/datos-eventos';
 
 interface Props {
   noticia: Noticia;
@@ -16,6 +17,9 @@ interface Props {
 
 const { noticia: n, nivel = 2, variante = 'normal', class: clase, ...datos } = Astro.props;
 const Titulo = `h${nivel}`;
+// Eventos publicados que la página ya pidió (lib/datos-eventos.ts): colores y foto solo de un evento publicado
+const publicados = publicadosDeLaSolicitud(Astro.locals);
+const primero = eventosDe(n, publicados)[0]?.id;
 ---
 
 <article class:list={['tarjeta', variante, clase]} {...datos}>
@@ -23,8 +27,8 @@ const Titulo = `h${nivel}`;
     n.data.imagen ? (
       <img class="imagen" src={n.data.imagen.src} alt={n.data.imagen.alt} loading="lazy" decoding="async" />
     ) : (
-      <div class="imagen" style={fondoNoticia(n)} aria-hidden="true">
-        {n.data.eventos[0] && <FotoEvento id={n.data.eventos[0]} tamano="media" capa="normal" />}
+      <div class="imagen" style={fondoNoticia(n, publicados)} aria-hidden="true">
+        {primero && <FotoEvento id={primero} tamano="media" capa="normal" />}
       </div>
     )
   }

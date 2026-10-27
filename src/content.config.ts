@@ -28,8 +28,11 @@ const noticias = defineCollection({
     fecha,
     ciudad: z.enum(idsCiudad),
     tema: z.enum(temas),
-    // Ids de src/data/eventos.ts relacionados con la noticia (pueden ser ninguno)
-    eventos: z.array(z.enum(idsEvento)).default([]),
+    // Ids de eventos relacionados con la noticia (pueden ser ninguno): los de src/data/eventos.ts (e1…e19) o los de
+    // D1 (ev_…, etapa B). Solo se muestran los que estén publicados (lib/datos-eventos.ts).
+    eventos: z
+      .array(z.union([z.enum(idsEvento), z.string().regex(/^ev_[a-z0-9]{6,32}$/, 'Un id de evento va como e1…e19 o ev_… (D1).')]))
+      .default([]),
     destacada: z.boolean().default(false),
     // Opcional: reemplaza el antetítulo automático "{Tema} · {Ciudad}"
     antetitulo: z.string().max(60).optional(),

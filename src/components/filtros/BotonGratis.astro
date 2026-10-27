@@ -1,0 +1,41 @@
+---
+// "Gratis" (etapa B2): no es una categoría sino un precio, así que va aparte y se suma a cualquiera de las 14.
+// Botón que alterna (aria-pressed), del mismo alto que BotonFiltro. Lo usan la Agenda y el Mapa; la página escucha
+// el clic en [data-filtro-gratis] y cambia aria-pressed.
+import Icono from '../ui/Icono.astro';
+
+interface Props {
+  activo?: boolean;
+}
+
+const { activo = false } = Astro.props;
+---
+
+<button type="button" class="filtro-gratis" aria-pressed={String(activo)} data-filtro-gratis>
+  <Icono nombre="etiqueta" tamano={18} />Gratis
+</button>
+
+<style>
+  .filtro-gratis {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 18px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 600;
+  }
+
+  .filtro-gratis:hover {
+    background: var(--light-hover);
+  }
+
+  .filtro-gratis[aria-pressed='true'] {
+    border-color: var(--ink);
+    background: var(--cat-gratis);
+  }
+</style>

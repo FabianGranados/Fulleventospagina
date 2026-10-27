@@ -1,14 +1,23 @@
 ---
 import { ciudades } from '../../data/ciudades';
-import { eventos, conteoCiudad as conteo } from '../../data/eventos';
+import { eventos as eventosDemo, type Evento } from '../../data/eventos';
 import { planes, ciudadesTexto } from '../../lib/formato';
-import { departamentos, nivelPlanes, planesPorDepartamento } from '../../data/departamentos';
+import { departamentos, nivelPlanes } from '../../data/departamentos';
+import { porCiudad, porDepartamento as planesPorDpto } from '../../lib/planes';
 
+interface Props {
+  // Planes del finde (BloqueMapa ya los filtró de los publicados)
+  eventos?: Evento[];
+}
+
+const eventos = Astro.props.eventos ?? eventosDemo;
+const conteos = porCiudad(eventos);
+const conteo = (id: string) => conteos[id] ?? 0;
 const activas = ciudades.filter((c) => conteo(c.id) > 0).length;
 // Orden de norte a sur (top ascendente), como en el prototipo
 const pines = [...ciudades].sort((a, b) => a.top - b.top);
 // Mapa de tierra y mar (decisión 2.36): departamentos reales según los planes del finde
-const porDepartamento = planesPorDepartamento(Object.fromEntries(ciudades.map((c) => [c.id, conteo(c.id)])));
+const porDepartamento = planesPorDpto(eventos);
 ---
 
 <div class="mini">

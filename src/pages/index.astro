@@ -10,11 +10,11 @@ import ComoFunciona from '../components/bienvenida/ComoFunciona.astro';
 import BloqueMapa from '../components/bienvenida/BloqueMapa.astro';
 import Unete from '../components/bienvenida/Unete.astro';
 import Noticias from '../components/bienvenida/Noticias.astro';
-import { obtenerEventos } from '../lib/datos-eventos';
+import { eventosPublicados } from '../lib/datos-eventos';
 
-// Etapa B2: con EVENTOS_D1=local se renderiza bajo demanda con los eventos publicados en D1 (astro.config.mjs);
-// si no, es estática
-const eventos = await obtenerEventos();
+// Etapa B2/B3: con EVENTOS_D1=local o pruebas se renderiza bajo demanda con los eventos publicados en D1
+// (astro.config.mjs); si no, es estática
+const eventos = await eventosPublicados(Astro.locals);
 ---
 
 <Base titulo="Fulleventos Colombia">
@@ -27,7 +27,7 @@ const eventos = await obtenerEventos();
     <Hero eventos={eventos} />
     <AgendaFinde eventos={eventos} />
     <ComoFunciona />
-    <BloqueMapa />
+    <BloqueMapa eventos={eventos} />
     <Unete />
     <Noticias />
   </main>
