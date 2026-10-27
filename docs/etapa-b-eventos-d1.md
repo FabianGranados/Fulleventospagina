@@ -140,6 +140,17 @@ Nada de B2 toca Cloudflare: no hay binding en `wrangler.jsonc`, no se desplegó 
   En la Agenda, la hoja "Categoría" tiene las 14 con ícono y conteo, y "Gratis" es un botón aparte (`aria-pressed`,
   `?gratis=1`). Los enlaces viejos `?categoria=rumba` o `?categoria=gratis` siguen funcionando.
 
+### Entorno de pruebas en Cloudflare (preparado, sin desplegar)
+
+- `wrangler.pruebas.jsonc`: Worker `fulleventos-pruebas` (`workers_dev`) con la base D1 `fulleventos-pruebas`
+  (binding `DB`), que ya tiene las migraciones 0001–0003 y los 19 eventos de ejemplo publicados. No apunta a
+  `fulleventospagina` ni a producción.
+- `npm run build:pruebas` (`EVENTOS_D1=pruebas`): mismas páginas bajo demanda que el modo local, con esa config.
+  Las páginas llevan `noindex, nofollow` aunque producción deje de llevarlo (`SITIO_PRUEBAS` en `Base.astro`).
+- Después de `build:pruebas`, `npx wrangler deploy --dry-run` muestra lo que se subiría (usa la config redirigida
+  `dist/server/wrangler.json`). Desplegar y cualquier comando `--remote` necesitan autorización.
+- El adaptador agrega un binding `SESSION` (KV) sin id: al desplegar, wrangler crea ese KV solo.
+
 ### Pendiente para B3 y antes de producción
 
 - El Mapa, Inicio, el perfil y las noticias siguen con `eventos.ts` y las 6 categorías del sitio.

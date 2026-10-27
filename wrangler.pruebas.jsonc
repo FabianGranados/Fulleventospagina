@@ -1,0 +1,17 @@
+// Entorno de PRUEBAS en Cloudflare (etapa B2). Worker y base separados de producción: nunca pongas aquí
+// "fulleventospagina" ni la base de producción. Se compila con `npm run build:pruebas`.
+// La base fulleventos-pruebas ya tiene las migraciones 0001–0003 y los 19 eventos de ejemplo publicados.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fulleventos-pruebas",
+  "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fulleventos-pruebas",
+      "database_id": "5f81a0fe-33bb-45aa-9b58-a52554e1de53",
+      "migrations_dir": "migraciones"
+    }
+  ]
+}

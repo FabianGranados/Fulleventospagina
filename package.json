@@ -8,6 +8,7 @@
     "preview": "astro preview",
     "dev:d1": "EVENTOS_D1=local astro dev",
     "build:d1": "EVENTOS_D1=local astro build",
+    "build:pruebas": "EVENTOS_D1=pruebas astro build",
     "preview:d1": "EVENTOS_D1=local astro preview",
     "astro": "astro",
     "test": "npm run test:importador && npm run revisar:secretos && astro build && playwright test",
